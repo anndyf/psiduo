@@ -7,6 +7,11 @@ import { MatchChoice } from "@/components/home/MatchChoice";
 import { ProfessionalsCarousel } from "@/components/home/ProfessionalsCarousel";
 import { Plans } from "@/components/home/Plans";
 
+export const metadata = {
+  title: "PsiDuo | Conexão Terapêutica",
+  description: "Encontre o psicólogo ideal para você.",
+};
+
 export default async function Home() {
   const professionals = await getPsicologosDestaque();
 

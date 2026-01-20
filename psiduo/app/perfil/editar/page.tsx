@@ -10,6 +10,7 @@ import { useSession } from "next-auth/react";
 import ProfileHealth from "./components/ProfileHealth";
 import DuoIISection from "./components/DuoIISection";
 import { PsicologoFormData } from "@/types/psicologo";
+import { compressImage } from "@/utils/imageCompression";
 
 // LISTAS DE OPÇÕES
 const ESTADOS_BR = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"];
@@ -90,7 +91,7 @@ const OPCOES_DIRETIVIDADE = [
   { l: "Pouco Diretivo (Interfere ocasionalmente)", v: "POUCO_DIRETIVO" },
   { l: "Muito Diretivo (Sugere ações e ferramentas)", v: "MUITO_DIRETIVO" }
 ];
-const LISTA_PUBLICO = ["Individual", "Casais","Adultos", "Idosos","Público LGBTQIA+", "Mulheres", "Homens", "Público Negro", "Público Indígena", "Refugiados"];
+const LISTA_PUBLICO = ["Idosos","Público LGBTQIA+", "Mulheres", "Homens", "Público Negro", "Público Indígena", "Refugiados"];
 
 export default function EditarPerfilCompleto() {
   const router = useRouter();
@@ -169,12 +170,20 @@ export default function EditarPerfilCompleto() {
     setFormData({ ...formData, whatsapp: formatado });
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setFormData({ ...formData, foto: reader.result as string });
-      reader.readAsDataURL(file);
+      try {
+        setLoading(true);
+        // Compress image to max 800x800 and 70% quality
+        const compressedBase64 = await compressImage(file, 800, 800, 0.7);
+        setFormData({ ...formData, foto: compressedBase64 });
+      } catch (error) {
+        console.error("Erro ao processar imagem:", error);
+        setMsg({ tipo: "erro", texto: "Não foi possível processar a imagem. Tente outra." });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -196,6 +205,17 @@ export default function EditarPerfilCompleto() {
 
   const handleSubmit = async () => {
     if (!userId) return;
+
+    // VALIDATION: Modalidade Obrigatória
+    const temModalidade = formData.publicoAlvo.includes("Individual") || formData.publicoAlvo.includes("Casais");
+    if (!temModalidade) {
+        setMsg({ tipo: "erro", texto: "Selecione pelo menos uma modalidade: Individual ou Casais." });
+        setShowModal(false);
+        // Scroll to top to see error ideally, or standard toast handles it
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+    }
+
     setShowModal(false);
     setLoading(true);
     const result = await salvarEAtivarPerfilCompleto(userId, formData);
@@ -458,6 +478,30 @@ export default function EditarPerfilCompleto() {
                 </div>
               </div>
 
+              {/* MODALIDADE (INDIVIDUAL / CASAIS) */}
+              <div className="bg-slate-50 px-4 py-6 rounded-[2.5rem] border border-slate-100 space-y-6 shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                  <label className="block text-lg font-black text-deep uppercase tracking-wide">MODALIDADE DE ATENDIMENTO</label>
+                  <span className="text-[10px] font-black text-primary bg-primary/10 px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm">Obrigatório</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    {["Individual", "Casais"].map(mod => (
+                        <button 
+                             key={mod} 
+                             type="button" 
+                             onClick={() => toggleItem(mod, 'publicoAlvo')} 
+                             className={`px-6 py-4 rounded-xl text-sm font-black border uppercase transition-all flex items-center justify-center gap-2 ${formData.publicoAlvo.includes(mod) ? 'bg-deep text-white border-deep shadow-lg scale-[1.02]' : 'bg-white text-slate-500 border-slate-200 hover:border-deep/30'}`}
+                        >
+                            {formData.publicoAlvo.includes(mod) && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                            {mod}
+                        </button>
+                    ))}
+                </div>
+                {!formData.publicoAlvo.includes("Individual") && !formData.publicoAlvo.includes("Casais") && (
+                     <p className="text-xs text-amber-600 font-bold text-center bg-amber-50 py-2 rounded-lg border border-amber-100">⚠ Selecione pelo menos uma opção acima.</p>
+                )}
+              </div>
+
               <div className="bg-slate-50 px-4 py-6 rounded-[2.5rem] border border-slate-100 space-y-6 shadow-sm">
                 <div className="flex justify-between items-center mb-6">
                   <label className="block text-lg font-black text-deep uppercase tracking-wide">PÚBLICO ALVO</label>
@@ -541,20 +585,136 @@ export default function EditarPerfilCompleto() {
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md overflow-y-auto">
               <div className="w-full max-w-sm relative py-8">
                   <button onClick={() => setShowPreview(false)} className="absolute top-4 right-0 z-50 text-white bg-red-600 rounded-full w-8 h-8 font-black">X</button>
-                  <div className="bg-white rounded-3xl overflow-hidden shadow-2xl scale-90 origin-top">
-                     {/* Preview simplificado */}
-                      <div className="p-4 bg-deep text-white text-center">
-                          <p className="font-bold">Prévia do Card</p>
+                  <div className={`bg-white rounded-[2.5rem] p-5 sm:p-6 flex flex-col shadow-sm border transition-all duration-300 group relative ${
+                      formData.plano === 'DUO_II' 
+                      ? 'border-primary/20 shadow-[0_20px_60px_rgba(59,130,246,0.08)]' 
+                      : 'border-slate-100'
+                  }`}>
+                      {/* --- HEADER: Foto + Name + CRP --- */}
+                      <div className="flex items-center gap-4 sm:gap-5 mb-4">
+                          <div className="relative shrink-0">
+                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.25rem] sm:rounded-[1.5rem] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.08)] border-2 sm:border-[3px] border-white relative">
+                                  {formData.foto ? (
+                                      <div className="w-full h-full rounded-[1.1rem] sm:rounded-[1.3rem] overflow-hidden relative">
+                                          <Image src={formData.foto} fill className="object-cover" alt="Foto" sizes="(max-width: 640px) 64px, 80px" />
+                                      </div>
+                                  ) : (
+                                      <div className="w-full h-full rounded-[1.1rem] sm:rounded-[1.3rem] bg-mist flex items-center justify-center text-xl sm:text-2xl font-black text-primary">
+                                          {formData.nome ? formData.nome.charAt(0) : "P"}
+                                      </div>
+                                  )}
+                                  {formData.plano === 'DUO_II' && (
+                                      <div className="absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 bg-primary text-white p-1 sm:p-1.5 rounded-lg shadow-lg ring-2 ring-white z-10">
+                                          <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                                      </div>
+                                  )}
+                              </div>
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-start">
+                                  <h3 className="font-bold text-slate-800 text-base sm:text-lg tracking-tight leading-tight">{formData.nome || "Seu Nome Completo"}</h3>
+                                  <button className="p-1.5 rounded-full text-slate-300">
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                                  </button>
+                              </div>
+                              <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">CRP 00/00000</p>
+                          </div>
                       </div>
-                      <div className="p-8 text-center space-y-4">
-                          <div className="w-24 h-24 bg-slate-200 rounded-full mx-auto relative overflow-hidden">
-                              {formData.foto && <Image src={formData.foto} fill className="object-cover" alt="" />}
+
+                      {/* --- WHATSAPP FAST CONTACT --- */}
+                      <div className="mb-4">
+                          <button 
+                              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-50 text-green-600 border border-green-100 font-bold text-[10px] uppercase tracking-widest hover:bg-green-100 transition-colors"
+                          >
+                              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                              Contato via WhatsApp
+                          </button>
+                      </div>
+
+                      {/* --- ABORDAGEM (BOX) --- */}
+                          <div className="mb-4">
+                              <div className="bg-blue-50/50 border border-blue-100/50 rounded-xl p-3 text-center">
+                                  <span className="text-[9px] font-black text-blue-700 uppercase tracking-widest truncate block w-full px-2">
+                                      {formData.abordagem || "Sua Abordagem Teórica"}
+                                  </span>
+                              </div>
                           </div>
-                          <h2 className="text-xl font-black text-deep">{formData.nome || "Seu Nome"}</h2>
-                          <p className="text-sm text-slate-500">{formData.especialidades.join(", ") || "Suas especialidades"}</p>
-                          <div className="border-t pt-4">
-                             <p className="text-green-600 font-black text-lg">R$ {formData.preco}</p>
+
+                      {/* --- ESPECIALIDADES & TEMAS --- */}
+                      <div className="space-y-3 mb-4 flex-1">
+                          {/* Especialidades */}
+                          {formData.especialidades && formData.especialidades.length > 0 && (
+                              <div>
+                                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">Especialidade</p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                      {formData.especialidades.map((esp: string) => (
+                                          <span key={esp} className="text-[9px] text-blue-500 font-bold bg-blue-50/30 px-2.5 py-0.5 rounded-lg border border-blue-100/30">
+                                              {esp}
+                                          </span>
+                                      ))}
+                                  </div>
+                              </div>
+                          )}
+
+                          {/* Temas */}
+                          {formData.temas && formData.temas.length > 0 && (
+                            <div>
+                                <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">Temas</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {formData.temas.slice(0, 2).map((tema: string) => (
+                                        <span key={tema} className="text-[9px] text-slate-500 font-bold bg-slate-50 px-2.5 py-0.5 rounded-lg border border-slate-100">
+                                            {tema}
+                                        </span>
+                                    ))}
+                                    {formData.temas.length > 2 && (
+                                        <span className="text-[9px] text-slate-400 font-bold py-0.5 px-1">+{formData.temas.length - 2}</span>
+                                    )}
+                                </div>
+                            </div>
+                          )}
+
+                          {/* Público Alvo */}
+                          {formData.publicoAlvo && formData.publicoAlvo.length > 0 && (
+                              <div>
+                                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1 ">Acompanhamento</p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                      {formData.publicoAlvo.map((p: string) => (
+                                          <span key={p} className="text-[8px] text-slate-400 font-bold bg-white px-2 py-0.5 rounded-md border border-slate-100">
+                                              {p}
+                                          </span>
+                                      ))}
+                                  </div>
+                              </div>
+                          )}
+
+                          {/* Bio Snippet */}
+                          {formData.biografia && (
+                              <div className="pt-2">
+                                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">Apresentação</p>
+                                  <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2 italic font-medium">
+                                      "{formData.biografia}"
+                                  </p>
+                              </div>
+                          )}
+                      </div>
+
+                      {/* --- FOOTER: Valor + Botão --- */}
+                      <div className="pt-4 border-t border-slate-50 flex items-center justify-between gap-3">
+                          <div className="shrink-0">
+                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Sessão</p>
+                              <div className="flex items-baseline gap-1 whitespace-nowrap">
+                                  <span className="text-xl font-black text-green-500 tracking-tight leading-none">R$ {formData.preco}</span>
+                                  <span className="text-[10px] text-slate-400 font-bold uppercase opacity-60">/ {formData.duracaoSessao || 50}m</span>
+                              </div>
                           </div>
+                          
+                          <button 
+                              className="flex-1 bg-deep text-white px-5 py-3.5 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-deep/10 flex items-center justify-center gap-2 whitespace-nowrap"
+                          >
+                              Perfil Completo
+                              <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                          </button>
                       </div>
                   </div>
               </div>

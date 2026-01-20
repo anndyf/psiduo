@@ -115,23 +115,43 @@ export default function ComoFunciona() {
           <div className="flex-1 order-2 lg:order-1">
              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-4">
-                  <div className="h-48 bg-slate-900 rounded-3xl p-6 text-white flex flex-col justify-end gap-2 shadow-xl border border-white/5">
-                     <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Duo I</span>
-                     <p className="text-xs font-bold leading-tight">Visibilidade gratuita e catálogo completo.</p>
+                  <div className="h-48 bg-slate-900 rounded-3xl p-6 text-white flex flex-col items-center justify-center gap-4 shadow-xl border border-white/5 group hover:scale-105 transition-transform">
+                     <div className="flex items-center justify-center w-20 h-20 rounded-3xl">
+                        <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                     </div>
+                     <div className="text-center">
+                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60 block mb-1">Duo I</span>
+                        <p className="text-xs font-bold leading-tight">Visibilidade gratuita e catálogo completo.</p>
+                     </div>
                   </div>
-                  <div className="h-64 bg-primary rounded-3xl p-6 text-white flex flex-col justify-end gap-2 shadow-xl">
-                     <span className="text-[10px] font-black uppercase tracking-widest text-blue-900">Duo II</span>
-                     <p className="text-sm font-black leading-tight">Destaque premium, agenda pró e vídeo.</p>
+                  <div className="h-64 bg-primary rounded-3xl p-6 text-white flex flex-col items-center justify-center gap-4 shadow-xl group hover:scale-105 transition-transform">
+                     <div className="flex items-center justify-center w-24 h-24 rounded-3xl">
+                        <svg className="w-14 h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+                     </div>
+                     <div className="text-center">
+                        <span className="text-xs font-black uppercase tracking-widest text-white block mb-2">Duo II</span>
+                        <p className="text-sm font-black leading-tight">Destaque premium, agenda, vídeo e diário de pacientes.</p>
+                     </div>
                   </div>
                 </div>
                 <div className="space-y-4 pt-12">
-                   <div className="h-64 bg-mist border-2 border-slate-100 rounded-3xl p-6 flex flex-col justify-end gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Dados</span>
-                      <p className="text-sm font-black text-deep leading-tight">Métricas de impacto e acessos ao perfil.</p>
+                   <div className="h-64 bg-mist border-2 border-slate-100 rounded-3xl p-6 flex flex-col items-center justify-center gap-4 group hover:scale-105 transition-transform">
+                      <div className="flex items-center justify-center w-24 h-24 rounded-3xl">
+                         <svg className="w-14 h-14 text-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                      </div>
+                      <div className="text-center">
+                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Dados</span>
+                         <p className="text-sm font-black text-deep leading-tight">Métricas de impacto e acessos ao perfil.</p>
+                      </div>
                    </div>
-                   <div className="h-48 bg-deep rounded-3xl p-6 text-white flex flex-col justify-end gap-2 shadow-xl">
-                      <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Filtros</span>
-                      <p className="text-xs font-bold leading-tight">Leads qualificados que procuram seu nicho.</p>
+                   <div className="h-48 bg-deep rounded-3xl p-6 text-white flex flex-col items-center justify-center gap-4 shadow-xl group hover:scale-105 transition-transform">
+                      <div className="flex items-center justify-center w-20 h-20 rounded-3xl">
+                         <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                      </div>
+                      <div className="text-center">
+                         <span className="text-[10px] font-black uppercase tracking-widest opacity-60 block mb-1">Busca Algorítmica</span>
+                         <p className="text-xs font-bold leading-tight">Pacientes que realmente procuram você.</p>
+                      </div>
                    </div>
                 </div>
              </div>
@@ -175,12 +195,11 @@ export default function ComoFunciona() {
         <div className="container mx-auto max-w-6xl relative z-10 text-center">
             <h2 className="text-3xl lg:text-5xl font-black text-white uppercase tracking-tighter mb-16">Por que somos <br className="md:hidden"/> <span className="text-primary">diferentes?</span></h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                {[
                  { t: "Direto ao Ponto", d: "Sem taxas de agendamento ou comissões por sessão.", i: <svg className="w-12 h-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
                  { t: "Liberdade Total", d: "O contrato é direto entre você e o profissional.", i: <svg className="w-12 h-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg> },
-                 { t: "Foco Clínico", d: "Espaço exclusivo para saúde mental, sem distrações.", i: <svg className="w-12 h-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg> },
-                 { t: "SEO Próprio", d: "Seu perfil é otimizado para aparecer no Google.", i: <svg className="w-12 h-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg> }
+                 { t: "Foco Clínico", d: "Espaço exclusivo para saúde mental, sem distrações.", i: <svg className="w-12 h-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg> }
                ].map((card, idx) => (
                  <div key={idx} className="bg-white/5 border border-white/10 p-8 rounded-3xl text-center backdrop-blur-sm group hover:bg-white/10 transition duration-500">
                     <div className="text-primary mb-6 transition duration-500 group-hover:scale-110">{card.i}</div>

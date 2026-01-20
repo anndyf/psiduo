@@ -32,61 +32,174 @@ export default function SouPsicologo() {
         </div>
       </section>
 
-      {/* --- VANTAGENS --- */}
+      {/* --- VANTAGENS DO PSIDUO (Geral) --- */}
       <section className="py-24 bg-white px-6">
         <div className="container mx-auto max-w-6xl">
-           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-              <div className="space-y-12">
-                 <div>
-                    <h2 className="text-3xl lg:text-4xl font-black text-slate-900 uppercase tracking-tighter mb-6">Por que escolher o <span className="text-primary italic">PsiDuo</span>?</h2>
-                    <p className="text-slate-500 font-medium">Diferente das redes sociais barulhentas, aqui o foco é 100% clínico e na sua autoridade professional.</p>
-                 </div>
+           <div className="text-center mb-16">
+              <h2 className="text-3xl lg:text-4xl font-black text-slate-900 uppercase tracking-tighter mb-6">Por que escolher o <span className="text-primary italic">PsiDuo</span>?</h2>
+              <p className="text-slate-500 font-medium max-w-2xl mx-auto">Diferente das redes sociais barulhentas, aqui o foco é 100% clínico e na sua autoridade professional.</p>
+           </div>
 
-                 <div className="space-y-8">
-                    {[
-                      { t: "SEO Otimizado", d: "Seu perfil é indexado pelo Google, facilitando que pacientes te encontrem organicamente.", i: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg> },
-                      { t: "Zero Comissões", d: "O valor da sua sessão é integralmente seu. Não cobramos porcentagem sobre seus atendimentos.", i: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
-                      { t: "Autoridade Visual", d: "Perfis limpos, modernos e com recursos premium como vídeo e agenda pró.", i: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg> }
-                    ].map((item, idx) => (
-                      <div key={idx} className="flex gap-6 group">
-                         <div className="bg-slate-50 w-14 h-14 rounded-2xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors shrink-0">{item.i}</div>
-                         <div>
-                            <h4 className="font-black text-slate-800 uppercase text-xs tracking-widest mb-1">{item.t}</h4>
-                            <p className="text-slate-500 text-sm leading-relaxed">{item.d}</p>
-                         </div>
-                      </div>
-                    ))}
-                 </div>
-              </div>
-              
-              <div className="relative">
-                 <div className="absolute inset-0 bg-primary/20 rounded-[3rem] blur-3xl -z-10 animate-pulse"></div>
-                 <div className="bg-slate-900 p-8 rounded-[3rem] shadow-2xl border border-white/10 aspect-square flex flex-col justify-center gap-8">
-                     <div className="space-y-4">
-                        <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden">
-                           <div className="w-[85%] h-full bg-primary"></div>
-                        </div>
-                        <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Preenchimento do Perfil</p>
-                     </div>
-                     <div className="space-y-4">
-                        <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden">
-                           <div className="w-[60%] h-full bg-blue-300"></div>
-                        </div>
-                        <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Acessos este mês</p>
-                     </div>
-                     <div className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                         <div className="flex justify-between items-center mb-4">
-                            <span className="text-white text-xs font-black uppercase tracking-widest">Contatos Recebidos</span>
-                            <span className="text-primary font-black">+12</span>
-                         </div>
-                         <div className="flex -space-x-3">
-                            {[1,2,3,4].map(i => <div key={i} className="w-10 h-10 rounded-full border-2 border-slate-900 bg-slate-700"></div>)}
-                         </div>
-                     </div>
-                 </div>
-              </div>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                { 
+                   t: "Visibilidade Qualificada", 
+                   d: "Pacientes utilizam filtros avançados para encontrar exatamente a sua especialidade.", 
+                   icon: <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
+                   color: "bg-blue-500"
+                },
+                { 
+                   t: "Zero Comissões", 
+                   d: "Receba 100% do valor da sua consulta. O pagamento é acordado diretamente com o paciente.", 
+                   icon: <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+                   color: "bg-green-500"
+                },
+                { 
+                   t: "Autonomia Profissional", 
+                   d: "Você define seus horários e regras. Somos a ponte tecnológica, não seu chefe.", 
+                   icon: <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+                   color: "bg-slate-800"
+                }
+              ].map((item, idx) => (
+                <div key={idx} className="bg-slate-50 rounded-[2rem] p-8 border border-slate-100 hover:shadow-xl hover:scale-105 transition-all duration-300 group">
+                   <div className={`${item.color} w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg rotate-3 group-hover:rotate-0 transition-transform`}>
+                      {item.icon}
+                   </div>
+                   <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-3">{item.t}</h3>
+                   <p className="text-slate-500 text-sm font-medium leading-relaxed">
+                      {item.d}
+                   </p>
+                </div>
+              ))}
            </div>
         </div>
+      </section>
+
+      {/* --- DETALHES DUO II (PREMIUM FEATURES) - MOVED UP --- */}
+      <section className="py-24 bg-deep relative overflow-hidden">
+         {/* Background Elements */}
+         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -ml-24 -mt-24 pointer-events-none"></div>
+         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] -mr-24 -mb-24 pointer-events-none"></div>
+
+         <div className="container mx-auto max-w-6xl relative z-10 px-6">
+            <div className="text-center mb-20">
+               <span className="inline-block bg-white/10 text-blue-300 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.3em] backdrop-blur-md mb-6 border border-white/5">
+                  Exclusividade Premium
+               </span>
+               <h2 className="text-3xl lg:text-5xl font-black text-white uppercase tracking-tighter leading-tight">
+                  Por que ser <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-300">Duo II</span>?
+               </h2>
+               <p className="text-slate-400 mt-6 max-w-2xl mx-auto text-lg font-medium leading-relaxed">
+                  Desbloqueie ferramentas que vão além da divulgação. O Duo II é um sistema completo de gestão e fidelização clínica.
+               </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Feature 1: Diário (Large) */}
+               <div className="md:col-span-2 bg-gradient-to-br from-white/10 to-white/5 border border-white/10 p-10 rounded-[2.5rem] hover:border-primary/50 transition-all group relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-32 bg-primary/20 blur-[80px] rounded-full -mr-16 -mt-16 pointer-events-none group-hover:bg-primary/30 transition-colors"></div>
+                  <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mb-6 text-primary relative z-10">
+                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                  </div>
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-3 relative z-10">Diário do Paciente</h3>
+                  <p className="text-slate-400 font-medium leading-relaxed max-w-sm relative z-10">Acompanhe o humor, sono e anotações dos seus pacientes entre sessões. Receba insights valiosos.</p>
+               </div>
+
+               {/* Feature 2: Vídeo (Standard) */}
+               <div className="md:col-span-1 bg-white/5 border border-white/5 p-10 rounded-[2.5rem] hover:bg-white/10 transition-all group">
+                  <div className="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-6 text-blue-300">
+                     <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                  </div>
+                  <h3 className="text-xl font-black text-white uppercase tracking-tight mb-3">Vídeo Apresentação</h3>
+                  <p className="text-sm text-slate-400 font-medium leading-relaxed">Gere 3x mais conexão antes mesmo do primeiro contato.</p>
+               </div>
+
+               {/* Feature 3: Agenda (Standard) */}
+               <div className="md:col-span-1 bg-white/5 border border-white/5 p-10 rounded-[2.5rem] hover:bg-white/10 transition-all group">
+                  <div className="w-14 h-14 bg-purple-500/20 rounded-2xl flex items-center justify-center mb-6 text-purple-300">
+                     <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  </div>
+                  <h3 className="text-xl font-black text-white uppercase tracking-tight mb-3">Agenda Inteligente</h3>
+                  <p className="text-sm text-slate-400 font-medium leading-relaxed">Exiba seus horários disponíveis de forma clara. Reduza a troca de mensagens.</p>
+               </div>
+
+               {/* Feature 4: Métricas (Large) */}
+               <div className="md:col-span-2 bg-gradient-to-bl from-white/10 to-white/5 border border-white/10 p-10 rounded-[2.5rem] hover:border-blue-400/50 transition-all group relative overflow-hidden">
+                  <div className="absolute bottom-0 left-0 p-32 bg-blue-500/20 blur-[80px] rounded-full -ml-16 -mb-16 pointer-events-none group-hover:bg-blue-500/30 transition-colors"></div>
+                  <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-6 text-blue-300 relative z-10">
+                     <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                  </div>
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-3 relative z-10">Métricas de Dados</h3>
+                  <p className="text-slate-400 font-medium leading-relaxed max-w-sm relative z-10">Entenda seu funil. Saiba quantas pessoas visitam seu perfil, clicam no WhatsApp e interagem com você.</p>
+               </div>
+            </div>
+         </div>
+      </section>
+
+      {/* --- VISUAL SHOWCASE DO DIÁRIO --- */}
+      <section className="py-24 bg-slate-50 px-6 overflow-hidden">
+         <div className="container mx-auto max-w-6xl">
+             <div className="flex flex-col lg:flex-row items-center gap-16">
+                 
+                 {/* Texto Explicativo */}
+                 <div className="flex-1 space-y-8">
+                     <div className="flex flex-wrap items-center gap-3">
+                        <span className="bg-primary/10 border border-primary/20 text-primary px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">Exclusividade Duo II</span>
+                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">Pacientes Ilimitados</span>
+                     </div>
+                     <h2 className="text-4xl lg:text-5xl font-black text-slate-900 uppercase tracking-tighter leading-none">
+                         O <span className="text-primary">Elo Perdido</span> <br/> Entre as Sessões.
+                     </h2>
+                     <p className="text-slate-500 text-lg font-medium leading-relaxed">
+                         Muitas vezes, o que acontece entre uma sessão e outra é perdido. Com o módulo de <strong>Diário de Pacientes</strong>, você cadastra <span className="text-deep font-bold underline decoration-primary/30 decoration-2 underline-offset-2">quantos pacientes quiser</span>, sem limites. Eles registram humor e sono diariamente, e você recebe tudo em um painel clínico organizado.
+                     </p>
+                     
+                     <div className="space-y-4 pt-4">
+                        <div className="flex items-center gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-primary">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            </div>
+                            <div>
+                                <h4 className="font-black text-slate-900 uppercase text-xs tracking-widest">Para o Paciente</h4>
+                                <p className="text-xs text-slate-500">Interface simples, amigável e gamificada.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                            <div className="w-12 h-12 bg-deep/10 rounded-xl flex items-center justify-center text-deep">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>
+                            </div>
+                            <div>
+                                <h4 className="font-black text-slate-900 uppercase text-xs tracking-widest">Para Você</h4>
+                                <p className="text-xs text-slate-500">Gráficos de tendência e alertas de oscilação.</p>
+                            </div>
+                        </div>
+                     </div>
+                 </div>
+
+                 {/* Imagens (Mockups) */}
+                 <div className="flex-1 relative">
+                     {/* Background Blob */}
+                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-primary/20 to-blue-200/20 rounded-full blur-3xl -z-10"></div>
+                     
+                     <div className="relative z-10">
+                        {/* Painel Desktop */}
+                        <div className="rounded-xl overflow-hidden shadow-2xl border-4 border-white transform hover:scale-[1.02] transition-transform duration-500">
+                           <img src="/painel_mockup.png" alt="Painel de Gerenciamento do Psicólogo" className="w-full h-auto" />
+                        </div>
+                        
+                        {/* Gráficos (Floating Left) - NOVA IMAGEM */}
+                        <div className="absolute -bottom-8 -left-8 w-72 rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-4 border-white transform -rotate-3 hover:rotate-0 transition-all duration-500 hover:scale-105 hover:z-30">
+                           <img src="/graficos_mockup.png" alt="Análise de Dados Clínicos" className="w-full h-auto bg-white" />
+                        </div>
+                        
+                        {/* App Mobile (Overlapping Right) */}
+                        <div className="absolute -bottom-12 -right-6 w-1/3 rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-4 border-white transform rotate-3 hover:rotate-0 transition-all duration-500 hover:scale-105 hover:z-20">
+                           <img src="/diario_mockup.png" alt="Aplicativo do Paciente" className="w-full h-auto" />
+                        </div>
+                     </div>
+                 </div>
+             </div>
+         </div>
       </section>
 
       {/* --- TABELA DE PLANOS --- */}
@@ -116,8 +229,7 @@ export default function SouPsicologo() {
                      "Filtros de especialidades",
                      "Bio e foto profissional",
                      "Botão de WhatsApp direto",
-                     "Recebimento de avaliações",
-                     "URL com seu nome (Slug)"
+                     "Recebimento de avaliações"
                    ].map((item, i) => (
                      <li key={i} className="flex items-center gap-4">
                         <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
@@ -153,18 +265,17 @@ export default function SouPsicologo() {
 
                 <ul className="space-y-6 mb-12 flex-1">
                    {[
-                     { t: "Tudo do plano Duo I", v: true },
-                     { t: "Horários Disponíveis (Agenda)", v: true },
+                     { t: "Diário de Pacientes (Novo!)", v: true, highlight: true },
+                     { t: "Agenda Disponível e Link", v: true },
                      { t: "Vídeo de Apresentação", v: true },
-                     { t: "Links Redes Sociais", v: true },
-                     { t: "Visualizador de Acessos", v: true },
-                     { t: "Suporte prioritário", v: true }
+                     { t: "Métricas de Acessos", v: true },
+                     { t: "Destaque na Busca", v: true },
                    ].map((item, i) => (
                      <li key={i} className="flex items-center gap-4">
-                        <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
-                           <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${item.highlight ? 'bg-amber-400 text-deep shadow-lg shadow-amber-400/50' : 'bg-blue-500/20 text-blue-400'}`}>
+                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                         </div>
-                        <span className="text-blue-50/90 font-bold uppercase text-[10px] tracking-widest">{item.t}</span>
+                        <span className={`font-bold uppercase text-[10px] tracking-widest ${item.highlight ? 'text-amber-400 font-black' : 'text-blue-50/90'}`}>{item.t}</span>
                      </li>
                    ))}
                 </ul>
@@ -175,38 +286,6 @@ export default function SouPsicologo() {
              </div>
           </div>
         </div>
-      </section>
-
-      {/* --- FAQ MINI --- */}
-      <section className="py-24 bg-white px-6">
-         <div className="container mx-auto max-w-4xl text-center">
-             <h2 className="text-3xl lg:text-4xl font-black text-slate-900 uppercase tracking-tighter mb-16">Dúvida rápida?</h2>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
-                <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100">
-                   <h4 className="font-black text-slate-900 uppercase text-xs tracking-widest mb-3">Posso trocar de plano depois?</h4>
-                   <p className="text-slate-500 text-sm leading-relaxed">Sim, você pode alternar entre o Duo I e Duo II a qualquer momento através do seu painel de controle.</p>
-                </div>
-                <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100">
-                   <h4 className="font-black text-slate-900 uppercase text-xs tracking-widest mb-3">Tem fidelidade ou multa?</h4>
-                   <p className="text-slate-500 text-sm leading-relaxed">Não. O PsiDuo trabalha com liberdade total. Você pode cancelar sua assinatura premium sem qualquer burocracia.</p>
-                </div>
-             </div>
-         </div>
-      </section>
-
-      {/* --- CTA FINAL --- */}
-      <section className="py-24 px-6 bg-slate-900">
-         <div className="container mx-auto max-w-4xl text-center">
-            <h2 className="text-4xl lg:text-6xl font-black text-white uppercase tracking-tighter mb-8 leading-tight">
-               SUA PRÓXIMA SESSÃO <br/> <span className="text-primary italic">COMEÇA AQUI.</span>
-            </h2>
-            <p className="text-slate-400 text-lg lg:text-xl font-medium mb-12 opacity-80 max-w-2xl mx-auto">
-               Crie seu perfil profissional agora e faça parte da plataforma que mais cresce na conexão terapêutica.
-            </p>
-            <Link href="/cadastro" className="bg-primary text-white px-14 py-6 rounded-2xl font-black uppercase text-[13px] tracking-[0.3em] shadow-2xl hover:bg-blue-600 transition">
-               Criar meu Perfil Agora
-            </Link>
-         </div>
       </section>
 
       <Footer />

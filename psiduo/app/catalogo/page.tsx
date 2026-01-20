@@ -370,7 +370,7 @@ export default function Catalogo() {
                             {/* --- ABORDAGEM (BOX) --- */}
                             <div className="mb-4">
                                 <div className="bg-blue-50/50 border border-blue-100/50 rounded-xl p-3 text-center">
-                                    <span className="text-[9px] font-black text-blue-700 uppercase tracking-widest">
+                                    <span className="text-[9px] font-black text-blue-700 uppercase tracking-widest truncate block w-full px-2">
                                         {pro.abordagem}
                                     </span>
                                 </div>
@@ -396,13 +396,13 @@ export default function Catalogo() {
                                 <div>
                                     <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">Temas</p>
                                     <div className="flex flex-wrap gap-1.5">
-                                        {pro.temas.slice(0, 5).map((tema: string) => (
+                                        {pro.temas.slice(0, 2).map((tema: string) => (
                                             <span key={tema} className="text-[9px] text-slate-500 font-bold bg-slate-50 px-2.5 py-0.5 rounded-lg border border-slate-100">
                                                 {tema}
                                             </span>
                                         ))}
-                                        {pro.temas.length > 5 && (
-                                            <span className="text-[9px] text-slate-400 font-bold py-0.5 px-1">+{pro.temas.length - 5}</span>
+                                        {pro.temas.length > 2 && (
+                                            <span className="text-[9px] text-slate-400 font-bold py-0.5 px-1">+{pro.temas.length - 2}</span>
                                         )}
                                     </div>
                                 </div>

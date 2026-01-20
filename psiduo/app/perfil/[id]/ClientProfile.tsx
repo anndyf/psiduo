@@ -41,6 +41,10 @@ export default function ClientProfile({ initialData, id }: { initialData: any, i
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showToast, setShowToast] = useState(false);
+  
+  // Rating State
+  const [rating, setRating] = useState(0);
+  const [feedbackText, setFeedbackText] = useState("");
 
   useEffect(() => {
     const savedFavs = localStorage.getItem("psiduo_favorites");
@@ -318,26 +322,18 @@ export default function ClientProfile({ initialData, id }: { initialData: any, i
 
             {/* SEÇÃO DE AVALIAÇÃO PRIVADA */}
             <div className="bg-white p-10 md:p-14 rounded-[50px] shadow-sm border border-slate-100">
-              {/* ... (Feedback Section) ... */}
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
                 <div>
                   <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-900 mb-2">Feedback do Paciente</h3>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Sua avaliação é enviada de forma privada para o profissional.</p>
                 </div>
-                <div className="flex gap-1" id="star-rating">
+                <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button 
                       key={star} 
                       type="button"
-                      onClick={() => {
-                        const stars = document.querySelectorAll('.star-btn');
-                        stars.forEach((s, idx) => {
-                          if (idx < star) s.classList.add('text-amber-400');
-                          else s.classList.remove('text-amber-400');
-                        });
-                        (window as any).currentRating = star;
-                      }}
-                      className="star-btn text-2xl text-slate-200 hover:text-amber-300 transition-colors"
+                      onClick={() => setRating(star)}
+                      className={`text-2xl transition-colors ${star <= rating ? 'text-amber-400' : 'text-slate-200 hover:text-amber-300'}`}
                     >
                       ★
                     </button>
@@ -347,27 +343,28 @@ export default function ClientProfile({ initialData, id }: { initialData: any, i
 
               <div className="space-y-6">
                 <textarea 
-                  id="testimonial-text"
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
                   placeholder="Deixe aqui seu depoimento ou sugestão..."
                   rows={4}
                   className="w-full bg-slate-50 border-2 border-slate-100 rounded-[30px] p-8 text-sm font-medium outline-none focus:border-primary transition-all resize-none"
-                  suppressHydrationWarning
                 ></textarea>
                 
                 <div className="flex justify-end">
                   <button 
                     onClick={async (e) => {
+                      if (rating === 0) { alert("Por favor, selecione uma nota de 1 a 5 estrelas."); return; }
+                      
                       const btn = e.currentTarget;
-                      const text = (document.getElementById('testimonial-text') as HTMLTextAreaElement).value;
-                      const nota = (window as any).currentRating || 0;
-                      if (nota === 0) { alert("Por favor, selecione uma nota de 1 a 5 estrelas."); return; }
                       btn.disabled = true;
                       btn.innerText = "Enviando...";
+                      
                       try {
-                        const res = await enviarAvaliacao(dados.id, nota, text, "Acesso Perfil");
+                        const res = await enviarAvaliacao(dados.id, rating, feedbackText, "Acesso Perfil");
                         if (res.success) {
                           alert("Obrigado pelo seu feedback!");
-                          (document.getElementById('testimonial-text') as HTMLTextAreaElement).value = "";
+                          setFeedbackText("");
+                          setRating(0);
                         }
                       } catch (err) { console.error(err); }
                       finally { btn.disabled = false; btn.innerText = "Enviar Depoimento Privado"; }

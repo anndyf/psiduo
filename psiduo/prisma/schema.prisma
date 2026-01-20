@@ -89,6 +89,7 @@ model Psicologo {
   userId            String      @unique
   avaliacoes        Avaliacao[]
   user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pacientes         Paciente[]
 }
 
 model Avaliacao {
@@ -111,6 +112,34 @@ model AuditLog {
   metadata  Json?
   createdAt DateTime @default(now())
 }
+
+model Paciente {
+  id              String           @id @default(cuid())
+  nome            String
+  tokenAcesso     String           @unique
+  psicologoId     String
+  ativo           Boolean          @default(true)
+  criadoEm        DateTime         @default(now())
+  dataInicio      DateTime         @default(now())
+  
+  psicologo       Psicologo        @relation(fields: [psicologoId], references: [id], onDelete: Cascade)
+  registros       RegistroDiario[]
+}
+
+model RegistroDiario {
+  id          String   @id @default(cuid())
+  pacienteId  String
+  data        DateTime
+  humor       Int      
+  sono        Int      
+  notas       String?
+  tags        String[]
+  criadoEm    DateTime @default(now())
+  
+  paciente    Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+}
+
+
 
 enum Plano {
   DUO_I

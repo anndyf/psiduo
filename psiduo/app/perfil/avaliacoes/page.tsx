@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { buscarAvaliacoes } from "../actions";
@@ -18,6 +19,7 @@ interface Avaliacao {
 
 export default function PaginaAvaliacoes() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
   
   // Inicialização correta do estado com o Tipo definido
@@ -32,25 +34,47 @@ export default function PaginaAvaliacoes() {
   });
   
   useEffect(() => {
-    const storedId = localStorage.getItem("psiduo_user_id");
-    if (!storedId) {
+    if (status === "loading") return;
+    if (status === "unauthenticated") {
       router.push("/login");
       return;
     }
 
     async function carregar() {
-      const res = await buscarAvaliacoes(storedId!);
-      if (res.success && res.avaliacoes) {
-        setDados({ 
-          avaliacoes: res.avaliacoes as Avaliacao[], 
-          total: res.total, 
-          media: res.media 
-        });
-      }
-      setLoading(false);
+        // Se a sessão tiver o ID, usamos ele. Caso contrário, precisamos buscar pelo email ou outra via.
+        // Vamos assumir que buscarAvaliacoes pode lidar com a sessão no server-side se passarmos nada? 
+        // Não, a definição pede ID.
+        // Vamos tentar pegar o ID da sessão se estiver disponível no objeto session.user (customizado nas callbacks do NextAuth)
+        // Ou pelo email.
+        
+        // CORREÇÃO: O ID do usuário deve vir da sessão auth.
+        // Como o tipo session.user default não tem ID, vamos tentar usar o email para buscar o ID primeiro ou assumir que o ID foi injetado.
+        // Mas para simplificar rápido: Se o painel sabe quem é, ele deve ter o ID.
+        // Vamos tentar buscar o ID via server action usando o email da sessão.
+        
+        if (session?.user) {
+             // O ID correto para buscar avaliações é o do PERFIL DE PSICÓLOGO, não do USUÁRIO (login)
+             // O NextAuth foi configurado para injetar 'psicologoId' na sessão.
+             const psicologoId = (session.user as any).psicologoId;
+             console.log("PsicologoID Session:", psicologoId);
+             
+             if (psicologoId) {
+                 const res = await buscarAvaliacoes(psicologoId);
+                 if (res.success && res.avaliacoes) {
+                    setDados({ 
+                      avaliacoes: res.avaliacoes as Avaliacao[], 
+                      total: res.total, 
+                      media: res.media 
+                    });
+                 }
+             } else {
+                 console.error("ID de Psicólogo não encontrado na sessão.");
+             }
+        }
+        setLoading(false);
     }
     carregar();
-  }, [router]);
+  }, [router, session, status]);
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-white font-black text-slate-300 uppercase tracking-[0.4em] animate-pulse">
