@@ -23,7 +23,7 @@ export const Hero = () => {
             <span className="text-primary">ao encontro com o outro.</span>
           </h1>
           <p className="text-lg lg:text-xl text-slate-700 font-medium max-w-2xl mx-auto leading-relaxed mb-0">
-            Navegue pelas suas emoções com segurança. Conectamos você ao psicólogo ideal através de um match inteligente e humanizado.
+            Navegue pelas suas emoções com segurança. Conectamos você ao psicólogo ideal através de uma <strong>conexão</strong> inteligente e humanizada.
           </p>
         </div>
 

@@ -28,7 +28,7 @@ export default function FAQ() {
     },
     {
       q: "O que fazer se eu não me adaptar ao profissional?",
-      a: "A aliança terapêutica é fundamental. Se você sentir que não houve o 'match' ideal com o primeiro profissional, você tem total liberdade para retornar ao nosso catálogo e buscar um novo especialista que atenda melhor às suas expectativas."
+      a: "A aliança terapêutica é fundamental. Se você sentir que não houve a 'conexão' ideal com o primeiro profissional, você tem total liberdade para retornar ao nosso catálogo e buscar um novo especialista que atenda melhor às suas expectativas."
     }
   ];
 

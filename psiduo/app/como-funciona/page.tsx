@@ -21,7 +21,7 @@ export default function ComoFunciona() {
               A ponte perfeita entre <span className="text-primary italic">você</span> e seu <span className="text-blue-200">psicólogo</span>.
             </h1>
             <p className="text-blue-100 text-lg lg:text-xl font-medium max-w-2xl leading-relaxed opacity-80">
-              O PsiDuo não é apenas um diretório. É uma curadoria tecnológica desenhada para que a primeira sessão comece com a certeza do match ideal.
+              O PsiDuo não é apenas um diretório. É uma curadoria tecnológica desenhada para que a primeira sessão comece com a certeza da <strong>conexão ideal</strong>.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Link href="/catalogo" className="bg-primary hover:bg-blue-600 text-white px-10 py-5 rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-2xl transition shadow-blue-500/20 text-center">

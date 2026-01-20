@@ -19,7 +19,7 @@ export const MatchResultCard = ({ pro, isBestMatch }: MatchResultCardProps) => {
       {isBestMatch && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <Badge variant="deep" className="px-4 py-1.5 shadow-lg">
-            Melhor Match
+            Melhor Conexão
           </Badge>
         </div>
       )}

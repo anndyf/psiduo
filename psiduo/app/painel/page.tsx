@@ -26,7 +26,9 @@ export default function PainelPsicologo() {
   const [isModalSistemaOpen, setIsModalSistemaOpen] = useState(false);
   const [editandoEmail, setEditandoEmail] = useState(false);
   const [novoEmail, setNovoEmail] = useState("");
+  const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
+  const [confirmarNovaSenha, setConfirmarNovaSenha] = useState("");
   const [statusEnvio, setStatusEnvio] = useState({ tipo: "", texto: "" });
   const [showToast, setShowToast] = useState(false);
 
@@ -105,17 +107,38 @@ const handleCopiarLink = async () => {
   };
 
 const handleSalvarCredenciais = async () => {
-  setLoading(true);
-  const res = await atualizarCredenciais({
-    emailNovo: editandoEmail ? novoEmail : undefined,
-    senhaNova: novaSenha || undefined
-  });
+    setStatusEnvio({ tipo: "", texto: "" });
+
+    // Validações de Senha
+    if (novaSenha) {
+        if (!senhaAtual) {
+            setStatusEnvio({ tipo: "erro", texto: "Digite sua senha atual para confirmar a troca." });
+            return;
+        }
+        if (novaSenha !== confirmarNovaSenha) {
+            setStatusEnvio({ tipo: "erro", texto: "A nova senha e a confirmação não conferem." });
+            return;
+        }
+        if (novaSenha.length < 6) {
+             setStatusEnvio({ tipo: "erro", texto: "A nova senha deve ter pelo menos 6 caracteres." });
+             return;
+        }
+    }
+
+    setLoading(true);
+    const res = await atualizarCredenciais({
+      emailNovo: editandoEmail ? novoEmail : undefined,
+      senhaNova: novaSenha || undefined,
+      senhaAtual: senhaAtual || undefined
+    });
 
     if (res.success) {
       setStatusEnvio({ tipo: "sucesso", texto: res.message });
       setDados(prev => ({ ...prev, email: editandoEmail ? novoEmail : prev.email }));
       setEditandoEmail(false);
+      setSenhaAtual("");
       setNovaSenha("");
+      setConfirmarNovaSenha("");
       setTimeout(() => setIsModalSistemaOpen(false), 3000);
     } else {
       setStatusEnvio({ tipo: "erro", texto: res.error || "Erro ao atualizar." });
@@ -348,14 +371,30 @@ const handleSalvarCredenciais = async () => {
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Nova Senha</label>
-                <input 
-                  type="password" 
-                  placeholder="••••••••"
-                  value={novaSenha}
-                  onChange={(e) => setNovaSenha(e.target.value)}
-                  className="w-full bg-slate-50 border-b-2 border-slate-200 p-4 font-bold text-slate-900 outline-none focus:border-deep transition-all"
-                />
+                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Alterar Senha</label>
+                 <div className="space-y-3">
+                    <input 
+                      type="password" 
+                      placeholder="Senha Atual (Obrigatório)"
+                      value={senhaAtual}
+                      onChange={(e) => setSenhaAtual(e.target.value)}
+                      className="w-full bg-slate-50 border-b-2 border-slate-200 p-4 font-bold text-slate-900 outline-none focus:border-deep transition-all"
+                    />
+                    <input 
+                      type="password" 
+                      placeholder="Nova Senha"
+                      value={novaSenha}
+                      onChange={(e) => setNovaSenha(e.target.value)}
+                      className="w-full bg-slate-50 border-b-2 border-slate-200 p-4 font-bold text-slate-900 outline-none focus:border-deep transition-all"
+                    />
+                    <input 
+                      type="password" 
+                      placeholder="Confirmar Nova Senha"
+                      value={confirmarNovaSenha}
+                      onChange={(e) => setConfirmarNovaSenha(e.target.value)}
+                      className="w-full bg-slate-50 border-b-2 border-slate-200 p-4 font-bold text-slate-900 outline-none focus:border-deep transition-all"
+                    />
+                 </div>
               </div>
 
               <div className="pt-4 space-y-4">

@@ -39,7 +39,7 @@ export default function Navbar() {
             <Link href="/" className="hover:text-white transition">Início</Link>
             <Link href="/como-funciona" className="hover:text-white transition">Como Funciona</Link>
             <Link href="/catalogo" className="hover:text-white transition">Catálogo</Link>
-            <Link href="/faq" className="hover:text-white transition">Dúvidas</Link>
+            {/* <Link href="/faq" className="hover:text-white transition">Dúvidas</Link> */}
           </div>
 
           {/* Área de Ação (Login + Cadastro ou Painel + Sair) */}
@@ -115,13 +115,13 @@ export default function Navbar() {
             >
               Catálogo
             </Link>
-            <Link 
+            {/* <Link 
               href="/faq" 
               className="block text-white hover:text-blue-300 transition font-medium"
               onClick={() => setIsOpen(false)}
             >
               Dúvidas
-            </Link>
+            </Link> */}
 
             <div className="pt-4 border-t border-white/10 space-y-3">
               {isLogged ? (

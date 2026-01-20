@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-br">
-      <body className={`${dmSans.className} bg-mist text-deep antialiased`}>
+      <body className={`${dmSans.className} bg-mist text-deep antialiased`} suppressHydrationWarning>
         <AuthProvider>
           {children}
         </AuthProvider>

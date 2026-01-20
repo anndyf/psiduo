@@ -2,7 +2,7 @@ export const HowItWorks = () => {
   const steps = [
     {
       number: 1,
-      title: "Faça o Match",
+      title: "Inicie a Conexão",
       description: "Responda ao nosso questionário rápido. O sistema filtra e apresenta os profissionais ideais para sua necessidade.",
       highlight: "Serviço 100% Gratuito."
     },

@@ -85,6 +85,8 @@ export default function Cadastro() {
     duracaoSessao: 50
   });
 
+  const [fieldErrors, setFieldErrors] = useState<string[]>([]);
+
   useEffect(() => {
     if (!confirmarSenha) {
       setSenhaFeedback(null);
@@ -128,9 +130,15 @@ export default function Cadastro() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     let { name, value } = e.target;
+    
+    // Remove erro visual ao digitar
+    if (fieldErrors.includes(name)) {
+        setFieldErrors(prev => prev.filter(f => f !== name));
+    }
+
     if (name === "crp") {
         value = formatarCRP(value);
-        setCrpEmUso(false); // Reseta o erro ao digitar
+        setCrpEmUso(false);
     }
     if (name === "whatsapp") value = formatarWhatsapp(value);
     setFormData({ ...formData, [name]: value });
@@ -164,6 +172,24 @@ export default function Cadastro() {
         return;
     }
 
+    // Validação de Campos Vazios
+    const emptyFields: string[] = [];
+    if (!formData.nome) emptyFields.push("nome");
+    if (!formData.email) emptyFields.push("email");
+    if (!formData.crp) emptyFields.push("crp");
+    if (!formData.whatsapp) emptyFields.push("whatsapp");
+    if (!formData.senha) emptyFields.push("senha");
+    if (!formData.preco) emptyFields.push("preco");
+    if (!confirmarEmail) emptyFields.push("confirmarEmail");
+    if (!confirmarSenha) emptyFields.push("confirmarSenha");
+
+    if (emptyFields.length > 0) {
+        setFieldErrors(emptyFields);
+        setError("Por favor, preencha todos os campos obrigatórios.");
+        setIsLoading(false);
+        return;
+    }
+
     if (!validarEmail(formData.email)) {
         setError("Por favor, digite um e-mail válido.");
         setIsLoading(false);
@@ -176,8 +202,11 @@ export default function Cadastro() {
         return;
     }
 
-    if (formData.senha !== confirmarSenha || formData.senha.length < 6) {
-      setError("Verifique as senhas digitadas (mínimo 6 caracteres).");
+    // Critérios de Senha Forte
+    const senhaForte = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(formData.senha);
+
+    if (!senhaForte || formData.senha !== confirmarSenha) {
+      setError("A senha deve ter no mínimo 8 caracteres, uma letra maiúscula, uma minúscula e um número.");
       setIsLoading(false);
       return;
     }
@@ -284,7 +313,7 @@ export default function Cadastro() {
                         <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Nome Completo</label>
                         <input 
                             name="nome" required type="text" 
-                            className="w-full border border-slate-200 rounded-xl p-4 text-slate-700 focus:ring-2 focus:ring-primary outline-none bg-slate-50 focus:bg-white transition"
+                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${fieldErrors.includes('nome') ? 'border-red-500 bg-red-50 focus:ring-red-200' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
                             placeholder="Ex: Dra. Ana Silva"
                             value={formData.nome}
                             onChange={handleChange}
@@ -295,7 +324,7 @@ export default function Cadastro() {
                         <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">E-mail Profissional</label>
                         <input 
                             name="email" required type="email" 
-                            className="w-full border border-slate-200 rounded-xl p-4 text-slate-700 focus:ring-2 focus:ring-primary outline-none bg-slate-50 focus:bg-white transition"
+                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${fieldErrors.includes('email') ? 'border-red-500 bg-red-50 focus:ring-red-200' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
                             placeholder="seu@email.com"
                             value={formData.email}
                             onChange={handleChange}
@@ -318,10 +347,13 @@ export default function Cadastro() {
                         </label>
                         <input 
                             required type="email" 
-                            className="w-full border border-slate-200 rounded-xl p-4 text-slate-700 focus:ring-2 focus:ring-primary outline-none bg-slate-50 focus:bg-white transition"
+                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${fieldErrors.includes('confirmarEmail') ? 'border-red-500 bg-red-50 focus:ring-red-200' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
                             placeholder="Confirme seu e-mail"
                             value={confirmarEmail}
-                            onChange={(e) => setConfirmarEmail(e.target.value)}
+                            onChange={(e) => {
+                                setConfirmarEmail(e.target.value);
+                                if (fieldErrors.includes("confirmarEmail")) setFieldErrors(prev => prev.filter(f => f !== "confirmarEmail"));
+                            }}
                         />
                     </div>
                 </div>
@@ -335,7 +367,7 @@ export default function Cadastro() {
                         </label>
                         <input 
                             name="crp" required type="text" 
-                            className={`w-full border rounded-xl p-4 text-slate-700 focus:ring-2 outline-none bg-slate-50 focus:bg-white transition ${crpEmUso ? 'border-red-500 ring-red-100 bg-red-50' : 'border-slate-200 focus:ring-primary'}`}
+                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${crpEmUso || fieldErrors.includes('crp') ? 'border-red-500 bg-red-50 ring-red-100' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
                             placeholder="Ex: 06/12345"
                             value={formData.crp}
                             onChange={handleChange}
@@ -350,7 +382,7 @@ export default function Cadastro() {
                         <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">WhatsApp</label>
                         <input 
                             name="whatsapp" required type="tel" 
-                            className="w-full border border-slate-200 rounded-xl p-4 text-slate-700 focus:ring-2 focus:ring-primary outline-none bg-slate-50 focus:bg-white transition"
+                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${fieldErrors.includes('whatsapp') ? 'border-red-500 bg-red-50 focus:ring-red-200' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
                             placeholder="(00) 90000-0000"
                             value={formData.whatsapp}
                             onChange={handleChange}
@@ -365,8 +397,8 @@ export default function Cadastro() {
                         <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Senha</label>
                         <input 
                             name="senha" required type="password" 
-                            className="w-full border border-slate-200 rounded-xl p-4 text-slate-700 focus:ring-2 focus:ring-primary outline-none bg-slate-50 focus:bg-white transition"
-                            placeholder="Mínimo 6 dígitos"
+                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${fieldErrors.includes('senha') ? 'border-red-500 bg-red-50 focus:ring-red-200' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
+                            placeholder="Crie uma senha forte"
                             value={formData.senha}
                             onChange={handleChange}
                         />
@@ -387,17 +419,36 @@ export default function Cadastro() {
                         </label>
                         <input 
                             name="confirmarSenha" required type="password" 
-                            className={`w-full border rounded-xl p-4 text-slate-700 focus:ring-2 outline-none bg-slate-50 focus:bg-white transition ${senhaFeedback?.cor === 'text-red-500' ? 'border-red-300 ring-red-100' : 'border-slate-200 focus:ring-primary'}`}
+                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${(senhaFeedback?.cor === 'text-red-500' || fieldErrors.includes('confirmarSenha')) ? 'border-red-500 bg-red-50 ring-red-100' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
                             placeholder="Repita a senha"
                             value={confirmarSenha}
-                            onChange={(e) => setConfirmarSenha(e.target.value)}
+                            onChange={(e) => {
+                                setConfirmarSenha(e.target.value);
+                                if (fieldErrors.includes("confirmarSenha")) setFieldErrors(prev => prev.filter(f => f !== "confirmarSenha"));
+                            }}
                         />
-                        {senhaFeedback && (
-                            <div className={`text-xs font-bold mt-2 ml-1 ${senhaFeedback.cor}`}>
-                                {senhaFeedback.msg}
-                            </div>
-                        )}
                     </div>
+                </div>
+
+                {/* Indicadores de Força da Senha - Horizontal e Equilibrado */}
+                <div className="flex flex-wrap gap-x-6 gap-y-2 pl-1">
+                    {[
+                        { label: "Mínimo 8 caracteres", valid: formData.senha.length >= 8 },
+                        { label: "Letra maiúscula", valid: /[A-Z]/.test(formData.senha) },
+                        { label: "Letra minúscula", valid: /[a-z]/.test(formData.senha) },
+                        { label: "Pelo menos um número", valid: /\d/.test(formData.senha) },
+                    ].map((rule, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                            <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${rule.valid ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-300'}`}>
+                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <span className={`text-xs font-medium transition-colors ${rule.valid ? 'text-green-600' : 'text-slate-400'}`}>
+                                {rule.label}
+                            </span>
+                        </div>
+                    ))}
                 </div>
 
                 {/* Grid Inferior: Abordagem e Preço */}
@@ -422,7 +473,7 @@ export default function Cadastro() {
                         <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Valor Sessão (R$)</label>
                         <input 
                             name="preco" required type="number" 
-                            className="w-full border border-slate-200 rounded-xl p-4 text-slate-700 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary outline-none"
+                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${fieldErrors.includes('preco') ? 'border-red-500 bg-red-50 focus:ring-red-200' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
                             placeholder="150"
                             value={formData.preco}
                             onChange={handleChange}

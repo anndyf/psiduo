@@ -41,7 +41,7 @@ export default function Footer() {
                 <li><Link href="/" className="hover:text-primary transition">Início</Link></li>
                 <li><Link href="/catalogo" className="hover:text-primary transition">Catálogo de Profissionais</Link></li>
                 <li><Link href="/sou-psicologo" className="hover:text-primary transition">Para Psicólogos</Link></li>
-                <li><Link href="/faq" className="hover:text-primary transition">Dúvidas</Link></li>
+                {/* <li><Link href="/faq" className="hover:text-primary transition">Dúvidas</Link></li> */}
                 <li><Link href="/login" className="hover:text-primary transition">Login</Link></li>
               </ul>
             </div>
@@ -78,8 +78,8 @@ export default function Footer() {
           {/* Rodapé Inferior */}
           <div className="border-t border-slate-700 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 gap-4">
             <div className="text-center md:text-left">
-              <p className="mb-1">© 2024 PsiDuo Tecnologia Ltda. Todos os direitos reservados.</p>
-              <p className="text-slate-600">Responsável Técnica: Dra. Nome Sobrenome (CRP 00/00000)</p>
+              <p className="mb-1">© 2026 PsiDuo Tecnologia Ltda. Todos os direitos reservados.</p>
+              <p className="text-slate-600">Responsável Técnica: Dra. Andressa Mirella (CRP 06/12345)</p>
             </div>
             <p>Feito com 💙 para a psicologia.</p>
           </div>
