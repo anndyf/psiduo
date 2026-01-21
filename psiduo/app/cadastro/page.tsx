@@ -6,7 +6,7 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
-import { cadastrarPsicologo, verificarCRP } from "../catalogo/actions";
+import { cadastrarPsicologo, verificarCRP, validarStatusCRP } from "../catalogo/actions";
 
 // Lista com nomes amigáveis
 const ABORDAGENS = [
@@ -71,6 +71,7 @@ export default function Cadastro() {
   // Estado para validação de CRP em tempo real
   const [crpEmUso, setCrpEmUso] = useState(false);
   const [verificandoCrp, setVerificandoCrp] = useState(false);
+  const [crpValidado, setCrpValidado] = useState(false);
 
   const [formData, setFormData] = useState({
     nome: "",
@@ -139,6 +140,7 @@ export default function Cadastro() {
     if (name === "crp") {
         value = formatarCRP(value);
         setCrpEmUso(false);
+        setCrpValidado(false); // Reseta validação ao digitar
     }
     if (name === "whatsapp") value = formatarWhatsapp(value);
     setFormData({ ...formData, [name]: value });
@@ -149,9 +151,16 @@ export default function Cadastro() {
     if (formData.crp.length >= 7) {
       setVerificandoCrp(true);
       try {
-        const jaExiste = await verificarCRP(formData.crp);
-        if (jaExiste) {
-          setCrpEmUso(true);
+        // IMPORTANTE: validarStatusCRP deve ser importado de ../catalogo/actions
+        const resultado = await validarStatusCRP(formData.crp);
+        
+        if (!resultado.valido) {
+           setError(resultado.mensagem || "CRP inválido.");
+           setCrpEmUso(true); // Bloqueia submit
+        } else {
+           setCrpEmUso(false);
+           setCrpValidado(true); // Marca como visualmente válido
+           setError(""); // Limpa erro se tiver
         }
       } catch (err) {
         console.error("Erro ao verificar CRP", err);
@@ -375,7 +384,10 @@ export default function Cadastro() {
                             maxLength={9}
                         />
                         {crpEmUso && (
-                            <span className="text-xs text-red-500 font-bold absolute -bottom-5 left-1">Este CRP já está em uso.</span>
+                            <span className="text-xs text-red-500 font-bold absolute -bottom-5 left-1">Verifique o erro acima.</span>
+                        )}
+                        {crpValidado && !crpEmUso && (
+                            <span className="text-xs text-green-600 font-bold absolute -bottom-5 left-1">✓ CRP Ativo e Válido</span>
                         )}
                     </div>
                     <div>

@@ -48,8 +48,8 @@ export const MatchResultCard = ({ pro, isBestMatch }: MatchResultCardProps) => {
             <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">{pro.abordagem}</p>
           </div>
           <div className="shrink-0 flex flex-col items-end">
-             <span className="text-[20px] font-black text-primary leading-none">{Math.round((pro.score / 50) * 100)}%</span>
-             <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Afinidade</span>
+             <span className="text-[20px] font-black text-primary leading-none">{Math.min(100, Math.max(0, Math.round((pro.score / 80) * 100)))}%</span>
+             <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Conexão</span>
           </div>
         </div>
 

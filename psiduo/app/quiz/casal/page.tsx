@@ -402,6 +402,31 @@ export default function QuizCasal() {
                       {opt.l}
                     </OptionButton>
                   ))}
+                  
+                  {/* Option: Sem preferência (Limpar todas) */}
+                  <OptionButton
+                    selected={
+                      !formData.preferenciasEspecificas.lgbtqia && 
+                      !formData.preferenciasEspecificas.mais45 && 
+                      !formData.preferenciasEspecificas.naoReligioso && 
+                      !formData.preferenciasEspecificas.negros
+                    }
+                    onClick={() => setFormData({
+                      ...formData, 
+                      preferenciasEspecificas: { 
+                        ...formData.preferenciasEspecificas, 
+                        lgbtqia: false,
+                        mais45: false,
+                        naoReligioso: false,
+                        negros: false
+                      }
+                    })}
+                    textAlign="center"
+                    size="sm"
+                    className="p-5 font-black text-slate-400"
+                  >
+                    Sem preferência
+                  </OptionButton>
                 </div>
               </div>
             </div>
@@ -417,7 +442,7 @@ export default function QuizCasal() {
                 size="xl"
                 fullWidth
               >
-                {loading ? "Calculando Match..." : "Ver Resultados"}
+                {loading ? "Calculando Conexão..." : "Ver Minhas Conexões"}
               </Button>
             </div>
           </div>

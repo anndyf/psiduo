@@ -39,7 +39,6 @@ export const EXPECTATIVAS_INDIVIDUAL = [
   "Desafie minhas crenças",
   "Me dê exercícios para praticar em casa",
   "Me guie para metas específicas",
-  "Outro",
   "Não sei"
 ];
 
@@ -49,7 +48,8 @@ export const EXPECTATIVAS_CASAL = [
   "Melhoria na escuta mútua",
   "Orientação sobre dinâmica familiar",
   "Processo de fechamento/divórcio amigável",
-  "Novas ferramentas de diálogo"
+  "Novas ferramentas de diálogo",
+  "Outro"
 ];
 
 export const MODELOS_TERAPEUTA = [

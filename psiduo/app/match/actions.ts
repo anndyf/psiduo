@@ -129,7 +129,36 @@ export async function findMatches(quizData: QuizData) {
         score += 8;
       }
 
-      // 5. TERAPIA ANTES (Peso 5)
+      // 5. EXPECTATIVA -> ABORDAGEM (Peso 10)
+      const abordagemGroups: Record<string, string[]> = {
+         // FOCO EM TÉCNICAS E MUDANÇA (TCC, Comportamental)
+         "Me ensine novas práticas / habilidades": ["TCC", "Cognitivo", "Comportamental", "ACT", "DBT", "FAP", "Esquemas", "Racional", "Neuropsicologia", "PBE", "Programação neurolinguística"],
+         "Desafie minhas crenças": ["TCC", "Cognitivo", "Racional", "Esquemas"],
+         "Me dê exercícios para praticar em casa": ["TCC", "Cognitivo", "Comportamental", "Neuropsicologia"],
+         "Me guie para metas específicas": ["TCC", "Comportamental", "Coaching", "Breve", "Focada", "Orientação"],
+         
+         // FOCO EM PROFUNDIDADE E PASSADO (Psicanálise, Analítica)
+         "Ressignificar meu passado": ["Psicanálise", "Analítica", "Junguiana", "Lacaniana", "Winnicottiana", "Psicodinâmica", "Esquizoanálise"],
+         
+         // FOCO EM ACOLHIMENTO E SER (Humanista)
+         "Apenas escuta e acolhimento": ["Humanista", "Centrada na Pessoa", "Fenomenológica", "Existencial", "Gestalt", "Logoterapia", "Apego"],
+         
+         // CASAL (Específicos)
+         "Mediação de conflitos": ["Sistêmica", "Familiar", "Casal", "Comunicação"],
+         "Orientação sobre dinâmica familiar": ["Sistêmica", "Familiar", "Bowen", "Estrutural"],
+         "Novas ferramentas de diálogo": ["Comunicação", "Sistêmica", "TCC", "Comportamental"],
+      };
+
+      const keywords = quizData.expectativa.flatMap(e => abordagemGroups[e] || []);
+      // Verifica se a abordagem do psi contem alguma das palavras-chave
+      // Ex: abordagem "Psicanálise Freudiana" contem "Psicanálise" -> Match
+      const abordagemMatch = keywords.some(k => psi.abordagem.includes(k));
+      
+      if (abordagemMatch) {
+        score += 10;
+      }
+
+      // 6. TERAPIA ANTES (Peso 5)
       // Se nunca fez terapia (terapiaAntes: false), psicólogos com perfil mais acolhedor ou diretividade "POUCO_DIRETIVO" podem ser bons
       if (!quizData.terapiaAntes && psi.diretividade === "POUCO_DIRETIVO") {
         score += 5;

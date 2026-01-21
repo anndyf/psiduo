@@ -26,7 +26,11 @@ export default function Login() {
     });
 
     if (result?.error) {
-      setError(result.error);
+      if (result.error === "CredentialsSignin") {
+        setError("E-mail ou senha incorretos.");
+      } else {
+        setError("Ocorreu um erro ao entrar. Tente novamente.");
+      }
       setIsLoading(false);
     } else {
       router.push("/painel");

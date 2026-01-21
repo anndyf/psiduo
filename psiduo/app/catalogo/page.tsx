@@ -11,7 +11,7 @@ import { getPsicologos, registrarCliqueWhatsapp } from "./actions";
 const FILTERS_DATA = [
   {
     category: "Público Alvo",
-    items: ["Individual", "Casais", "Adultos", "Idosos", "Público LGBTQIA+", "Mulheres", "Homens", "Público Negro", "Público Indígena", "Refugiados"],
+    items: ["Individual", "Casais", "Idosos", "Público LGBTQIA+", "Mulheres", "Homens", "Público Negro", "Público Indígena"],
   },
   {
     category: "Saúde emocional e mental",

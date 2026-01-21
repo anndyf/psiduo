@@ -231,7 +231,7 @@ export default function QuizIndividual() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
               </Button>
               <Button onClick={nextStep} variant="deep" size="xl" fullWidth>
-                Continuar
+                Próximo
               </Button>
             </div>
           </div>
@@ -271,7 +271,7 @@ export default function QuizIndividual() {
                 size="xl"
                 fullWidth
               >
-                Tudo Certo
+                Próximo
               </Button>
             </div>
           </div>
@@ -344,7 +344,7 @@ export default function QuizIndividual() {
                 size="xl"
                 fullWidth
               >
-                Continuar
+                Próximo
               </Button>
             </div>
           </div>
@@ -459,6 +459,31 @@ export default function QuizIndividual() {
                       {opt.l}
                     </OptionButton>
                   ))}
+                  
+                  {/* Option: Sem preferência (Limpar todas) */}
+                  <OptionButton
+                    selected={
+                      !formData.preferenciasEspecificas.lgbtqia && 
+                      !formData.preferenciasEspecificas.mais45 && 
+                      !formData.preferenciasEspecificas.naoReligioso && 
+                      !formData.preferenciasEspecificas.negros
+                    }
+                    onClick={() => setFormData({
+                      ...formData, 
+                      preferenciasEspecificas: { 
+                        ...formData.preferenciasEspecificas, 
+                        lgbtqia: false,
+                        mais45: false,
+                        naoReligioso: false,
+                        negros: false
+                      }
+                    })}
+                    textAlign="center"
+                    size="sm"
+                    className="p-5 font-black text-slate-400"
+                  >
+                    Sem preferência
+                  </OptionButton>
                 </div>
               </div>
             </div>
@@ -475,7 +500,7 @@ export default function QuizIndividual() {
                 fullWidth
                 className="gap-3 shadow-primary/20"
               >
-                {loading ? "Calculando seu Match..." : "Ver Meus Matches"}
+                {loading ? "Calculando sua Conexão..." : "Ver Minhas Conexões"}
               </Button>
             </div>
           </div>
