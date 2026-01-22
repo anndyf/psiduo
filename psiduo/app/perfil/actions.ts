@@ -65,7 +65,9 @@ export async function buscarDadosPsicologo(idOuSlug: string) {
         redesSociais: psicologo.redesSociais || null,
         agendaConfig: psicologo.agendaConfig || null,
         acessos: psicologo.acessos || 0,
-        plano: psicologo.plano || "DUO_I" 
+        plano: psicologo.plano || "DUO_I",
+        atendeOnline: psicologo.atendeOnline ?? true,
+        atendePresencial: psicologo.atendePresencial ?? false
       }
     };
   } catch (error) {
@@ -150,6 +152,8 @@ export async function salvarEAtivarPerfilCompleto(id: string, dados: any) {
       especialidades: dados.especialidades,
       temas: dados.temas,
       status: novoStatus,
+      atendeOnline: dados.atendeOnline,
+      atendePresencial: dados.atendePresencial,
     };
 
     // --- AUTO-CORREÇÃO DE SLUG (Se ainda não tiver) ---

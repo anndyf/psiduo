@@ -78,13 +78,15 @@ export const Plans = () => {
                           Tudo do plano Duo I
                       </li>
                       {[
+                        { text: "Diário de Pacientes (Novo!)", highlight: true, special: true },
                         { text: "Horários Disponíveis (Agenda)", highlight: true },
                         { text: "Vídeo de Apresentação" },
-                        { text: "Links Redes Sociais" },
-                        { text: "Visualizador de Acessos" }
+                        { text: "Métricas de Acessos" },
+                        { text: "Destaque na Busca" },
+                        { text: "Links Redes Sociais" }
                       ].map(item => (
                         <li key={item.text} className={`flex items-center ${item.highlight ? 'text-deep font-semibold' : 'text-slate-700'}`}>
-                            <span className={`w-6 h-6 ${item.highlight ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-primary'} rounded-full flex items-center justify-center mr-3 ${item.highlight ? 'shadow-sm' : ''}`}>✓</span>
+                            <span className={`w-6 h-6 ${item.special ? 'bg-amber-400 text-deep shadow-lg shadow-amber-400/50' : (item.highlight ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-primary')} rounded-full flex items-center justify-center mr-3 ${item.highlight ? 'shadow-sm' : ''}`}>✓</span>
                             {item.text}
                         </li>
                       ))}

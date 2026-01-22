@@ -33,6 +33,8 @@ interface PsicologoDados {
   videoApresentacao?: string;
   agendaConfig?: any;
   redesSociais?: any;
+  atendeOnline?: boolean;
+  atendePresencial?: boolean;
 }
 
 export default function ClientProfile({ initialData, id }: { initialData: any, id: string }) {
@@ -45,6 +47,14 @@ export default function ClientProfile({ initialData, id }: { initialData: any, i
   // Rating State
   const [rating, setRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState("");
+
+  const getModalidade = () => {
+      const online = dados?.atendeOnline ?? true;
+      const presencial = dados?.atendePresencial ?? false;
+      if (online && presencial) return "Online e Presencial";
+      if (presencial) return "Presencial";
+      return "100% Online";
+  };
 
   useEffect(() => {
     const savedFavs = localStorage.getItem("psiduo_favorites");
@@ -95,11 +105,12 @@ export default function ClientProfile({ initialData, id }: { initialData: any, i
   const renderVideoYoutube = (url: string): string => {
     if (!url) return "";
     try {
-      let videoId = "";
-      if (url.includes("shorts/")) videoId = url.split("shorts/")[1]?.split(/[?&]/)[0];
-      else if (url.includes("youtu.be/")) videoId = url.split("youtu.be/")[1]?.split(/[?&]/)[0];
-      else if (url.includes("v=")) videoId = url.split("v=")[1]?.split(/[?&]/)[0];
-      return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1` : "";
+      // Regex robusto para capturar ID do YouTube (suporta shorts, embed, watch, youtu.be)
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
+      const match = url.match(regExp);
+      const videoId = (match && match[2].length === 11) ? match[2] : null;
+      
+      return videoId ? `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1` : "";
     } catch (e) { return ""; }
   };
 
@@ -225,8 +236,13 @@ export default function ClientProfile({ initialData, id }: { initialData: any, i
                 </div>
                 <div className="bg-slate-900 text-white p-5 rounded-[28px] shadow-lg">
                   <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block mb-1">Duração</span>
-                  <span className="text-base font-black tracking-tight">{dados.duracaoSessao}m</span>
+                  <span className="text-base font-black tracking-tight">{dados.duracaoSessao}min</span>
                 </div>
+              </div>
+              
+              <div className="mt-4 bg-blue-50 text-blue-900 p-5 rounded-[28px] shadow-sm border border-blue-100">
+                  <span className="text-[8px] font-black uppercase tracking-widest text-blue-400 block mb-1">Atendimento</span>
+                  <span className="text-sm font-black tracking-tight uppercase text-blue-700">{getModalidade()}</span>
               </div>
             </div>
 

@@ -44,4 +44,6 @@ export interface PsicologoFormData {
   plano: string;
   acessos: number;
   status?: string;
+  atendeOnline?: boolean;
+  atendePresencial?: boolean;
 }

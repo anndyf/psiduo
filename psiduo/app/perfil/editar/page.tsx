@@ -113,7 +113,9 @@ export default function EditarPerfilCompleto() {
     agendaConfig: { Seg: [], Ter: [], Qua: [], Qui: [], Sex: [], Sab: [], Dom: [] },
     plano: "DUO_I",
     acessos: 0,
-    nome: ""
+    nome: "",
+    atendeOnline: true,
+    atendePresencial: false
   });
 
   useEffect(() => {
@@ -150,6 +152,8 @@ export default function EditarPerfilCompleto() {
             redesSociais: res.dados.redesSociais || { instagram: "", linkedin: "", site: "" },
             agendaConfig: agenda,
             plano: res.dados.plano || "DUO_I",
+            atendeOnline: res.dados.atendeOnline ?? true,
+            atendePresencial: res.dados.atendePresencial ?? false,
         } as PsicologoFormData);
       }
       setFetching(false);
@@ -329,6 +333,38 @@ export default function EditarPerfilCompleto() {
                         {ESTADOS_BR.map(uf => <option key={uf} value={uf}>{uf}</option>)}
                       </select>
                     </div>
+                  </div>
+                  
+                  {/* FORMATO DE ATENDIMENTO */}
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 mt-0">
+                      <label className="block text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Formato de Atendimento</label>
+                      <div className="grid grid-cols-2 gap-4">
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, atendeOnline: !formData.atendeOnline })}
+                            className={`p-4 rounded-xl flex items-center justify-center gap-3 border transition-all ${
+                              formData.atendeOnline ? "bg-white border-green-500 text-green-700 shadow-md" : "bg-slate-100 border-transparent text-slate-400"
+                            }`}
+                          >
+                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${formData.atendeOnline ? "border-green-600 bg-green-600" : "border-slate-300 bg-white"}`}>
+                                {formData.atendeOnline && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                             </div>
+                             <span className="font-bold uppercase text-xs">Atendimento Online</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, atendePresencial: !formData.atendePresencial })}
+                            className={`p-4 rounded-xl flex items-center justify-center gap-3 border transition-all ${
+                              formData.atendePresencial ? "bg-white border-green-500 text-green-700 shadow-md" : "bg-slate-100 border-transparent text-slate-400"
+                            }`}
+                          >
+                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.atendePresencial ? "border-green-600 bg-green-600" : "border-slate-300 bg-white"}`}>
+                                {formData.atendePresencial && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                             </div>
+                             <span className="font-bold uppercase text-xs">Atendimento Presencial</span>
+                          </button>
+                      </div>
                   </div>
                   
                   <div>

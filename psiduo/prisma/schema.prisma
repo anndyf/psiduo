@@ -81,6 +81,8 @@ model Psicologo {
   status            String      @default("PENDENTE")
   cidade            String?
   estado            String?
+  atendeOnline      Boolean     @default(true)
+  atendePresencial  Boolean     @default(false)
   slug              String?     @unique
   diretividade      String?
   estilo            String?

@@ -2,13 +2,13 @@ import Link from "next/link";
 
 export const MatchChoice = () => {
   return (
-    <section id="match" className="py-24 bg-mist relative z-10 scroll-mt-24">
+    <section id="match" className="py-24 bg-deep relative z-10 scroll-mt-24">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-4xl font-bold text-deep mb-4">
+          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
             Qual é o seu momento?
           </h2>
-          <p className="text-slate-500 max-w-xl mx-auto text-lg">
+          <p className="text-blue-100 max-w-xl mx-auto text-lg">
             Conectamos você ao suporte especializado tanto para jornadas individuais quanto para relacionamentos.
           </p>
         </div>

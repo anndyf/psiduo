@@ -21,7 +21,7 @@ export default function SouPsicologo() {
               A vitrine clínica que <br/> <span className="text-primary">valoriza</span> sua jornada.
             </h1>
             <p className="text-slate-400 text-lg lg:text-xl font-medium leading-relaxed opacity-90">
-              O PsiDuo é o espaço onde tecnologia e ética se encontram para conectar você a pacientes qualificados. Sem taxas por sessão, sem intermediários.
+              O PsiDuo é o espaço onde tecnologia e ética se encontram para conectar você a pacientes. Sem taxas por sessão, sem intermediários.
             </p>
             <div className="pt-4">
                <Link href="#planos" className="bg-primary hover:bg-blue-600 text-white px-10 py-5 rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-2xl transition inline-block">
@@ -90,7 +90,7 @@ export default function SouPsicologo() {
                   Por que ser <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-300">Duo II</span>?
                </h2>
                <p className="text-slate-400 mt-6 max-w-2xl mx-auto text-lg font-medium leading-relaxed">
-                  Desbloqueie ferramentas que vão além da divulgação. O Duo II é um sistema completo de gestão e fidelização clínica.
+                  Desbloqueie ferramentas que vão além da divulgação. No plano Duo II você tem acesso a um sistema de acompanhamento e fidelização clínica.
                </p>
             </div>
 
@@ -102,7 +102,7 @@ export default function SouPsicologo() {
                     <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
                   </div>
                   <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-3 relative z-10">Diário do Paciente</h3>
-                  <p className="text-slate-400 font-medium leading-relaxed max-w-sm relative z-10">Acompanhe o humor, sono e anotações dos seus pacientes entre sessões. Receba insights valiosos.</p>
+                  <p className="text-slate-400 font-medium leading-relaxed max-w-sm relative z-10">Acompanhe o humor, sono e anotações dos seus pacientes entre sessões. Tenha dados para um manejo clínico mais assertivo.</p>
                </div>
 
                {/* Feature 2: Vídeo (Standard) */}
@@ -111,7 +111,7 @@ export default function SouPsicologo() {
                      <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                   </div>
                   <h3 className="text-xl font-black text-white uppercase tracking-tight mb-3">Vídeo Apresentação</h3>
-                  <p className="text-sm text-slate-400 font-medium leading-relaxed">Gere 3x mais conexão antes mesmo do primeiro contato.</p>
+                  <p className="text-sm text-slate-400 font-medium leading-relaxed">Gere mais conexão antes mesmo do primeiro contato.</p>
                </div>
 
                {/* Feature 3: Agenda (Standard) */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { alternarStatusPaciente, renomearPaciente, excluirPaciente } from "../actions";
 import { Copy, PauseCircle, PlayCircle, BarChart2, Pencil, MessageCircle, X, Check, Frown, Meh, Smile, AlertTriangle, Trash2 } from "lucide-react";
@@ -18,6 +18,12 @@ interface Paciente {
 export default function PatientList({ initialPacientes }: { initialPacientes: Paciente[] }) {
     const router = useRouter();
     const [pacientes, setPacientes] = useState(initialPacientes);
+
+    // Sincroniza estado local quando o filtro muda no componente pai
+    useEffect(() => {
+        setPacientes(initialPacientes);
+    }, [initialPacientes]);
+
     const [editingId, setEditingId] = useState<string | null>(null);
     const [newName, setNewName] = useState("");
 

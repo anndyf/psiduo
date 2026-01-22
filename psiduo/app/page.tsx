@@ -5,7 +5,7 @@ import { Hero } from "@/components/home/Hero";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { MatchChoice } from "@/components/home/MatchChoice";
 import { ProfessionalsCarousel } from "@/components/home/ProfessionalsCarousel";
-import { Plans } from "@/components/home/Plans";
+import { PsychologistCTA } from "@/components/home/PsychologistCTA";
 
 export const metadata = {
   title: "PsiDuo | Conexão Terapêutica",
@@ -22,7 +22,7 @@ export default async function Home() {
       <HowItWorks />
       <MatchChoice />
       <ProfessionalsCarousel professionals={professionals} />
-      <Plans />
+      <PsychologistCTA />
       <Footer /> 
     </main>
   );

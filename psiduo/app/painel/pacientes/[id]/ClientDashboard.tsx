@@ -393,7 +393,7 @@ export default function ClientDashboard({ paciente, registrosIniciais, registros
 
                         <div>
                             <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-3 border-b border-slate-100 pb-2">Impactos e Correlações</h4>
-                            <p className="text-xs text-slate-600 leading-relaxed">
+                            <div className="text-xs text-slate-600 leading-relaxed">
                                 A análise cruza dias específicos com a média do período.
                                 <br/><br/>
                                 <div className="flex items-center gap-2 mb-1">
@@ -404,7 +404,7 @@ export default function ClientDashboard({ paciente, registrosIniciais, registros
                                     <TrendingUp size={14} className="text-green-500" />
                                     <span><strong className="text-green-500">Aumento na Média:</strong> Correlação com elevação dos índices.</span>
                                 </div>
-                            </p>
+                            </div>
                         </div>
 
                         <div>
