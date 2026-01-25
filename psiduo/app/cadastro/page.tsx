@@ -8,56 +8,7 @@ import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { cadastrarPsicologo, verificarCRP, validarStatusCRP } from "../catalogo/actions";
 
-// Lista com nomes amigáveis
-const ABORDAGENS = [
-  "Psicanálise Freudiana (Sigmund Freud)",
-  "Psicologia Analítica / Jungiana (Carl Gustav Jung)",
-  "Psicanálise Lacaniana (Jacques Lacan)",
-  "Psicanálise Winnicottiana (Donald Winnicott)",
-  "Análise do Comportamento",
-  "TCC – Terapia Cognitivo-Comportamental",
-  "Terapia Racional-Emotiva Comportamental (REBT)",
-  "Terapia Cognitiva Construtivista",
-  "ACT – Terapia de Aceitação e Compromisso",
-  "DBT – Terapia Dialética Comportamental",
-  "FAP – Psicoterapia Analítico-Funcional",
-  "Terapia de Esquemas",
-  "Psicologia Baseada em Evidências - PBE",
-  "Psicoterapia Breve",
-  "Terapia Comportamental Integrativa de Casais - IBCT",
-  "Gestalt-Terapia",
-  "Abordagem Centrada na Pessoa (ACP)",
-  "Terapia Focada na Emoção (EFT)",
-  "Psicoterapia Humanista-Existencial",
-  "Fenomenológica/Existencial",
-  "Logoterapia",
-  "Daseinsanalyse",
-  "Esquizoanálise",
-  "Terapia Sistêmica",
-  "Terapia Familiar Estrutural",
-  "Terapia Familiar Estratégica",
-  "Terapia Familiar de Bowen",
-  "Terapia Narrativa",
-  "Terapia Sistêmica Pós-Moderna",
-  "Terapia de Casal Sistêmica",
-  "Psicoterapia Construtivista",
-  "Construcionismo Social",
-  "Análise Bioenergética",
-  "Psicoterapia Corporal",
-  "Terapia Corporal Reichiana",
-  "Psicologia Somática",
-  "Psicodrama",
-  "Psicodinâmica",
-  "Neuropsicologia Clínica",
-  "Reabilitação Neuropsicológica",
-  "Psicoterapia Baseada em Neurociência",
-  "Programação Neurolinguística - PNL",
-  "Teoria do Apego (clínica)",
-  "Psicologia Positiva Clínica",
-  "Psicoterapia Baseada em Evidências",
-  "Orientação Profissional e Vocacional"
-];
-
+import { ABORDAGENS } from "../../lib/constants";
 export default function Cadastro() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);

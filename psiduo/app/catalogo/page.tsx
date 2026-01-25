@@ -6,6 +6,7 @@ import Link from "next/link";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { getPsicologos, registrarCliqueWhatsapp } from "./actions";
+import { ABORDAGENS } from "../../lib/constants";
 
 // --- DADOS DOS FILTROS ---
 const FILTERS_DATA = [
@@ -224,11 +225,9 @@ export default function Catalogo() {
                     suppressHydrationWarning={true}
                 >
                     <option value="Todas">Todas as abordagens</option>
-                    <option value="Psicanálise">Psicanálise</option>
-                    <option value="TCC">TCC</option>
-                    <option value="Humanista">Humanista</option>
-                    <option value="Gestalt">Gestalt</option>
-                    <option value="Comportamental">Comportamental</option>
+                    {ABORDAGENS.map((item) => (
+                      <option key={item} value={item}>{item}</option>
+                    ))}
                 </select>
                 </div>
                 <div>
@@ -438,7 +437,7 @@ export default function Catalogo() {
                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Sessão</p>
                                     <div className="flex items-baseline gap-1 whitespace-nowrap">
                                         <span className="text-xl font-black text-green-500 tracking-tight leading-none">R$ {pro.preco}</span>
-                                        <span className="text-[10px] text-slate-400 font-bold uppercase opacity-60">/ {pro.duracaoSessao || 50}m</span>
+                                        <span className="text-[10px] text-slate-400 font-bold uppercase opacity-60">/ {pro.duracaoSessao || 50} Min</span>
                                     </div>
                                 </div>
                                 

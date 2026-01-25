@@ -160,7 +160,7 @@ export default function ComoFunciona() {
           <div className="flex-1 order-1 lg:order-2 space-y-8">
             <span className="text-primary font-black text-[11px] uppercase tracking-[0.4em]">Para Profissionais</span>
             <h2 className="text-4xl lg:text-5xl font-black text-slate-900 uppercase tracking-tighter leading-tight">
-              Sua Vitrine de <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">Alta Conversão</span>
+              Sua Presença Digital <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">Profissional</span>
             </h2>
             <p className="text-slate-500 font-medium text-lg leading-relaxed">
               O PsiDuo foi feito para psicólogos que buscam uma alternativa profissional às redes sociais. Aqui, você não apenas aparece; você se conecta com pacientes que realmente buscam o seu serviço.

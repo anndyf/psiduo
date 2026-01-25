@@ -126,6 +126,7 @@ model Paciente {
   
   psicologo       Psicologo        @relation(fields: [psicologoId], references: [id], onDelete: Cascade)
   registros       RegistroDiario[]
+  metas           Meta[]
 }
 
 model RegistroDiario {
@@ -142,6 +143,49 @@ model RegistroDiario {
 }
 
 
+
+
+model Meta {
+  id          String         @id @default(cuid())
+  pacienteId  String
+  titulo      String
+  descricao   String?
+  frequencia  FrequenciaMeta @default(DIARIO)
+  
+  // Controle de Recorrência
+  diasSemana  Int[]          // 0=Dom, 1=Seg... (Para SEMANAL)
+  diaMes      Int?           // 1-31 (Para MENSAL)
+  
+  // Periodo de Vigência
+  dataInicio  DateTime       @default(now())
+  dataFim     DateTime?
+
+  ativa       Boolean        @default(true)
+  criadoEm    DateTime       @default(now())
+  atualizadoEm DateTime      @updatedAt
+  
+  paciente    Paciente       @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  registros   MetaRegistro[]
+}
+
+model MetaRegistro {
+  id        String   @id @default(cuid())
+  metaId    String
+  data      DateTime 
+  feito     Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+  
+  meta      Meta     @relation(fields: [metaId], references: [id], onDelete: Cascade)
+
+  @@unique([metaId, data]) 
+}
+
+enum FrequenciaMeta {
+  DIARIO
+  SEMANAL
+  MENSAL
+  UNICO
+}
 
 enum Plano {
   DUO_I

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import AuthProvider from "@/components/AuthProvider";
+import { Toaster } from 'sonner';
 import "./globals.css";
 
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "700"] });
@@ -25,6 +26,7 @@ export default function RootLayout({
     <html lang="pt-br">
       <body className={`${dmSans.className} bg-mist text-deep antialiased`} suppressHydrationWarning>
         <AuthProvider>
+          <Toaster position="top-center" richColors />
           {children}
         </AuthProvider>
       </body>

@@ -232,7 +232,7 @@ export default function PatientList({ initialPacientes }: { initialPacientes: Pa
                                     ${isPaused ? 'bg-slate-300 cursor-not-allowed' : 'bg-slate-900 hover:bg-black'}`}
                             >
                                 <BarChart2 size={16} />
-                                Ver Gráficos
+                                Acessar Painel
                                 {/* Tooltip não necessário aqui pois já tem texto, mas mantendo padrão se quiser */}
                             </button>
                             <button 
@@ -285,7 +285,7 @@ export default function PatientList({ initialPacientes }: { initialPacientes: Pa
 
                 <div className="flex items-center gap-2">
                     <BarChart2 size={14} className="text-slate-400" />
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Gráficos</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Painel</span>
                 </div>
                 
                 <div className="flex items-center gap-2">

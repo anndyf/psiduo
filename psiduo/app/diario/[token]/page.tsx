@@ -1,4 +1,5 @@
 import { validarToken, buscarHistorico } from "../actions";
+import { buscarMetasPeloToken } from "@/app/metas/actions";
 import ClientDiary from "./ClientDiary";
 
 // O token vem da URL dinâmica
@@ -19,9 +20,12 @@ export default async function Page({ params }: { params: Promise<{ token: string
         );
     }
 
-    // Buscar histórico do mês atual para o calendário
+    // Buscar histórico do mês atual e METAS
     const hoje = new Date();
-    const historico = await buscarHistorico(token, hoje.getFullYear(), hoje.getMonth());
+    const [historico, metasRes] = await Promise.all([
+        buscarHistorico(token, hoje.getFullYear(), hoje.getMonth()),
+        buscarMetasPeloToken(token)
+    ]);
 
     // START: Verificação de Pausa
     if (!res.paciente.ativo) {
@@ -50,5 +54,6 @@ export default async function Page({ params }: { params: Promise<{ token: string
         token={token} 
         historicoInicial={historico} 
         dataInicio={res.paciente.dataInicio}
+        metas={metasRes.metas ?? []}
     />;
 }
