@@ -92,6 +92,12 @@ model Psicologo {
   avaliacoes        Avaliacao[]
   user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   pacientes         Paciente[]
+
+  @@index([abordagem])
+  @@index([preco])
+  @@index([plano])
+  @@index([status])
+  @@index([verificado])
 }
 
 model Avaliacao {
@@ -102,6 +108,8 @@ model Avaliacao {
   psicologoId String
   localizacao String?
   psicologo   Psicologo @relation(fields: [psicologoId], references: [id])
+
+  @@index([psicologoId])
 }
 
 model AuditLog {
@@ -118,15 +126,27 @@ model AuditLog {
 model Paciente {
   id              String           @id @default(cuid())
   nome            String
+  cpf             String?          @unique
   tokenAcesso     String           @unique
   psicologoId     String
   ativo           Boolean          @default(true)
   criadoEm        DateTime         @default(now())
   dataInicio      DateTime         @default(now())
-  
   psicologo       Psicologo        @relation(fields: [psicologoId], references: [id], onDelete: Cascade)
   registros       RegistroDiario[]
   metas           Meta[]
+  notasClinicas   NotaClinica[]
+}
+
+model NotaClinica {
+  id          String   @id @default(cuid())
+  pacienteId  String
+  conteudo    String   @db.Text
+  criadoEm    DateTime @default(now())
+  
+  paciente    Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+
+  @@index([pacienteId])
 }
 
 model RegistroDiario {
@@ -140,6 +160,8 @@ model RegistroDiario {
   criadoEm    DateTime @default(now())
   
   paciente    Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+
+  @@index([pacienteId, data])
 }
 
 

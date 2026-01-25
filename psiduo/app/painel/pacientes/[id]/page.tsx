@@ -1,4 +1,4 @@
-import { buscarDadosDashboard } from "../actions";
+import { buscarDadosDashboard, buscarNotasClinicas } from "../actions";
 import { buscarMetasPaciente } from "@/app/metas/actions";
 import ClientDashboard from "./ClientDashboard";
 
@@ -6,9 +6,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const [dashboardRes, metasRes] = await Promise.all([
+    const [dashboardRes, metasRes, notasRes] = await Promise.all([
         buscarDadosDashboard(id),
-        buscarMetasPaciente(id)
+        buscarMetasPaciente(id),
+        buscarNotasClinicas(id)
     ]);
 
     if (!dashboardRes.success) {
@@ -28,5 +29,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ id: 
         registrosIniciais={dashboardRes.registros ?? []}
         registrosCompletos={dashboardRes.registrosCompletos ?? []}
         metas={metasRes.metas ?? []}
+        notasIniciais={notasRes.notas ?? []}
     />;
 }

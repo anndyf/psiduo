@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+import LogoPsiDuo from "@/components/LogoPsiDuo";
 
 export default function Login() {
   const router = useRouter();
@@ -43,8 +44,12 @@ export default function Login() {
       <Navbar />
 
       <div className="flex-1 flex items-center justify-center p-4 py-12">
-        <div className="bg-white w-full max-w-md rounded-3xl shadow-xl overflow-hidden border border-slate-100">
+        <div className="bg-white w-full max-w-md rounded-3xl shadow-xl overflow-hidden border border-slate-100 flex flex-col">
           
+          <div className="pt-8 pb-4">
+             <LogoPsiDuo />
+          </div>
+
           <div className="bg-deep p-8 text-center text-white">
             <h1 className="text-2xl font-bold">Bem-vindo(a)</h1>
             <p className="text-blue-200 text-sm mt-1">Acesse sua área profissional</p>
@@ -111,6 +116,9 @@ export default function Login() {
             Acessando sua conta
           </p>
           <p className="mt-2 text-blue-200/60 font-bold text-[10px] uppercase tracking-widest italic font-serif">Preparando seu painel...</p>
+          <div className="absolute bottom-10 opacity-50">
+             <span className="font-black text-white text-2xl tracking-tighter">PsiDuo</span>
+          </div>
         </div>
       )}
       <Footer />

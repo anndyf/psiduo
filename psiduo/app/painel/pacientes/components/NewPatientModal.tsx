@@ -7,14 +7,30 @@ export default function NewPatientModal({ onClose }: { onClose: () => void }) {
   const [nome, setNome] = useState("");
   // Inicializar com a data de hoje formatada YYYY-MM-DD
   const [dataInicio, setDataInicio] = useState(new Date().toISOString().split('T')[0]);
+  const [cpf, setCpf] = useState("");
   const [loading, setLoading] = useState(false);
   const [novoLink, setNovoLink] = useState("");
 
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 11) value = value.slice(0, 11);
+    
+    value = value.replace(/(\d{3})(\d)/, "$1.$2");
+    value = value.replace(/(\d{3})(\d)/, "$1.$2");
+    value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    
+    setCpf(value);
+  };
+
   const handleCreate = async () => {
     if (!nome.trim()) return;
+    if (cpf.length < 14) {
+        alert("Digite um CPF válido completo.");
+        return;
+    }
     setLoading(true);
 
-    const res = await cadastrarPaciente(nome, dataInicio);
+    const res = await cadastrarPaciente(nome, dataInicio, cpf);
     if (res.success && res.data) {
        // Gerar link absoluto (assumindo que window.location.origin está disponível no client)
        const link = `${window.location.origin}/diario/${res.data.tokenAcesso}`;
@@ -64,11 +80,23 @@ export default function NewPatientModal({ onClose }: { onClose: () => void }) {
                     <p className="text-[10px] text-slate-400 font-bold mt-1">O paciente não poderá registrar antes desta data.</p>
                 </div>
 
+                <div>
+                    <label className="block text-xs font-black uppercase text-slate-400 mb-2">CPF do Paciente</label>
+                    <input 
+                        className="w-full bg-slate-50 border-b-2 border-slate-200 p-4 font-bold text-slate-900 outline-none focus:border-deep transition-all"
+                        placeholder="000.000.000-00"
+                        value={cpf}
+                        onChange={handleCpfChange}
+                        maxLength={14}
+                    />
+                    <p className="text-[10px] text-slate-400 font-bold mt-1">Será usado para o acesso seguro do paciente.</p>
+                </div>
+
                 <div className="flex gap-4 pt-2">
                     <button onClick={onClose} className="flex-1 py-4 text-xs font-black uppercase text-slate-400 hover:bg-slate-50 rounded-xl">Cancelar</button>
                     <button 
                         onClick={handleCreate} 
-                        disabled={loading || !nome}
+                        disabled={loading || !nome || cpf.length < 14}
                         className="flex-1 py-4 bg-deep text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-900 disabled:opacity-50 shadow-lg"
                     >
                         {loading ? "Criando..." : "Gerar Link"}

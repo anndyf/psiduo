@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { alternarStatusPaciente, renomearPaciente, excluirPaciente } from "../actions";
+import { alternarStatusPaciente, excluirPaciente } from "../actions";
 import { Copy, PauseCircle, PlayCircle, BarChart2, Pencil, MessageCircle, X, Check, Frown, Meh, Smile, AlertTriangle, Trash2 } from "lucide-react";
+import EditPatientModal from "./EditPatientModal";
 
 interface Paciente {
     id: string;
     nome: string;
+    cpf?: string | null;
+    dataInicio: Date;
     tokenAcesso: string;
     registros: { data: Date, humor: number }[];
     _count: { registros: number };
@@ -24,8 +27,7 @@ export default function PatientList({ initialPacientes }: { initialPacientes: Pa
         setPacientes(initialPacientes);
     }, [initialPacientes]);
 
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [newName, setNewName] = useState("");
+    const [editingPatient, setEditingPatient] = useState<Paciente | null>(null);
 
     const toggleStatus = async (paciente: Paciente) => {
         const novoStatus = !paciente.ativo;
@@ -64,38 +66,30 @@ export default function PatientList({ initialPacientes }: { initialPacientes: Pa
         alert("Link copiado! Envie para o paciente.");
     };
 
-    const shareWhatsapp = (nome: string, token: string) => {
-        const link = `${window.location.origin}/diario/${token}`;
-        const msg = `Olá ${nome.split(' ')[0]}! Aqui está o seu link para o Diário Emocional do PsiDuo: ${link}`;
+    const shareWhatsapp = (nome: string, token: string, cpf?: string | null) => {
+        const directLink = `${window.location.origin}/diario/${token}`;
+        const loginLink = `${window.location.origin}/diario`;
+        const primeiroNome = nome.split(' ')[0];
+
+
+        let msg = `Olá ${primeiroNome}! Aqui está seu acesso ao *Diário Emocional do PsiDuo*.\n\n`;
+        
+        msg += `*O que é?*\n`;
+        msg += `Um espaço seguro para você registrar diariamente suas emoções, sono e anotações importantes para nossa terapia. Leva menos de 1 minuto!\n\n`;
+
+        msg += `*Link Direto (entra automático):*\n${directLink}\n\n`;
+        
+        if (cpf) {
+            msg += `*Acesso Alternativo:*\n`;
+            msg += `Acesse ${loginLink} e use seu CPF: *${cpf}*\n\n`;
+        } else {
+            msg += `Dica: Salve este link nos seus favoritos.\n\n`;
+        }
+
+        msg += `Estou te esperando lá!`;
+
         const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
         window.open(url, '_blank');
-    };
-
-    const startEditing = (paciente: Paciente) => {
-        setEditingId(paciente.id);
-        setNewName(paciente.nome);
-    };
-
-    const cancelEditing = () => {
-        setEditingId(null);
-        setNewName("");
-    };
-
-    const saveName = async (id: string) => {
-        if (!newName.trim()) return;
-        
-        try {
-            const res = await renomearPaciente(id, newName);
-            if (res.success) {
-                setPacientes(prev => prev.map(p => p.id === id ? { ...p, nome: newName } : p));
-                setEditingId(null);
-            } else {
-                alert("Erro ao renomear.");
-            }
-        } catch (error) {
-            console.error(error);
-            alert("Erro ao salvar.");
-        }
     };
 
     if (pacientes.length === 0) {
@@ -109,11 +103,22 @@ export default function PatientList({ initialPacientes }: { initialPacientes: Pa
 
     return (
         <div>
+            {editingPatient && (
+                <EditPatientModal 
+                    paciente={editingPatient} 
+                    onClose={() => setEditingPatient(null)} 
+                    onSuccess={() => {
+                        setEditingPatient(null);
+                        router.refresh();
+                        // O refresh vai atualizar initialPacientes, que vai atualizar o state via useEffect
+                    }} 
+                />
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                 {pacientes.map(paciente => {
                     const ultimoRegistro = paciente.registros[0];
                     const totalRegistros = paciente._count.registros;
-                    const isEditing = editingId === paciente.id;
                     const isPaused = !paciente.ativo;
 
                     // Definir classes do card com base no estado
@@ -134,45 +139,27 @@ export default function PatientList({ initialPacientes }: { initialPacientes: Pa
                                 </div>
                             )}
 
-                            {/* Header com Edição de Nome */}
+                            {/* Header com Edição */}
                         <div className="flex justify-between items-start mb-6">
                             <div className="flex-1 mr-2">
-                                {isEditing ? (
-                                    <div className="flex items-center gap-2">
-                                        <input 
-                                            type="text" 
-                                            value={newName}
-                                            onChange={(e) => setNewName(e.target.value)}
-                                            className="w-full text-lg font-black text-slate-900 uppercase tracking-wide border-b-2 border-slate-900 focus:outline-none bg-transparent"
-                                            autoFocus
-                                        />
-                                        <button onClick={() => saveName(paciente.id)} className="p-1 hover:bg-green-50 text-green-600 rounded-full">
-                                            <Check size={18} />
-                                        </button>
-                                        <button onClick={cancelEditing} className="p-1 hover:bg-red-50 text-red-500 rounded-full">
-                                            <X size={18} />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="group/name flex items-center gap-2">
-                                        <h3 className="text-lg font-black text-slate-900 uppercase tracking-wide truncate">{paciente.nome}</h3>
-                                        
-                                        {/* Botão Renomear com Tooltip */}
-                                        <button 
-                                            onClick={() => startEditing(paciente)}
-                                            className="opacity-0 group-hover/name:opacity-100 transition-opacity text-slate-300 hover:text-slate-500 group/tooltip relative"
-                                        >
-                                            <Pencil size={14} />
-                                            <span className="hidden group-hover/tooltip:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-20">
-                                                Renomear
-                                            </span>
-                                        </button>
-                                    </div>
-                                )}
+                                <div className="group/name flex items-center gap-2">
+                                    <h3 className="text-lg font-black text-slate-900 uppercase tracking-wide truncate">{paciente.nome}</h3>
+                                    
+                                    {/* Botão Editar com Tooltip */}
+                                    <button 
+                                        onClick={() => setEditingPatient(paciente)}
+                                        className="opacity-0 group-hover/name:opacity-100 transition-opacity text-slate-300 hover:text-slate-500 group/tooltip relative"
+                                    >
+                                        <Pencil size={14} />
+                                        <span className="hidden group-hover/tooltip:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-20">
+                                            Editar Dados
+                                        </span>
+                                    </button>
+                                </div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
                                     {totalRegistros} {totalRegistros === 1 ? 'Registro' : 'Registros'}
                                     <span className="mx-1 text-slate-300">|</span>
-                                    Gerado em: {new Date(paciente.criadoEm).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                                    Início: {new Date(paciente.dataInicio).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
                                 </p>
                             </div>
 
@@ -190,7 +177,7 @@ export default function PatientList({ initialPacientes }: { initialPacientes: Pa
 
                                 {/* Whatsapp com Tooltip */}
                                 <button 
-                                    onClick={() => shareWhatsapp(paciente.nome, paciente.tokenAcesso)}
+                                    onClick={() => shareWhatsapp(paciente.nome, paciente.tokenAcesso, paciente.cpf)}
                                     className="text-slate-300 hover:text-green-500 transition-colors p-2 rounded-full hover:bg-green-50 group/tooltip relative"
                                 >
                                     <MessageCircle size={18} />

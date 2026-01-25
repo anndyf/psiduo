@@ -27,6 +27,27 @@ export async function validarToken(token: string) {
     }
 }
 
+
+// --- AUTENTICAR VIA CPF ---
+export async function autenticarPaciente(cpf: string) {
+    if (!cpf) return { success: false, error: "CPF obrigatório" };
+    
+    try {
+        const cpfLimpo = cpf.replace(/\D/g, "");
+        const paciente = await prisma.paciente.findFirst({
+            where: { cpf: cpfLimpo },
+            select: { tokenAcesso: true }
+        });
+
+        if (!paciente) return { success: false, error: "CPF não encontrado." };
+        
+        return { success: true, token: paciente.tokenAcesso };
+    } catch (e) {
+        console.error("Erro ao autenticar:", e);
+        return { success: false, error: "Erro ao buscar paciente." };
+    }
+}
+
 // --- SALVAR REGISTRO (UPSERT MANUAL) ---
 export async function salvarRegistro(token: string, dataISO: string, dados: {
     humor: number,

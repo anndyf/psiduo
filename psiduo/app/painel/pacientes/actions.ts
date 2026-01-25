@@ -16,7 +16,7 @@ function generateToken(length = 12) {
 }
 
 // --- CRIAR PACIENTE (DUO II EXCLUSIVE) ---
-export async function cadastrarPaciente(nome: string, dataInicioISO?: string) {
+export async function cadastrarPaciente(nome: string, dataInicioISO?: string, cpf?: string) {
   const session = await getServerSession(authOptions);
   
   // @ts-ignore
@@ -47,13 +47,16 @@ export async function cadastrarPaciente(nome: string, dataInicioISO?: string) {
     }
 
     // Processar Data Início
-    // Se vier string, converte. Se não, usa now().
-    // Ajuste: Definir hora para meio-dia (12:00) para evitar problemas de fuso (UTC-3 vs UTC)
-    // Se criar como "YYYY-MM-DD", vira UTC 00h -> Local anterior 21h.
-    // Usando "YYYY-MM-DDT12:00:00", vira Local 12h -> UTC 15h. Mantém o dia correto.
     let dataInicio = new Date();
     if (dataInicioISO) {
         dataInicio = new Date(dataInicioISO + "T12:00:00");
+    }
+
+    // CPF Limpo (apenas números)
+    const cpfLimpo = cpf?.replace(/\D/g, "") || null;
+    if (cpfLimpo) {
+        const cpfExiste = await prisma.paciente.findFirst({ where: { cpf: cpfLimpo } });
+        if (cpfExiste) return { success: false, error: "Este CPF já está cadastrado para outro paciente." };
     }
 
     const novoPaciente = await prisma.paciente.create({
@@ -61,7 +64,8 @@ export async function cadastrarPaciente(nome: string, dataInicioISO?: string) {
         nome,
         psicologoId,
         tokenAcesso: token,
-        dataInicio
+        dataInicio,
+        cpf: cpfLimpo
       }
     });
 
@@ -74,21 +78,46 @@ export async function cadastrarPaciente(nome: string, dataInicioISO?: string) {
   }
 }
 
-// --- RENOMEAR PACIENTE ---
-export async function renomearPaciente(id: string, novoNome: string) {
+// --- EDITAR PACIENTE (NOME, CPF, DATA) ---
+export async function editarPaciente(
+    id: string, 
+    dados: { nome: string, cpf?: string, dataInicio?: string }
+) {
     const session = await getServerSession(authOptions);
     // @ts-ignore
     if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
 
     try {
+        const updateData: any = { nome: dados.nome };
+
+        // Processar CPF
+        if (dados.cpf !== undefined) {
+             const cpfLimpo = dados.cpf.replace(/\D/g, "");
+             // Verificar duplicidade se CPF mudou
+             if (cpfLimpo) {
+                 const donoCpf = await prisma.paciente.findFirst({
+                     where: { cpf: cpfLimpo, NOT: { id } }
+                 });
+                 if (donoCpf) return { success: false, error: "CPF já pertence a outro paciente." };
+             }
+             updateData.cpf = cpfLimpo || null;
+        }
+
+        // Processar Data Início
+        if (dados.dataInicio) {
+            updateData.dataInicio = new Date(dados.dataInicio + "T12:00:00");
+        }
+
         await prisma.paciente.update({
             where: { id },
-            data: { nome: novoNome }
+            data: updateData
         });
+
         revalidatePath("/painel/pacientes");
         return { success: true };
-    } catch (e) {
-        return { success: false, error: "Erro ao renomear." };
+    } catch (e: any) {
+        console.error("Erro ao editar:", e);
+        return { success: false, error: "Erro ao editar paciente." };
     }
 }
 
@@ -203,15 +232,16 @@ export async function buscarDadosDashboard(pacienteId: string) {
         });
 
         return { success: true, paciente, registros, registrosCompletos };
-
     } catch (error) {
         console.error("Erro dashboard:", error);
         return { success: false, error: "Erro interno." };
     }
 }
 
-// --- FILTRAR REGISTROS (NOVA ACTION) ---
+// ... (filtrarRegistros permanece igual)
+
 export async function filtrarRegistros(pacienteId: string, periodo: '7d' | '30d' | '1y' | 'all') {
+    // ... (same as before) ...
     const session = await getServerSession(authOptions);
     // @ts-ignore
     if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
@@ -236,8 +266,7 @@ export async function filtrarRegistros(pacienteId: string, periodo: '7d' | '30d'
             start.setHours(0,0,0,0);
             whereClause.data = { gte: start };
         }
-        // 'all' não adiciona filtro de data, pega tudo
-
+        
         const registros = await prisma.registroDiario.findMany({
             where: whereClause,
             orderBy: { data: 'asc' }
@@ -248,5 +277,63 @@ export async function filtrarRegistros(pacienteId: string, periodo: '7d' | '30d'
     } catch (e) {
         console.error("Erro ao filtrar:", e);
         return { success: false, error: "Erro ao filtrar registros." };
+    }
+}
+
+// --- NOTAS CLÍNICAS (NOVA ESTRUTURA) ---
+
+export async function criarNotaClinica(pacienteId: string, conteudo: string) {
+    const session = await getServerSession(authOptions);
+    // @ts-ignore
+    if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
+
+    try {
+        const nota = await prisma.notaClinica.create({
+            data: {
+                pacienteId,
+                conteudo
+            }
+        });
+        
+        revalidatePath(`/painel/pacientes/${pacienteId}`);
+        return { success: true, nota };
+    } catch (e: any) {
+        console.error("Erro ao criar nota:", e);
+        return { success: false, error: e.message || "Erro ao criar nota." };
+    }
+}
+
+export async function excluirNotaClinica(notaId: string, pacienteId: string) {
+    const session = await getServerSession(authOptions);
+    // @ts-ignore
+    if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
+
+    try {
+        await prisma.notaClinica.delete({
+            where: { id: notaId }
+        });
+        
+        revalidatePath(`/painel/pacientes/${pacienteId}`);
+        return { success: true };
+    } catch (e) {
+        console.error("Erro ao excluir nota:", e);
+        return { success: false, error: "Erro ao excluir nota." };
+    }
+}
+
+export async function buscarNotasClinicas(pacienteId: string) {
+    const session = await getServerSession(authOptions);
+    // @ts-ignore
+    if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
+    
+    try {
+        const notas = await prisma.notaClinica.findMany({
+            where: { pacienteId },
+            orderBy: { criadoEm: 'desc' }
+        });
+        return { success: true, notas };
+    } catch (e) {
+        console.error("Erro ao buscar notas:", e);
+        return { success: false, error: "Erro ao buscar notas." };
     }
 }
