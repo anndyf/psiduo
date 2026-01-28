@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { Button } from "@/components/ui/Button";
 
 export default function Navbar() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function Navbar() {
       <div className="container mx-auto px-6 flex justify-between items-center">
         
         {/* LOGO */}
-        <Link href="/" className="text-2xl font-bold tracking-tight hover:opacity-90 transition">
+        <Link href="/" className="text-2xl font-bold tracking-tight hover:opacity-90 transition font-logo">
           Psi<span className="text-blue-400">Duo</span>
         </Link>
 
@@ -46,32 +47,31 @@ export default function Navbar() {
           <div className="flex items-center gap-4 pl-8 border-l border-white/10">
             {isLogged ? (
               <div className="flex items-center gap-3">
-                <Link 
-                  href="/painel" 
-                  className="bg-white text-deep px-5 py-2 rounded-full font-black transition text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-100 active:scale-95"
-                >
-                  Meu Painel
+                <Link href="/painel">
+                  <Button variant="white" size="sm" className="rounded-full shadow-lg">
+                    Meu Painel
+                  </Button>
                 </Link>
-                <button 
+                <Button 
+                  variant="dark-outline" 
+                  size="sm"
                   onClick={handleLogout}
-                  className="text-white/60 hover:text-white transition text-[10px] font-black uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 active:scale-95"
+                  className="rounded-full"
                 >
                   Sair
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <Link 
-                  href="/login" 
-                  className="text-white/60 hover:text-white transition text-[10px] font-black uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 active:scale-95"
-                >
-                  Login
+                <Link href="/login">
+                  <Button variant="dark-outline" size="sm" className="rounded-full">
+                    Login
+                  </Button>
                 </Link>
-                <Link 
-                  href="/cadastro" 
-                  className="bg-white text-deep px-5 py-2 rounded-full font-black transition text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-100 active:scale-95"
-                >
-                  Cadastre-se
+                <Link href="/cadastro">
+                  <Button variant="white" size="sm" className="rounded-full shadow-lg">
+                    Cadastre-se
+                  </Button>
                 </Link>
               </div>
             )}

@@ -18,7 +18,7 @@ export default function Footer() {
             
             {/* Coluna 1: Marca e Sobre */}
             <div>
-              <h3 className="text-2xl font-bold text-white mb-4">Psi<span className="text-primary">Duo</span></h3>
+              <h3 className="text-2xl font-bold text-white mb-4 font-logo">Psi<span className="text-primary">Duo</span></h3>
               <p className="mb-6 leading-relaxed text-slate-400 text-xs">
                 Plataforma de conexão entre psicólogos e pacientes. Facilitamos o acesso à saúde mental com tecnologia, segurança e ética.
               </p>

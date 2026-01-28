@@ -10,7 +10,7 @@ import { hashPassword } from "@/lib/password";
  * Usa requireAuth para garantir autenticação
  */
 export async function buscarDadosPainel() {
-  const user = await requireAuth();
+  const user = (await requireAuth()) as { id: string; email: string; name?: string };
   
   try {
     const psicologo = await prisma.psicologo.findUnique({
@@ -63,7 +63,7 @@ export async function atualizarCredenciais(dados: {
   senhaAtual?: string;
   senhaNova?: string;
 }) {
-  const user = await requireAuth();
+  const user = (await requireAuth()) as { id: string; email: string; name?: string };
 
   try {
     const updateData: any = {};

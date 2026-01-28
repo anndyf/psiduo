@@ -1,41 +1,35 @@
-# Implementação do Supabase Storage
+# Guia: Configurando Upload de Imagens (Supabase Storage)
 
-Para parar de salvar imagens pesadas no banco de dados e usar o armazenamento correto (Storage), siga estes passos.
+Para parar de salvar imagens pesadas no banco e deixá-las rápidas e baratas:
 
-## 1. Criar o Bucket no Supabase
-1. Acesse o painel do seu projeto no Supabase.
-2. Clique em **Storage** no menu lateral esquerdo.
-3. Clique no botão **New Bucket**.
-4. Preencha os dados:
-   - **Name**: `fotos-perfil`
-   - **Public bucket**: Marque esta opção como **ATIVADA (ON)**.
-   - Clique em **Save**.
-
-## 2. Configurar Permissões (Policies)
-Para que o site consiga enviar as fotos, precisamos liberar o acesso.
-
-1. Na tela do Storage, ao lado do bucket `fotos-perfil`, clique nos três pontos ou na aba **Configuration** > **Policies**.
-2. Clique em **New Policy** na seção de Policies do bucket `fotos-perfil`.
-3. Selecione **For full customization**.
-4. Preencha:
-   - **Policy Name**: `Permitir Upload Publico`
-   - **Allowed operations**: Marque **INSERT** e **SELECT**.
-   - **Target roles**: Marque **anon** e **authenticated**.
-   - Clique em **Review** e depois **Save**.
-
-## 3. Pegar as Chaves
-1. Vá em **Settings** (ícone de engrenagem) > **API**.
+## 1. Pegar as Chaves do Supabase
+1. Acesse https://supabase.com/dashboard/project/_/settings/api
 2. Copie a **Project URL**.
-3. Copie a **anon public key**.
+3. Copie a **anon public** key.
+4. Adicione no seu arquivo `.env`:
 
-## 4. Atualizar o arquivo .env
-Abra o arquivo `.env` no seu projeto e adicione estas duas linhas novas:
+```env
+NEXT_PUBLIC_SUPABASE_URL="sua-url-aqui"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="sua-chave-anon-aqui"
+```
 
-```
-NEXT_PUBLIC_SUPABASE_URL="cole-sua-url-aqui"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="cole-sua-key-aqui"
-```
+## 2. Criar o Bucket de Imagens
+1. No menu lateral esquerdo, clique em **Storage**.
+2. Clique em **New Bucket**.
+3. Nome: `public-images` (ou outro, mas lembre-se do nome).
+4. **IMPORTANTE:** Marque a opção "Public Bucket" (Senão as imagens não abrem no site).
+5. Salvar.
+
+## 3. Configurar Política de Acesso (Policies)
+Para conseguir fazer upload:
+1. Dentro do bucket criado, vá em **Configuration** -> **Policies**.
+2. Clique em "New Policy" -> "For full customization".
+3. Nome: "Upload Publico".
+4. Allowed operations: Marque **INSERT** e **SELECT**.
+5. Salvar.
+
+(Isso permite que qualquer usuário logado ou não faça upload. Para restringir, podemos melhorar a policy depois, mas para teste isso basta).
 
 ---
-**ATENÇÃO**: Assim que você concluir esses 4 passos, me avise (ex: "Configurei o bucket").
-Eu então farei as alterações no código para instalar a biblioteca e conectar o formulário ao novo bucket.
+## Como usar no código
+O sistema já vai buscar automaticamente o bucket. Se você seguiu o passo 2, funcionará imediatamente após adicionar as chaves no .env.

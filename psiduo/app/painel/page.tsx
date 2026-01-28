@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { buscarDadosPainel, atualizarCredenciais } from "./actions";
+import { buscarDadosPainel } from "./actions";
 import { buscarAvaliacoes } from "../perfil/actions";
+import AccountSettingsModal from "./AccountSettingsModal";
+import { Button } from "@/components/ui/Button";
 
 export default function PainelPsicologo() {
   const router = useRouter();
@@ -24,16 +26,10 @@ export default function PainelPsicologo() {
   });
   
   const [isModalSistemaOpen, setIsModalSistemaOpen] = useState(false);
-  const [editandoEmail, setEditandoEmail] = useState(false);
-  const [novoEmail, setNovoEmail] = useState("");
-  const [senhaAtual, setSenhaAtual] = useState("");
-  const [novaSenha, setNovaSenha] = useState("");
-  const [confirmarNovaSenha, setConfirmarNovaSenha] = useState("");
-  const [statusEnvio, setStatusEnvio] = useState({ tipo: "", texto: "" });
   const [showToast, setShowToast] = useState(false);
+  const [statusEnvio, setStatusEnvio] = useState({ tipo: "", texto: "" }); 
 
   useEffect(() => {
-    // Verificar autenticação
     if (status === "loading") return;
     
     if (status === "unauthenticated") {
@@ -49,8 +45,6 @@ export default function PainelPsicologo() {
         if (resPainel.success && resPainel.dados?.id) {
             resAv = await buscarAvaliacoes(resPainel.dados.id);
         }
-
-        console.log("Resposta Painel:", resPainel);
 
         if (resPainel.error) {
           console.error("Erro ao buscar painel:", resPainel.error);
@@ -69,10 +63,8 @@ export default function PainelPsicologo() {
             acessos: resPainel.dados.acessos || 0,
             cliquesWhatsapp: resPainel.dados.cliquesWhatsapp || 0
           });
-          setNovoEmail(resPainel.dados.email || "");
         } else {
-          console.error("Erro ao buscar dados do painel:", (resPainel as any).error);
-          setStatusEnvio({ tipo: "erro", texto: (resPainel as any).error || "Não foi possível carregar seu perfil. Tente logar novamente." });
+          setStatusEnvio({ tipo: "erro", texto: (resPainel as any).error || "Não foi possível carregar seu perfil." });
         }
       } catch (err) {
         console.error("Falha crítica no carregamento do painel:", err);
@@ -82,12 +74,9 @@ export default function PainelPsicologo() {
       }
     }
     init();
-  }, [router]);
+  }, [router, status]);
 
-// Logout agora é feito pelo Navbar com signOut()
-// Esta função não é mais necessária
-
-const handleCopiarLink = async () => {
+  const handleCopiarLink = async () => {
     const link = `${window.location.origin}/perfil/${dados.slug}`;
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -107,47 +96,7 @@ const handleCopiarLink = async () => {
     }
   };
 
-const handleSalvarCredenciais = async () => {
-    setStatusEnvio({ tipo: "", texto: "" });
-
-    // Validações de Senha
-    if (novaSenha) {
-        if (!senhaAtual) {
-            setStatusEnvio({ tipo: "erro", texto: "Digite sua senha atual para confirmar a troca." });
-            return;
-        }
-        if (novaSenha !== confirmarNovaSenha) {
-            setStatusEnvio({ tipo: "erro", texto: "A nova senha e a confirmação não conferem." });
-            return;
-        }
-        if (novaSenha.length < 6) {
-             setStatusEnvio({ tipo: "erro", texto: "A nova senha deve ter pelo menos 6 caracteres." });
-             return;
-        }
-    }
-
-    setLoading(true);
-    const res = await atualizarCredenciais({
-      emailNovo: editandoEmail ? novoEmail : undefined,
-      senhaNova: novaSenha || undefined,
-      senhaAtual: senhaAtual || undefined
-    });
-
-    if (res.success) {
-      setStatusEnvio({ tipo: "sucesso", texto: res.message });
-      setDados(prev => ({ ...prev, email: editandoEmail ? novoEmail : prev.email }));
-      setEditandoEmail(false);
-      setSenhaAtual("");
-      setNovaSenha("");
-      setConfirmarNovaSenha("");
-      setTimeout(() => setIsModalSistemaOpen(false), 3000);
-    } else {
-      setStatusEnvio({ tipo: "erro", texto: res.error || "Erro ao atualizar." });
-    }
-    setLoading(false);
-  };
-
-  if (loading && !isModalSistemaOpen) return (
+  if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-white font-black text-slate-300 uppercase tracking-[0.4em] animate-pulse">
       Autenticando
     </div>
@@ -170,37 +119,47 @@ const handleSalvarCredenciais = async () => {
             </h1>
             <div className="w-16 h-1.5 bg-deep mt-4 md:mt-6"></div>
           </div>
+
         </header>
 
         {/* Status Tracker */}
         {statusEnvio.texto && statusEnvio.tipo === "erro" && (
-          <div className="mb-8 p-6 bg-red-50 border-2 border-red-200 rounded-3xl text-red-600 font-black uppercase text-xs tracking-widest text-center flex items-center justify-center gap-3 animate-bounce">
+          <div className="mb-8 p-6 bg-red-50 border-2 border-red-200 rounded-3xl text-danger font-black uppercase text-xs tracking-widest text-center flex items-center justify-center gap-3 animate-bounce">
             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
             {statusEnvio.texto}
             <button onClick={() => window.location.reload()} className="ml-4 underline">Tentar novamente</button>
           </div>
         )}
 
-        <div className={`mb-12 p-10 md:p-14 bg-white border-t-4 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 transition-all ${
-          isAtivo ? "border-green-500" : "border-amber-500"
+        <div className={`mb-8 p-6 md:p-8 bg-white border-l-4 shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 transition-all ${
+          isAtivo ? "border-emerald-500" : "border-amber-500"
         }`}>
-          <div className="w-full md:w-auto text-left">
-            <h2 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400 mb-2">Visibilidade Atual</h2>
-            <p className={`text-3xl md:text-4xl font-black uppercase tracking-tight ${isAtivo ? "text-green-600" : "text-amber-600"}`}>
-              {dados.status}
-            </p>
+          <div className="w-full md:w-auto text-left flex flex-col">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Visibilidade Atual</h2>
+            <div className="flex items-center gap-3">
+                <div className={`w-2.5 h-2.5 rounded-full ${isAtivo ? "bg-emerald-500" : "bg-amber-500"}`}></div>
+                <p className={`text-2xl font-black uppercase tracking-tight ${isAtivo ? "text-emerald-700" : "text-amber-600"}`}>
+                  {dados.status}
+                </p>
+            </div>
+            {!isAtivo && (
+                <p className="text-xs font-bold text-slate-400 mt-1 max-w-md">
+                    Complete seu cadastro para aparecer nas buscas.
+                </p>
+            )}
           </div>
-          <button 
-            onClick={() => router.push("/perfil/editar")}
-            className={`w-full md:w-auto px-14 py-6 font-black uppercase text-[11px] tracking-[0.3em] transition-all shadow-lg active:scale-95 ${
-              isAtivo ? "bg-slate-900 text-white hover:bg-black" : "bg-amber-500 text-white hover:bg-amber-600 shadow-amber-200"
-            }`}
-          >
-            {isAtivo ? "Gerenciar Perfil" : "Ativar Agora"}
-          </button>
+          <div className="w-full md:w-auto">
+            <Button 
+              onClick={() => router.push("/perfil/editar")}
+              variant={isAtivo ? "outline" : "primary"}
+              className={`${!isAtivo ? "bg-amber-500 hover:bg-amber-600 border-none text-white shadow-amber-200" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}
+              size="sm"
+            >
+              {isAtivo ? "Gerenciar Perfil" : "Ativar Perfil"}
+            </Button>
+          </div>
         </div>
 
-        {/* Banner Upgrade */}
         {/* Banner Upgrade (Apenas para NÃO Duo II) */}
         {!isDuoII && (
           <div className="mb-12 bg-slate-900 p-10 md:p-16 flex flex-col lg:flex-row items-center justify-between gap-10 relative overflow-hidden group shadow-2xl">
@@ -210,9 +169,13 @@ const handleSalvarCredenciais = async () => {
               <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-6 leading-none">VÍDEO E AGENDA <br className="hidden md:block"/> NO PLANO DUO II</h2>
               <p className="text-slate-400 font-bold text-sm uppercase tracking-widest leading-relaxed opacity-80">Assinantes Premium desbloqueiam ferramentas de alta conversão e métricas avançadas.</p>
             </div>
-            <button onClick={() => router.push("/cadastro/planos")} className="relative z-10 px-14 py-7 bg-deep text-white font-black text-[11px] uppercase tracking-[0.3em] hover:bg-white hover:text-slate-900 transition-all shadow-2xl w-full lg:w-auto">
+            <Button 
+                onClick={() => router.push("/cadastro/planos")} 
+                className="relative z-10 shadow-2xl bg-deep hover:bg-white hover:text-deep"
+                size="xl"
+            >
               Fazer Upgrade
-            </button>
+            </Button>
           </div>
         )}
 
@@ -228,9 +191,13 @@ const handleSalvarCredenciais = async () => {
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Sua assinatura está ativa e rodando.</p>
                     </div>
                 </div>
-                <button className="px-8 py-3 bg-slate-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-600 transition">
+                <Button 
+                    onClick={() => router.push("/painel/configuracoes")}
+                    className="bg-slate-700 hover:bg-slate-600 border-none"
+                    size="md"
+                >
                     Gerenciar Plano
-                </button>
+                </Button>
              </div>
         )}
 
@@ -323,94 +290,29 @@ const handleSalvarCredenciais = async () => {
       </div>
 
       {/* Toast Notification */}
-      {showToast && (
-        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4 duration-300">
-          <div className="bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-white/10">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Sucesso</span>
-              <span className="text-xs font-bold uppercase tracking-wider">Link do Perfil Copiado!</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Sistema */}
-      {isModalSistemaOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-lg rounded-none border-t-8 border-deep shadow-2xl p-10 md:p-12 max-h-[90vh] overflow-y-auto">
-            <header className="mb-10 flex justify-between items-start">
-              <div>
-                <h2 className="text-xl md:text-2xl font-black text-slate-900 uppercase tracking-widest mb-2">SISTEMA</h2>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Configurações de Acesso</p>
+        {showToast && (
+          <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4 duration-300">
+            <div className="bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-white/10">
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
               </div>
-              <button onClick={() => setIsModalSistemaOpen(false)} className="text-slate-300 hover:text-red-600 transition-colors text-3xl">✕</button>
-            </header>
-            
-            {statusEnvio.texto && (
-              <div className={`mb-6 p-4 text-[10px] font-black uppercase tracking-widest text-center ${statusEnvio.tipo === 'sucesso' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                {statusEnvio.texto}
-              </div>
-            )}
-
-            <div className="space-y-8">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">E-mail de Acesso</label>
-                  <button onClick={() => setEditandoEmail(!editandoEmail)} className="text-[10px] font-black text-deep uppercase hover:underline">Alterar</button>
-                </div>
-                <input 
-                  disabled={!editandoEmail}
-                  type="email" 
-                  value={editandoEmail ? novoEmail : dados.email}
-                  onChange={(e) => setNovoEmail(e.target.value)}
-                  className="w-full bg-slate-50 border-b-2 border-slate-200 p-4 font-bold text-slate-900 outline-none focus:border-deep transition-all"
-                />
-              </div>
-
-              <div>
-                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Alterar Senha</label>
-                 <div className="space-y-3">
-                    <input 
-                      type="password" 
-                      placeholder="Senha Atual (Obrigatório)"
-                      value={senhaAtual}
-                      onChange={(e) => setSenhaAtual(e.target.value)}
-                      className="w-full bg-slate-50 border-b-2 border-slate-200 p-4 font-bold text-slate-900 outline-none focus:border-deep transition-all"
-                    />
-                    <input 
-                      type="password" 
-                      placeholder="Nova Senha"
-                      value={novaSenha}
-                      onChange={(e) => setNovaSenha(e.target.value)}
-                      className="w-full bg-slate-50 border-b-2 border-slate-200 p-4 font-bold text-slate-900 outline-none focus:border-deep transition-all"
-                    />
-                    <input 
-                      type="password" 
-                      placeholder="Confirmar Nova Senha"
-                      value={confirmarNovaSenha}
-                      onChange={(e) => setConfirmarNovaSenha(e.target.value)}
-                      className="w-full bg-slate-50 border-b-2 border-slate-200 p-4 font-bold text-slate-900 outline-none focus:border-deep transition-all"
-                    />
-                 </div>
-              </div>
-
-              <div className="pt-4 space-y-4">
-                <button 
-                  onClick={handleSalvarCredenciais}
-                  className="w-full bg-slate-900 text-white font-black py-6 text-[11px] uppercase tracking-[0.4em] hover:bg-black transition-all shadow-xl"
-                >
-                  Confirmar Alterações
-                </button>
-                <button onClick={() => setIsModalSistemaOpen(false)} className="w-full border border-slate-200 text-slate-600 font-black py-4 text-[11px] uppercase tracking-[0.3em] hover:bg-slate-50 transition-all">Fechar</button>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-widest text-primary">Sucesso</span>
+                <span className="text-xs font-bold uppercase tracking-wider">Link do Perfil Copiado!</span>
               </div>
             </div>
           </div>
-        </div>
-      )}
-      <Footer />
-    </main>
-  );
+        )}
+
+        {/* Modal Sistema */}
+        <AccountSettingsModal 
+          isOpen={isModalSistemaOpen} 
+          onClose={() => setIsModalSistemaOpen(false)} 
+          currentEmail={dados.email}
+          onUpdateEmail={(email) => setDados(prev => ({ ...prev, email }))}
+        />
+        
+        <Footer />
+      </main>
+    );
 }

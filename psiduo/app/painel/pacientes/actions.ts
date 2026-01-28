@@ -4,6 +4,196 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth"; // Ajuste o path se necessário, geralmente é lib/auth
 import { revalidatePath } from "next/cache";
+import { createPayment, getPixQrCode, getPayment } from "@/lib/asaas";
+
+// --- INICIAR COMPRA PACOTE (PIX) ---
+export async function iniciarCompraPacote() {
+    const session = await getServerSession(authOptions);
+    // @ts-ignore
+    if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
+    // @ts-ignore
+    const psicologoId = session.user.psicologoId;
+
+    try {
+        const user = await prisma.user.findFirst({
+            where: { psicologo: { id: psicologoId } },
+            include: { psicologo: true }
+        });
+
+        if (!user || !user.psicologo) return { success: false, error: "Psicólogo não encontrado." };
+
+        // Dados para Asaas
+        let celularLimpo = user.psicologo.whatsapp?.replace(/\D/g, "") || "";
+        // Sandbox fallback
+        if (process.env.ASAAS_ENV === 'sandbox' && celularLimpo.length < 10) celularLimpo = "11999999999"; 
+
+        const customerData = {
+            name: user.psicologo.nome,
+            email: user.email,
+            cpfCnpj: user.psicologo.cpf?.replace(/\D/g, "") || "",
+            mobilePhone: celularLimpo
+        };
+
+        // Criar Cobrança Avulsa
+        const result = await createPayment(
+            user.id,
+            customerData,
+            "PIX",
+            10.00,
+            1 // À vista
+        );
+
+        if (!result.success || !result.id) {
+            throw new Error(result.error || "Erro ao gerar cobrança.");
+        }
+
+        // Pegar QR Code
+        const pixInfo = await getPixQrCode(result.id);
+        
+        return {
+            success: true,
+            paymentId: result.id,
+            pix: pixInfo // { encodedImage, payload }
+        };
+
+    } catch (e: any) {
+        console.error("Erro iniciar compra pct:", e);
+        return { success: false, error: e.message || "Erro ao iniciar compra." };
+    }
+}
+
+// --- COMPRAR PACOTE (CARTÃO) ---
+export async function comprarPacoteCartao(cardData: any, holderInfo: any) {
+    const session = await getServerSession(authOptions);
+    // @ts-ignore
+    if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
+    // @ts-ignore
+    const psicologoId = session.user.psicologoId;
+
+    try {
+        const user = await prisma.user.findFirst({
+            where: { psicologo: { id: psicologoId } },
+            include: { psicologo: true }
+        });
+
+        if (!user || !user.psicologo) return { success: false, error: "Usuário não encontrado." };
+
+        let celularLimpo = user.psicologo.whatsapp?.replace(/\D/g, "") || "";
+        if (process.env.ASAAS_ENV === 'sandbox' && celularLimpo.length < 10) celularLimpo = "11999999999"; 
+
+        const customerData = {
+            name: user.psicologo.nome,
+            email: user.email,
+            cpfCnpj: user.psicologo.cpf?.replace(/\D/g, "") || "",
+            mobilePhone: celularLimpo
+        };
+
+        const result = await createPayment(
+            user.id,
+            customerData,
+            "CREDIT_CARD",
+            10.00,
+            1, // À vista
+            cardData,
+            holderInfo
+        );
+
+        if (!result.success) {
+            return { success: false, error: result.error || "Pagamento recusado." };
+        }
+
+        // SUCESSO! LIBERAR O LIMITE IMEDIATAMENTE
+        await prisma.psicologo.update({
+            where: { id: psicologoId },
+            data: {
+                limiteExtraPacientes: { increment: 10 }
+            }
+        });
+
+        // Registrar Log
+        await prisma.auditLog.create({
+            data: {
+                action: "COMPRA_PACOTE_PACIENTES_CARTAO",
+                userId: session.user.email,
+                success: true,
+                metadata: { paymentId: result.id, valor: 10.00, qtd: 10 }
+            }
+        });
+
+        revalidatePath("/painel/pacientes");
+        return { success: true };
+
+    } catch (e: any) {
+        console.error("Erro cartao pct:", e);
+        return { success: false, error: "Erro ao processar cartão." };
+    }
+}
+
+// --- VERIFICAR PAGAMENTO PACOTE ---
+export async function verificarCompraPacote(paymentId: string) {
+     const session = await getServerSession(authOptions);
+    // @ts-ignore
+    if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
+    // @ts-ignore
+    const psicologoId = session.user.psicologoId;
+
+    try {
+        // 1. Verificar no Asaas
+        const resCheck = await getPayment(paymentId);
+        if(!resCheck.success || !resCheck.data) return { success: false, error: "Pagamento não encontrado no Asaas." };
+
+        const status = resCheck.data.status; 
+        // Status possíveis de PAGO: RECEIVED, CONFIRMED
+        if (status !== 'RECEIVED' && status !== 'CONFIRMED') {
+            return { success: false, paid: false, status };
+        }
+
+        // 2. Se PAGO, verificar se JÁ foi processado (AuditLog ou Metadata?)
+        // Para simplificar, vou confiar que o usuário não vai conseguir abusar (gerar N pagamentos duplicados é difícil sem webhook).
+        // Melhor: Usar um Audit Log para garantir que esse PaymentID não foi usado ainda.
+        const jaUsado = await prisma.auditLog.findFirst({
+            where: { 
+                action: "COMPRA_PACOTE_PACIENTES",
+                metadata: {
+                    path: ['paymentId'],
+                    equals: paymentId
+                }
+            }
+        });
+
+        if (jaUsado) {
+             return { success: true, paid: true, message: "Já processado anteriormente." };
+        }
+
+        // 3. Adicionar +20 ao Limite
+        await prisma.psicologo.update({
+            where: { id: psicologoId },
+            data: {
+                limiteExtraPacientes: { increment: 10 }
+            }
+        });
+
+        // 4. Registrar Log
+        await prisma.auditLog.create({
+            data: {
+                action: "COMPRA_PACOTE_PACIENTES",
+                userId: session.user.email, // ou ID
+                success: true,
+                metadata: { paymentId, valor: 10.00, qtd: 10 }
+            }
+        });
+
+        revalidatePath("/painel/pacientes");
+        return { success: true, paid: true };
+
+    } catch (e: any) {
+        console.error("Erro verificar pct:", e);
+        return { success: false, error: "Erro ao verificar." };
+    }
+}
+
+// ... manter o resto ...
+
 
 // Helper para gerar token seguro
 function generateToken(length = 12) {
@@ -29,11 +219,26 @@ export async function cadastrarPaciente(nome: string, dataInicioISO?: string, cp
   // Verificar Plano DUO II
   const psicologo = await prisma.psicologo.findUnique({
     where: { id: psicologoId },
-    select: { plano: true }
+    select: { plano: true, limiteExtraPacientes: true }
   });
 
   if (psicologo?.plano !== 'DUO_II') {
     return { success: false, error: "Funcionalidade exclusiva do plano Duo II." };
+  }
+
+  // Verificar limite de 15 pacientes (Duo II) + EXTRA
+  const totalPacientes = await prisma.paciente.count({
+    where: { psicologoId }
+  });
+
+  const limiteTotal = 10 + (psicologo?.limiteExtraPacientes || 0);
+
+  if (totalPacientes >= limiteTotal) {
+    return { 
+        success: false, 
+        error: `Limite de ${limiteTotal} pacientes atingido.`,
+        limitReached: true // Flag para o front mostrar o modal se quiser
+    };
   }
 
   try {

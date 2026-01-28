@@ -1,125 +1,168 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { solicitarResetSenha } from "./actions";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { solicitarResetSenha, resetarSenha } from "./actions";
+import { toast } from "sonner";
+import Navbar from "@/components/Navbar";
+import { Lock, Mail, ArrowRight, CheckCircle } from "lucide-react";
 
-export default function EsqueciSenha() {
+function ResetSenhaContent() {
+  const searchParams = useSearchParams();
+  const token = searchParams ? searchParams.get("token") : null; 
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [resetLink, setResetLink] = useState("");
-  const [error, setError] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confirmar, setConfirmar] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [enviado, setEnviado] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // MODO 1: SOLICITAR
+  const handleSolicitar = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError("");
-    setMessage("");
-    setResetLink("");
+    setLoading(true);
+    
+    // Simula delay para não entregar se email existe ou não
+    await new Promise(r => setTimeout(r, 1000));
+    
+    await solicitarResetSenha(email);
+    setEnviado(true);
+    setLoading(false);
+  };
 
-    try {
-      const result = await solicitarResetSenha(email);
+  // MODO 2: TROCAR
+  const handleTrocar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (novaSenha !== confirmar) {
+      toast.error("As senhas não conferem!");
+      return;
+    }
+    if (novaSenha.length < 8) {
+      toast.error("A senha deve ter no mínimo 8 caracteres.");
+      return;
+    }
 
-      if (result.success) {
-        setMessage(result.message);
-        if (result.resetLink) {
-          setResetLink(result.resetLink);
-        }
-      } else {
-        setError(result.error || "Erro ao processar solicitação.");
-      }
-    } catch (err) {
-      setError("Erro ao processar solicitação.");
-    } finally {
-      setIsLoading(false);
+    setLoading(true);
+    const res = await resetarSenha(token!, novaSenha);
+    setLoading(false);
+
+    if (res.success) {
+      toast.success("Senha alterada com sucesso!");
+      setTimeout(() => router.push("/login"), 2000);
+    } else {
+      toast.error(res.error || "Erro ao alterar senha.");
     }
   };
 
   return (
-    <main className="min-h-screen bg-mist flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-deep mb-2">Esqueci Minha Senha</h1>
-          <p className="text-slate-600 text-sm">
-            Digite seu email para receber instruções de recuperação
-          </p>
-        </div>
-
-        {message ? (
-          <div className="space-y-4">
-            <div className="bg-green-50 text-green-700 p-4 rounded-xl border border-green-200">
-              <p className="font-medium">{message}</p>
-            </div>
-
-            {resetLink && (
-              <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
-                <p className="text-xs text-blue-600 font-bold mb-2 uppercase">
-                  Link de Reset (Desenvolvimento):
-                </p>
-                <Link 
-                  href={resetLink}
-                  className="text-blue-600 hover:text-blue-800 underline text-sm break-all"
-                >
-                  {resetLink}
-                </Link>
-              </div>
-            )}
-
-            <Link
-              href="/login"
-              className="block text-center text-primary hover:underline font-medium"
-            >
-              Voltar para Login
-            </Link>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <Navbar />
+      
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="bg-white w-full max-w-md p-8 rounded-3xl shadow-xl border border-slate-100">
+          
+          <div className="flex flex-col items-center mb-6">
+            <span className="text-3xl font-black text-slate-800 tracking-tight">Psi<span className="text-blue-600">Duo</span></span>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200">
-                {error}
+
+          {/* SUCESSO NO ENVIO */}
+          {enviado && !token ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail size={32} />
               </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl p-4 text-slate-700 focus:ring-2 focus:ring-primary outline-none bg-slate-50 focus:bg-white transition"
-                placeholder="seu@email.com"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-deep text-white font-bold py-4 rounded-xl shadow-lg hover:bg-primary transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? "Enviando..." : "Enviar Instruções"}
-            </button>
-
-            <div className="text-center space-y-2">
-              <Link
-                href="/login"
-                className="block text-primary hover:underline font-medium text-sm"
-              >
+              <h2 className="text-2xl font-black text-slate-900 mb-2">Verifique seu E-mail</h2>
+              <p className="text-slate-500 mb-6">Enviamos as instruções de recuperação para <strong>{email}</strong>.</p>
+              <button onClick={() => router.push("/login")} className="text-blue-600 font-bold hover:underline">
                 Voltar para Login
-              </Link>
-              <Link
-                href="/cadastro"
-                className="block text-slate-600 hover:text-slate-800 text-sm"
-              >
-                Não tem conta? Cadastre-se
-              </Link>
+              </button>
             </div>
-          </form>
-        )}
+          ) : token ? (
+            /* TELA 2: DIGITAR NOVA SENHA */
+            <form onSubmit={handleTrocar} className="space-y-6">
+                <div className="text-center mb-6">
+                    <h1 className="text-2xl font-black text-slate-900 uppercase">Criar Nova Senha</h1>
+                    <p className="text-sm text-slate-400 font-bold">Defina sua nova senha de acesso.</p>
+                </div>
+
+                <div>
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nova Senha</label>
+                    <input 
+                        type="password" 
+                        required 
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 outline-none focus:border-slate-400 transition"
+                        placeholder="••••••••"
+                        value={novaSenha}
+                        onChange={e => setNovaSenha(e.target.value)}
+                    />
+                </div>
+                <div>
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Confirmar Senha</label>
+                    <input 
+                        type="password" 
+                        required 
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 outline-none focus:border-slate-400 transition"
+                        placeholder="••••••••"
+                        value={confirmar}
+                        onChange={e => setConfirmar(e.target.value)}
+                    />
+                </div>
+
+                <button 
+                    disabled={loading}
+                    className="w-full bg-slate-900 text-white font-black uppercase text-xs tracking-[0.2em] py-4 rounded-xl shadow-lg hover:bg-black transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+                >
+                    {loading ? "Salvando..." : "Redefinir Senha"} <CheckCircle size={16} />
+                </button>
+            </form>
+          ) : (
+            /* TELA 1: DIGITAR EMAIL */
+            <form onSubmit={handleSolicitar} className="space-y-6">
+                <div className="text-center mb-6">
+                    <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-800">
+                        <Lock size={24} />
+                    </div>
+                    <h1 className="text-2xl font-black text-slate-900 uppercase">Esqueci a Senha</h1>
+                    <p className="text-sm text-slate-400 font-bold">Digite seu e-mail para receber o link.</p>
+                </div>
+
+                <div>
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">E-mail Cadastrado</label>
+                    <input 
+                        type="email" 
+                        required 
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 outline-none focus:border-slate-400 transition"
+                        placeholder="seu@email.com"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                    />
+                </div>
+
+                <button 
+                    disabled={loading}
+                    className="w-full bg-slate-900 text-white font-black uppercase text-xs tracking-[0.2em] py-4 rounded-xl shadow-lg hover:bg-black transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+                >
+                    {loading ? "Enviando..." : "Enviar Instruções"} <ArrowRight size={16} />
+                </button>
+                
+                <div className="text-center">
+                    <button type="button" onClick={() => router.push("/login")} className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">
+                        Voltar para Login
+                    </button>
+                </div>
+            </form>
+          )}
+        </div>
       </div>
-    </main>
+    </div>
+  );
+}
+
+export default function ResetSenhaPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">Carregando...</div>}>
+      <ResetSenhaContent />
+    </Suspense>
   );
 }

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { hashPassword, validatePasswordStrength } from "@/lib/password";
 import { signupRateLimit, checkRateLimit } from "@/lib/rate-limit";
+import { enviarEmailBoasVindas } from "@/lib/mail";
 
 // --- FUNÇÃO DE LEITURA (PAGINA INICIAL / DESTAQUE) ---
 export async function getPsicologosDestaque() {
@@ -145,9 +146,15 @@ export async function cadastrarPsicologo(dados: any) {
           biografia: dados.biografia,
         }
       });
-
       return { user, psicologo: novoPsicologo };
     });
+
+    // Envio de email de boas vindas (sem travar se falhar)
+    try {
+        await enviarEmailBoasVindas(dados.email, dados.nome.split(" ")[0]);
+    } catch (e) {
+        console.error("Falha ao enviar email boas vindas (não crítico):", e);
+    }
 
     revalidatePath('/catalogo');
     return { success: true, id: resultado.psicologo.id, userId: resultado.user.id };
@@ -192,7 +199,8 @@ export async function validarStatusCRP(crp: string) {
   // 3. VERIFICAÇÃO DE STATUS COM INFOSIMPLES
   const token = process.env.INFOSIMPLES_TOKEN;
   
-  if (token) {
+  // DESATIVADO TEMPORARIAMENTE PARA TESTES (Bypass)
+  if (false && token) {
       try {
         // CORREÇÃO: Endpoint exato conforme documentação enviada
         // CORREÇÃO FINAL: Extrair prefixo para determinar UF

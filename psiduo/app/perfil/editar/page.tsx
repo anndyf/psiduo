@@ -6,92 +6,37 @@ import Link from "next/link";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import { salvarEAtivarPerfilCompleto, buscarDadosPsicologo } from "../actions";
+import { validarStatusCRP } from "@/app/catalogo/actions";
 import { useSession } from "next-auth/react";
 import ProfileHealth from "./components/ProfileHealth";
 import DuoIISection from "./components/DuoIISection";
+import IdentitySection from "./components/IdentitySection";
+import SpecialtiesSection from "./components/SpecialtiesSection";
 import { PsicologoFormData } from "@/types/psicologo";
 import { compressImage } from "@/utils/imageCompression";
+import { uploadImage } from "@/lib/uploadHelper";
+import { toast } from "sonner";
 
 // LISTAS DE OPÇÕES
-const ESTADOS_BR = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"];
+import { 
+  ESTADOS_BR, ABORDAGENS, LISTA_ESPECIALIDADES, LISTA_TEMAS, 
+  OPCOES_GENERO, OPCOES_ETNIA, OPCOES_SEXUALIDADE, OPCOES_RELIGIAO, 
+  OPCOES_ESTILO, OPCOES_DIRETIVIDADE, LISTA_PUBLICO 
+} from "@/lib/profile-constants";
 
-const ABORDAGENS = [
-  "Psicanálise Freudiana (Sigmund Freud)", "Psicologia Analítica / Jungiana (Carl Gustav Jung)", "Psicanálise Lacaniana (Jacques Lacan)",
-  "Psicanálise Winnicottiana (Donald Winnicott)", "Análise do comportamento", "TCC – Terapia cognitivo-comportamental",
-  "Terapia Racional-Emotiva Comportamental (REBT)", "Terapia Cognitiva Construtivista", "ACT – Terapia de Aceitação e Compromisso",
-  "DBT – Terapia Dialética Comportamental", "FAP – Psicoterapia Analítico-Funcional", "Terapia de Esquemas",
-  "Psicologia Baseada em Evidências - PBE", "Psicoterapia Breve", "Terapia Comportamental Integrativa de Casais - IBCT",
-  "Gestalt-Terapia", "Abordagem Centrada na Pessoa (ACP)", "Terapia Focada na Emoção (EFT)", "Psicoterapia Humanista-Existencial",
-  "Fenomenológica/Existencial", "Logoterapia", "Daseinsanalyse", "Esquizoanálise", "Terapia Sistêmica",
-  "Terapia Familiar Estrutural", "Terapia Familiar Estratégica", "Terapia Familiar de Bowen", "Terapia Narrativa",
-  "Terapia Sistêmica Pós-Moderna", "Terapia de Casal Sistêmica", "Psicoterapia Construtivista", "Análise Bioenergética",
-  "Psicoterapia Corporal", "Psicodrama", "Psicodinâmica", "Neuropsicologia Clínica", "Psicoterapia Baseada em Neurociência",
-  "Programação neurolinguística - PNL", "Teoria do Apego (clínica)", "Psicologia Positiva Clínica", "Orientação profissional e vocacional"
-];
 
-const LISTA_ESPECIALIDADES = [
-  "Avaliação Neuropsicológica",
-  "Avaliação Psicológica",
-  "Clima e Cultura Organizacional",
-  "Clínica com Adultos e Idosos",
-  "Gestalt-terapia",
-  "Gestão de Conflitos no Trabalho",
-  "Gestão de Pessoas / Desenvolvimento Humano",
-  "Instrumentos e Técnicas de Avaliação Psicológica",
-  "Laudos e Pareceres em Avaliação Psicológica",
-  "MBA em Gestão de Recursos Humanos",
-  "Neuropsicologia",
-  "Neuropsicologia Clínica",
-  "People Analytics para Psicólogos",
-  "Psicanálise (clínica psicanalítica)",
-  "Psico-oncologia",
-  "Psicodrama",
-  "Psicologia Clínica",
-  "Psicologia Clínica em Saúde",
-  "Psicologia da Dor e Reabilitação",
-  "Psicologia da Saúde Mental",
-  "Psicologia do Trauma e Luto",
-  "Psicologia em Saúde",
-  "Psicologia Hospitalar",
-  "Psicologia Organizacional e do Trabalho",
-  "Psicologia Paliativa",
-  "Psicometria e Avaliação Psicológica",
-  "Psicoterapia",
-  "Reabilitação Neuropsicológica",
-  "Recrutamento, Seleção e Avaliação de Talentos",
-  "Recursos Humanos (RH)",
-  "Saúde Coletiva com ênfase em Psicologia",
-  "Saúde Mental e Qualidade de Vida no Trabalho",
-  "Terapia de Casal e Família",
-  "Terapia Humanista/Existencial",
-  "Terapia Sistêmica e Familiar",
-  "Terapias Cognitivo-Comportamentais (TCC)",
-  "Terapias Contextuais / 3ª Geração (ACT, DBT, FAP)",
-  "Testes Psicológicos: Aplicação e Interpretação",
-  "Treinamento e Desenvolvimento (T&D)"
-];
 
-const LISTA_TEMAS = [
-  "Ansiedade", "Depressão", "Estresse e Burnout", "Transtornos do humor", "Luto e perdas",
-  "Autoestima e confiança", "Identidade e propósito", "Regulação emocional", "Conflitos familiares",
-  "Relacionamentos amorosos", "Dependência emocional", "Carreira", "Insatisfação profissional"
-];
 
-const OPCOES_GENERO = ["Mulher Cis", "Homem Cis", "Mulher Trans", "Homem Trans", "Não-binário", "Agênero", "Gênero Fluido", "Queer", "Prefiro não dizer"];
-const OPCOES_ETNIA = ["Branca", "Preta", "Parda", "Amarela", "Indígena"];
-const OPCOES_SEXUALIDADE = ["Heterossexual", "Lésbica", "Gay", "Bissexual", "Pansexual", "Assexual", "Queer"];
-const OPCOES_RELIGIAO = ["Católico", "Evangélico", "Espírita", "Budista", "Religião de Matriz Africana", "Ateu / Agnóstico", "Sem religião específica", "Prefiro não dizer"];
-const OPCOES_ESTILO = [
-  { l: "Casual (Mais descontraído)", v: "CASUAL" },
-  { l: "Formal (Postura mais clássica)", v: "FORMAL" },
-  { l: "Meio Termo (Equilíbrio)", v: "MEIO_TERMO" }
-];
-const OPCOES_DIRETIVIDADE = [
-  { l: "Não Diretivo (Mais escuta, menos interferência)", v: "NAO_DIRETIVO" },
-  { l: "Pouco Diretivo (Interfere ocasionalmente)", v: "POUCO_DIRETIVO" },
-  { l: "Muito Diretivo (Sugere ações e ferramentas)", v: "MUITO_DIRETIVO" }
-];
-const LISTA_PUBLICO = ["Idosos","Público LGBTQIA+", "Mulheres", "Homens", "Público Negro", "Público Indígena", "Refugiados"];
+
+
+
+
+
+
+
+
+
+
 
 export default function EditarPerfilCompleto() {
   const router = useRouter();
@@ -104,8 +49,13 @@ export default function EditarPerfilCompleto() {
   const [userId, setUserId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // CRP States
+  const [verificandoCrp, setVerificandoCrp] = useState(false);
+  const [crpEmUso, setCrpEmUso] = useState(false);
+  const [crpValidado, setCrpValidado] = useState(false);
+
   const [formData, setFormData] = useState<PsicologoFormData>({
-    foto: "", biografia: "", abordagem: "", whatsapp: "", preco: 150, duracaoSessao: 50,
+    foto: "", biografia: "", abordagem: "", whatsapp: "", crp: "", preco: 150, duracaoSessao: 50,
     especialidades: [], temas: [],
     idade: "", genero: "", etnia: "", sexualidade: "", religiao: "", estilo: "", diretividade: "", publicoAlvo: [],
     cidade: "", estado: "", videoApresentacao: "", 
@@ -179,32 +129,65 @@ export default function EditarPerfilCompleto() {
     if (file) {
       try {
         setLoading(true);
-        // Compress image to max 800x800 and 70% quality
-        const compressedBase64 = await compressImage(file, 800, 800, 0.7);
-        setFormData({ ...formData, foto: compressedBase64 });
+        let finalUrl = "";
+
+        // 1. Tenta Upload na Nuvem (Storage)
+        const publicUrl = await uploadImage(file, "profiles");
+        
+        if (publicUrl) {
+            finalUrl = publicUrl;
+            toast.success("Foto enviada para nuvem com sucesso!");
+        } else {
+            // 2. Fallback: Base64 (Modo Legado)
+            // Se não tiver chaves no .env ou der erro, salva localmente comprimido
+            console.log("Storage não configurado ou erro. Usando compressão local.");
+            finalUrl = await compressImage(file, 800, 800, 0.7);
+        }
+
+        setFormData(prev => ({ ...prev, foto: finalUrl }));
       } catch (error) {
         console.error("Erro ao processar imagem:", error);
-        setMsg({ tipo: "erro", texto: "Não foi possível processar a imagem. Tente outra." });
+        setMsg({ tipo: "erro", texto: "Não foi possível processar a imagem." });
       } finally {
         setLoading(false);
       }
     }
   };
 
-  const toggleItem = (item: string, categoria: 'especialidades' | 'temas' | 'publicoAlvo') => {
-    const LIMITES = {
-      especialidades: 2,
-      temas: 5,
-      publicoAlvo: 10
-    };
-    const limite = LIMITES[categoria];
 
-    setFormData(prev => {
-      const lista = prev[categoria] as string[];
-      if (lista.includes(item)) return { ...prev, [categoria]: lista.filter(i => i !== item) };
-      if (lista.length < limite) return { ...prev, [categoria]: [...lista, item] };
-      return prev;
-    });
+
+  const formatarCRP = (valor: string) => {
+    const limpo = valor.replace(/\D/g, "");
+    return limpo.replace(/^(\d{2})(\d)/, "$1/$2").slice(0, 9);
+  };
+
+  const handleBlurCRP = async () => {
+    if (formData.crp && formData.crp.length >= 7) {
+        setVerificandoCrp(true);
+        try {
+            const resultado = await validarStatusCRP(formData.crp);
+            
+            if (!resultado.valido) {
+                // Aqui não bloqueamos totalmente o save se for duplicidade DO PROPRIO user (o back deve tratar)
+                // Mas avisamos
+                setMsg({ tipo: "erro", texto: resultado.mensagem || "CRP inválido." });
+                if (resultado.mensagem?.includes("cadastrado")) {
+                   // Se for duplicado, pode ser o dele mesmo. 
+                   // Como saber? O ideal é só validar formato.
+                   // Mas se a msg for diferentre de "cadastrado", é erro real (ex: Cancelado)
+                   setCrpEmUso(true); 
+                }
+            } else {
+                setCrpEmUso(false);
+                setCrpValidado(true);
+                setMsg({ tipo: "", texto: "" });
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setVerificandoCrp(false);
+        }
+    }
   };
 
   const handleSubmit = async () => {
@@ -315,7 +298,30 @@ export default function EditarPerfilCompleto() {
                     <input required type="text" placeholder="Seu nome profissional" className="w-full border border-slate-200 rounded-xl p-4 bg-slate-50 text-base font-black text-deep outline-none focus:ring-2 focus:ring-primary transition" value={formData.nome} onChange={(e) => setFormData({...formData, nome: e.target.value})} />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                     {/* CRP FIELD */}
+                    <div className="relative">
+                      <label className="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wide flex justify-between">
+                          CRP
+                          {verificandoCrp && <span className="text-[10px] text-blue-500 animate-pulse">Verificando...</span>}
+                      </label>
+                      <input 
+                        type="text" 
+                        placeholder="00/00000" 
+                        className={`w-full border rounded-xl p-4 bg-slate-50 text-base font-black text-deep outline-none focus:ring-2 focus:ring-primary transition ${crpEmUso ? 'border-red-500 bg-red-50' : 'border-slate-200'}`}
+                        value={formData.crp || ""} 
+                        onChange={(e) => {
+                            setFormData({...formData, crp: formatarCRP(e.target.value)});
+                            setCrpEmUso(false);
+                        }}
+                        onBlur={handleBlurCRP}
+                        maxLength={9}
+                      />
+                      {crpValidado && !crpEmUso && (
+                          <span className="absolute right-3 top-[3.2rem] text-green-500">✓</span>
+                      )}
+                    </div>
+
                     <div className="lg:col-span-1">
                       <label className="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wide">WhatsApp</label>
                       <input required type="text" placeholder="(00) 0 0000-0000" className="w-full border border-slate-200 rounded-xl p-4 bg-slate-50 text-base font-black text-deep outline-none focus:ring-2 focus:ring-primary transition" value={formData.whatsapp} onChange={(e) => handleWhatsappChange(e.target.value)} />
@@ -381,189 +387,11 @@ export default function EditarPerfilCompleto() {
               </div>
             </section>
 
-            {/* SEÇÃO 2: IDENTIDADE PROFISSIONAL (Mantida, pode ser extraída num futuro update) */}
-            <section className="space-y-8">
-              <h2 className="text-2xl font-black text-deep border-b-2 border-slate-100 pb-3 flex items-center gap-3 uppercase">
-                <span className="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-black italic">2</span>
-                Identidade Profissional
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-base font-black text-slate-700 mb-2 uppercase">Idade</label>
-                  <input required type="number" className="w-full border border-slate-200 rounded-xl p-4 bg-slate-50 text-base font-black" value={formData.idade} onChange={e => setFormData({...formData, idade: e.target.value})} />
-                </div>
-                <div>
-                  <label className="block text-base font-black text-slate-700 mb-2 uppercase">Gênero</label>
-                  <select required className="w-full border border-slate-200 rounded-xl p-4 bg-white text-base font-black" value={formData.genero} onChange={e => setFormData({...formData, genero: e.target.value})}>
-                    <option value="">Selecione</option>
-                    {OPCOES_GENERO.map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-base font-black text-slate-700 mb-2 uppercase">Etnia</label>
-                  <select required className="w-full border border-slate-200 rounded-xl p-4 bg-white text-base font-black" value={formData.etnia} onChange={e => setFormData({...formData, etnia: e.target.value})}>
-                    <option value="">Selecione</option>
-                    {OPCOES_ETNIA.map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-base font-black text-slate-700 mb-2 uppercase">Sexualidade</label>
-                  <select required className="w-full border border-slate-200 rounded-xl p-4 bg-white text-base font-black" value={formData.sexualidade} onChange={e => setFormData({...formData, sexualidade: e.target.value})}>
-                    <option value="">Selecione</option>
-                    {OPCOES_SEXUALIDADE.map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-base font-black text-slate-700 mb-2 uppercase">Religião</label>
-                  <select required className="w-full border border-slate-200 rounded-xl p-4 bg-white text-base font-black" value={formData.religiao} onChange={e => setFormData({...formData, religiao: e.target.value})}>
-                    <option value="">Selecione</option>
-                    {OPCOES_RELIGIAO.map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </div>
-              </div>
+            {/* SEÇÃO 2: IDENTIDADE PROFISSIONAL (Componentizado) */}
+            <IdentitySection formData={formData} setFormData={setFormData} />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
-                <div className="px-4 py-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                  <label className="block text-sm font-black uppercase tracking-widest text-slate-400 mb-4">Seu Estilo de Atendimento</label>
-                  <div className="grid grid-cols-1 gap-2">
-                    {OPCOES_ESTILO.map(opt => (
-                      <button
-                        key={opt.v}
-                        type="button"
-                        onClick={() => setFormData({...formData, estilo: opt.v})}
-                        className={`p-4 rounded-xl font-bold text-xs md:text-sm text-center md:text-left transition-all border-2 ${
-                          formData.estilo === opt.v ? "bg-primary text-white border-primary shadow-md shadow-primary/20" : "bg-white text-slate-600 border-slate-100 hover:border-blue-100"
-                        }`}
-                      >
-                        {opt.l}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="px-4 py-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                  <label className="block text-sm font-black uppercase tracking-widest text-slate-400 mb-4">Nível de Diretividade</label>
-                  <div className="grid grid-cols-1 gap-2">
-                    {OPCOES_DIRETIVIDADE.map(opt => (
-                      <button
-                        key={opt.v}
-                        type="button"
-                        onClick={() => setFormData({...formData, diretividade: opt.v})}
-                        className={`p-4 rounded-xl font-bold text-xs md:text-sm text-center md:text-left transition-all border-2 ${
-                          formData.diretividade === opt.v ? "bg-primary text-white border-primary shadow-md shadow-primary/20" : "bg-white text-slate-600 border-slate-100 hover:border-blue-100"
-                        }`}
-                      >
-                        {opt.l}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8">
-                  <label className="block text-base font-black text-slate-700 mb-2 uppercase">Abordagem Teórica Principal</label>
-                  <select required className="w-full border border-slate-200 rounded-xl p-4 bg-white text-base font-black" value={formData.abordagem} onChange={e => setFormData({...formData, abordagem: e.target.value})}>
-                    <option value="">Selecione sua abordagem...</option>
-                    {ABORDAGENS.map(a => <option key={a} value={a}>{a}</option>)}
-                  </select>
-                </div>
-            </section>
-
-           {/* SEÇÃO 3: CONFIGURAÇÕES DE ATENDIMENTO (Mantida) */}
-            <section className="space-y-12">
-              <h2 className="text-2xl font-black text-deep border-b-2 border-slate-100 pb-3 flex items-center gap-3 uppercase">
-                <span className="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-base font-black italic">3</span>
-                Especialidade e Público
-              </h2>
-
-              <div className="bg-slate-50 px-4 py-6 rounded-[2.5rem] border border-slate-100 space-y-6 shadow-sm">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <label className="block text-lg font-black text-deep uppercase tracking-wide">ESPECIALIZAÇÃO PROFISSIONAL</label>
-                    <span className="text-xs font-black text-primary bg-primary/10 px-3 py-1.5 rounded-full uppercase tracking-tighter shadow-sm">{formData.especialidades.length} de 2 selecionadas</span>
-                  </div>
-                  <p className="text-sm text-slate-600 font-bold">Selecione até 2 especializações técnicas.</p>
-                </div>
-                <div className="space-y-4">
-                  <select 
-                    className="w-full border border-slate-200 rounded-xl p-4 bg-white text-base font-black text-slate-700"
-                    value=""
-                    onChange={(e) => {
-                      if(e.target.value === "nenhuma") setFormData({...formData, especialidades: []});
-                      else if(e.target.value) toggleItem(e.target.value, 'especialidades');
-                    }}
-                  >
-                    <option value="">Clique para selecionar...</option>
-                    <option value="nenhuma" className="text-amber-600 font-black">Não possuo especialização</option>
-                    {LISTA_ESPECIALIDADES.map(esp => <option key={esp} value={esp} disabled={formData.especialidades.includes(esp)}>{esp}</option>)}
-                  </select>
-                    <div className="flex flex-wrap gap-3">
-                      {formData.especialidades.map(esp => (
-                        <div key={esp} className="flex items-center gap-3 bg-primary text-white px-5 py-3 rounded-xl text-sm font-black uppercase shadow-sm w-full md:w-auto">
-                          <span className="flex-1 leading-tight py-0.5">{esp}</span>
-                          <button 
-                            type="button" 
-                            onClick={() => toggleItem(esp, 'especialidades')} 
-                            className="shrink-0 hover:text-amber-200 transition-colors p-1 bg-white/10 rounded-lg"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                </div>
-              </div>
-
-              {/* MODALIDADE (INDIVIDUAL / CASAIS) */}
-              <div className="bg-slate-50 px-4 py-6 rounded-[2.5rem] border border-slate-100 space-y-6 shadow-sm">
-                <div className="flex justify-between items-center mb-6">
-                  <label className="block text-lg font-black text-deep uppercase tracking-wide">MODALIDADE DE ATENDIMENTO</label>
-                  <span className="text-[10px] font-black text-primary bg-primary/10 px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm">Obrigatório</span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    {["Individual", "Casais"].map(mod => (
-                        <button 
-                             key={mod} 
-                             type="button" 
-                             onClick={() => toggleItem(mod, 'publicoAlvo')} 
-                             className={`px-6 py-4 rounded-xl text-sm font-black border uppercase transition-all flex items-center justify-center gap-2 ${formData.publicoAlvo.includes(mod) ? 'bg-deep text-white border-deep shadow-lg scale-[1.02]' : 'bg-white text-slate-500 border-slate-200 hover:border-deep/30'}`}
-                        >
-                            {formData.publicoAlvo.includes(mod) && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                            {mod}
-                        </button>
-                    ))}
-                </div>
-                {!formData.publicoAlvo.includes("Individual") && !formData.publicoAlvo.includes("Casais") && (
-                     <p className="text-xs text-amber-600 font-bold text-center bg-amber-50 py-2 rounded-lg border border-amber-100">⚠ Selecione pelo menos uma opção acima.</p>
-                )}
-              </div>
-
-              <div className="bg-slate-50 px-4 py-6 rounded-[2.5rem] border border-slate-100 space-y-6 shadow-sm">
-                <div className="flex justify-between items-center mb-6">
-                  <label className="block text-lg font-black text-deep uppercase tracking-wide">PÚBLICO ALVO</label>
-                  <span className="text-xs font-black text-slate-400 bg-slate-100 px-3 py-1.5 rounded-full uppercase tracking-tighter shadow-sm">{formData.publicoAlvo.length} de 10 selecionados</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap gap-3">
-                  {LISTA_PUBLICO.map(p => (
-                    <button key={p} type="button" onClick={() => toggleItem(p, 'publicoAlvo')} className={`px-4 py-3 rounded-xl text-xs md:text-sm font-black border uppercase transition-all ${formData.publicoAlvo.includes(p) ? 'bg-deep text-white border-deep shadow-md' : 'bg-white text-slate-600 border-slate-200'}`}>{p}</button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-slate-50 px-4 py-6 rounded-[2.5rem] border border-slate-100 space-y-6 shadow-sm">
-                <div className="flex justify-between items-center mb-6">
-                  <label className="block text-lg font-black text-deep uppercase tracking-wide">TEMAS E DEMANDAS</label>
-                  <span className="text-xs font-black text-primary bg-primary/10 px-3 py-1.5 rounded-full uppercase tracking-tighter shadow-sm">{formData.temas.length} de 5 selecionados</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3">
-                  {LISTA_TEMAS.map(t => (
-                    <button key={t} type="button" onClick={() => toggleItem(t, 'temas')} className={`px-5 py-4 rounded-2xl text-xs md:text-sm font-black border uppercase transition-all duration-300 ${formData.temas.includes(t) ? 'bg-primary text-white border-primary shadow-xl scale-[1.02]' : 'bg-white text-slate-500 border-slate-200 hover:border-primary/30 hover:bg-slate-50'}`}>
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </section>
+            {/* SEÇÃO 3: CONFIGURAÇÕES DE ATENDIMENTO (Componentizado) */}
+            <SpecialtiesSection formData={formData} setFormData={setFormData} />
 
             {/* SEÇÃO 4: VALORES E DURAÇÃO */}
             <section className="space-y-6">

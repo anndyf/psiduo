@@ -2,63 +2,50 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import Link from "next/link";
-import { atualizarPlanoDuoII } from "../../catalogo/actions";
+import { toast } from "sonner";
+import { Check } from "lucide-react";
+import PaymentModal from "./PaymentModal";
 
 export default function SelecaoPlanos() {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
+  const { data: session, status } = useSession();
   const [loading, setLoading] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
   
-  // Link simbólico para o checkout (substitua pelo seu link real do Stripe/MercadoPago)
-  const LINK_PAGAMENTO_DUO_II = "https://checkout.seupagamento.com/duo-ii-20reais";
-
   useEffect(() => {
-    // Tenta pegar o ID do usuário que acabou de se cadastrar (se estiver logado ou no session/local storage)
-    // Se não encontrar, redireciona para o login
-    const id = localStorage.getItem("psiduo_user_id");
-    if (!id) {
-      // Se não houver ID, ele não deveria estar aqui
-      // router.push("/login"); 
-    } else {
-      setUserId(id);
+    if (status === "unauthenticated") {
+        toast.error("Você precisa estar logado para acessar essa página.");
+        router.push("/login");
     }
-  }, [router]);
+  }, [status, router]);
 
   const handleAssinarPremium = async () => {
-    if (!userId) {
-      alert("Sessão não identificada. Por favor, faça login.");
-      router.push("/login");
+    if (!session?.user?.email) {
+      toast.error("Sessão não identificada. Por favor, faça login.");
       return;
     }
-
-    setLoading(true);
-
-    try {
-      // 1. Simulação: Abre o link de pagamento em uma nova aba
-      window.open(LINK_PAGAMENTO_DUO_II, "_blank");
-
-      // 2. Chamada para a action que faz o upgrade (em um sistema real, isso seria via Webhook de confirmação de pagamento)
-      // Aqui estamos facilitando o fluxo para o usuário
-      const res = await atualizarPlanoDuoII(userId);
-
-      if (res.success) {
-        alert("Pagamento processado com sucesso! Seu plano foi atualizado para DUO II.");
-        router.push("/painel");
-      }
-    } catch (error) {
-      console.error("Erro ao processar assinatura:", error);
-      alert("Houve um problema ao processar sua assinatura.");
-    } finally {
-      setLoading(false);
-    }
+    setShowPayment(true);
   };
 
   return (
-    <main className="min-h-screen bg-mist font-sans flex flex-col">
+    <main className="min-h-screen bg-mist font-sans flex flex-col relative">
       <Navbar />
+
+      {/* MODAL DE PAGAMENTO (PIX / CARTÃO) */}
+      {showPayment && session?.user?.email && (
+          <PaymentModal 
+            email={session.user.email} 
+            onClose={() => setShowPayment(false)}
+            onSuccess={() => {
+                setShowPayment(false);
+                router.push("/painel");
+            }}
+          />
+      )}
 
       <div className="flex-1 container mx-auto px-4 py-12 md:py-20">
         <div className="text-center max-w-2xl mx-auto mb-16">
@@ -73,7 +60,7 @@ export default function SelecaoPlanos() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch">
           
-          {/* CARD PLANO DUO I (GRATUITO/INCLUSO) */}
+          {/* CARD PLANO DUO I */}
           <div className="relative bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl border-2 border-slate-100 flex flex-col">
             <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 bg-slate-100 border border-slate-200">
               Plano de Entrada
@@ -84,21 +71,22 @@ export default function SelecaoPlanos() {
               <div className="flex items-baseline gap-1">
                 <span className="text-4xl font-black text-slate-300 italic uppercase">Gratuito</span>
               </div>
-              <p className="text-[10px] text-slate-400 mt-4 font-black uppercase tracking-widest italic leading-relaxed">Ativação após revisão <br/>manual de perfil</p>
+              <p className="text-[10px] text-slate-400 mt-4 font-black uppercase tracking-widest italic leading-relaxed">Ativação imediata <br/>após completar o cadastro</p>
             </div>
 
             <ul className="space-y-4 mb-10 flex-1">
               {[
-                "Perfil visível no catálogo completo",
-                "Contato direto via WhatsApp",
-                "Gestão básica de perfil",
-                "Limites de especialidades aplicados"
+                "Presença no Catálogo Principal",
+                "Filtros de Especialidades",
+                "Bio e Foto Profissional",
+                "Botão de Whatsapp Direto",
+                "Recebimento de Avaliações"
               ].map((item, idx) => (
                 <li key={idx} className="flex items-start gap-3">
                   <div className="mt-1 bg-slate-100 text-slate-400 rounded-full p-0.5">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>
+                    <Check size={12} strokeWidth={4} />
                   </div>
-                  <span className="text-sm font-bold text-slate-600 italic">{item}</span>
+                  <span className="text-sm font-bold text-slate-600 italic uppercase tracking-tight">{item}</span>
                 </li>
               ))}
             </ul>
@@ -111,7 +99,7 @@ export default function SelecaoPlanos() {
             </Link>
           </div>
 
-          {/* CARD PLANO DUO II (PREMIUM) */}
+          {/* CARD PLANO DUO II */}
           <div className="relative bg-slate-900 rounded-[2.5rem] p-8 md:p-12 shadow-2xl border-4 border-primary scale-105 z-10 flex flex-col">
             <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-white bg-primary shadow-lg shadow-primary/30">
               Recomendado
@@ -122,25 +110,46 @@ export default function SelecaoPlanos() {
                  <h2 className="text-2xl font-black text-white uppercase tracking-tight">Plano DUO II</h2>
                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.8)]"></span>
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-blue-300">R$</span>
-                <span className="text-6xl font-black text-white italic">20</span>
-                <span className="text-blue-300 font-bold uppercase text-[10px] tracking-widest">/mês</span>
+              <div className="flex flex-col items-start gap-1">
+                 <span className="bg-white text-blue-600 px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest mb-1">Oferta de Lançamento</span>
+                 <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-black text-white italic">GRÁTIS</span>
+                    <span className="text-blue-200 font-bold uppercase text-[10px] tracking-widest self-end mb-2">/ 30 DIAS</span>
+                 </div>
+                 <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Depois apenas R$ 39,99/mês</p>
               </div>
             </div>
 
             <ul className="space-y-4 mb-10 flex-1">
+                {/* BASE INCLUSA */}
+                <li className="flex items-center gap-3 mb-2">
+                   <div className="bg-white/10 text-white rounded-full p-1">
+                     <Check size={10} strokeWidth={4} />
+                   </div>
+                   <span className="text-xs font-black text-white/80 uppercase tracking-widest">
+                     + Todas as vantagens do DUO I
+                   </span>
+                </li>
+
+                {/* DESTAQUE */}
+                <li className="flex items-center gap-3">
+                   <div className="mt-0 bg-yellow-400 text-slate-900 rounded-full p-1 shadow-[0_0_15px_rgba(250,204,21,0.6)]">
+                     <Check size={14} strokeWidth={4} />
+                   </div>
+                   <span className="text-sm font-black text-yellow-400 uppercase tracking-widest drop-shadow-sm">
+                     Diário de Pacientes
+                   </span>
+                </li>
+
                {[
-                "Ativação Prioritária e Imediata",
-                "Agenda Digital Integrada ao Perfil",
-                "Apresentação em Vídeo com Autoplay",
-                "Redes Sociais Públicas no Perfil",
-                "Indicador Visual de Destaque",
-                "Métricas de Acessos ao Perfil"
+                "Agenda Disponível e Link",
+                "Vídeo de Apresentação",
+                "Métricas de Acessos",
+                "Destaque na Busca"
               ].map((item, idx) => (
                 <li key={idx} className="flex items-start gap-3">
                   <div className="mt-1 bg-blue-500/20 text-blue-400 rounded-full p-0.5">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>
+                    <Check size={12} strokeWidth={4} />
                   </div>
                   <span className="text-sm font-bold text-slate-300 uppercase tracking-tight">{item}</span>
                 </li>
@@ -150,9 +159,9 @@ export default function SelecaoPlanos() {
             <button 
               onClick={handleAssinarPremium}
               disabled={loading}
-              className="w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] text-center bg-primary text-white hover:bg-blue-600 transition-all shadow-xl shadow-blue-500/20 active:scale-95 disabled:opacity-50"
+              className="w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] text-center bg-primary text-white hover:bg-blue-600 transition-all shadow-xl shadow-blue-500/20 active:scale-95 disabled:opacity-50 border-2 border-white/20 hover:border-white/50"
             >
-              {loading ? "Processando..." : "Assinar e Ativar DUO II ⚡"}
+              TESTAR GRÁTIS POR 30 DIAS
             </button>
           </div>
 

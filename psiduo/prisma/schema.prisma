@@ -58,7 +58,14 @@ model Psicologo {
   criadoEm          DateTime    @default(now())
   atualizadoEm      DateTime    @updatedAt
   nome              String
-  crp               String      @unique
+  cpf               String?
+  asaasCustomerId   String?
+  subscriptionId    String?
+  ciclo             String?     // MONTHLY, YEARLY
+  limiteExtraPacientes Int      @default(0)
+  dataInicioPlano   DateTime?
+  planoValidade     DateTime?
+  crp               String?     @unique
   foto              String?
   whatsapp          String
   abordagem         String

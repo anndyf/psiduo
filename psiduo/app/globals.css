@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  .text-micro {
+    @apply text-[10px] font-black uppercase tracking-[0.2em];
+  }
+  
+  .text-label {
+    @apply text-sm font-black uppercase tracking-widest;
+  }
+}

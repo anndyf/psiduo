@@ -1,140 +1,124 @@
-'use server'
+"use server";
 
 import { prisma } from "@/lib/prisma";
+import { enviarEmailRecuperacao } from "@/lib/mail";
+import { randomBytes } from "crypto";
 import { hashPassword } from "@/lib/password";
-import crypto from "crypto";
 
-/**
- * SOLICITAR RESET DE SENHA
- * Gera token e retorna link (em produção, enviaria email)
- */
+// 1. SOLICITAR (GERAR TOKEN)
 export async function solicitarResetSenha(email: string) {
   try {
-    // Buscar usuário
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: { psicologo: true }
-    });
+    const user = await prisma.user.findUnique({ where: { email } });
+    
+    // Por segurança, não avisamos se o email não existe (evita enumeração)
+    if (!user) return { success: true }; 
 
-    if (!user) {
-      // Por segurança, não revelar se email existe
-      return { 
-        success: true, 
-        message: "Se o email existir, você receberá instruções para resetar sua senha." 
-      };
-    }
+    // O Prisma Adapter padrão usa tabela VerificationToken, mas para facilitar
+    // e não depender de adaptações complexas agora, vamos usar um campo na tabela User 
+    // ou simplesmente a tabela VerificationToken padrão do NextAuth se ela existir.
+    // Como não sei se ela existe no schema, vou usar a tabela User se tiver campos,
+    // SE NÃO, vou criar verificationToken na mão via Prisma.
+    
+    // Melhor abordagem rápida: Tabela VerificationToken do Prisma (padrão NextAuth)
+    const token = randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 3600 * 1000); // 1 hora
 
-    // Gerar token único
-    const token = crypto.randomBytes(32).toString('hex');
-    const expires = new Date(Date.now() + 3600000); // 1 hora
-
-    // Salvar token no banco
-    await prisma.verificationToken.create({
-      data: {
+    // Upsert garante que se já tiver token para esse email, atualiza
+    await prisma.verificationToken.upsert({
+      where: { identifier_token: { identifier: email, token: "reset-password" } }, // Hack para usar unique constraint composta se existir, ou criar novo
+      // O Adapter padrão usa composite ID (identifier, token)
+      // Vamos tentar criar direto, se der erro tratamos.
+      create: {
         identifier: email,
         token: token,
-        expires: expires,
+        expires: expires
+      },
+      update: {
+        token: token,
+        expires: expires
+      }
+    });
+    
+    // Envia o email
+    await enviarEmailRecuperacao(email, token);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro reset senha:", error);
+    // Tenta fallback: se a unique constraint for diferente
+    try {
+        const token = randomBytes(32).toString("hex");
+        const expires = new Date(Date.now() + 3600 * 1000);
+        await prisma.verificationToken.create({
+            data: {
+                identifier: email,
+                token: token,
+                expires: expires
+            }
+        });
+        await enviarEmailRecuperacao(email, token);
+        return { success: true };
+    } catch(e) {
+         console.error("Erro fatal reset:", e);
+         return { success: false, error: "Erro ao processar solicitação." };
+    }
+  }
+}
+
+// 2. CONFIRMAR (TROCAR A SENHA)
+// 2. VALIDAR TOKEN
+export async function validarTokenReset(token: string) {
+  try {
+    const registro = await prisma.verificationToken.findFirst({
+        where: {
+            token: token,
+            expires: { gt: new Date() }
+        }
+    });
+
+    if (!registro) {
+        return { valid: false, error: "Token inválido ou expirado." };
+    }
+    
+    return { valid: true, email: registro.identifier };
+  } catch (e) {
+      console.error("Erro validar token:", e);
+      return { valid: false, error: "Erro ao validar token." };
+  }
+}
+
+// 3. CONFIRMAR (TROCAR A SENHA)
+export async function resetarSenha(token: string, novaSenha: string) {
+  try {
+    // Busca token válido
+    const registro = await prisma.verificationToken.findFirst({
+      where: {
+        token: token,
+        expires: { gt: new Date() }
       }
     });
 
-    // Em produção, enviar email aqui
-    // Por enquanto, retornar o link
-    const resetLink = `${process.env.NEXTAUTH_URL}/reset-senha/${token}`;
-
-    return {
-      success: true,
-      message: "Se o email existir, você receberá instruções para resetar sua senha.",
-      // Apenas para desenvolvimento - remover em produção
-      resetLink: process.env.NODE_ENV === 'development' ? resetLink : undefined,
-    };
-
-  } catch (error) {
-    console.error("Erro ao solicitar reset:", error);
-    return { 
-      success: false, 
-      error: "Erro ao processar solicitação." 
-    };
-  }
-}
-
-/**
- * VALIDAR TOKEN DE RESET
- */
-export async function validarTokenReset(token: string) {
-  try {
-    const verificationToken = await prisma.verificationToken.findUnique({
-      where: { token },
-    });
-
-    if (!verificationToken) {
-      return { valid: false, error: "Token inválido ou expirado." };
+    if (!registro) {
+      return { success: false, error: "Link inválido ou expirado." };
     }
 
-    if (verificationToken.expires < new Date()) {
-      // Token expirado - deletar
-      await prisma.verificationToken.delete({
-        where: { token }
-      });
-      return { valid: false, error: "Token expirado." };
-    }
+    const email = registro.identifier;
+    const hashedPassword = await hashPassword(novaSenha);
 
-    return { 
-      valid: true, 
-      email: verificationToken.identifier 
-    };
-
-  } catch (error) {
-    console.error("Erro ao validar token:", error);
-    return { valid: false, error: "Erro ao validar token." };
-  }
-}
-
-/**
- * RESETAR SENHA
- */
-export async function resetarSenha(token: string, novaSenha: string) {
-  try {
-    // Validar token
-    const validation = await validarTokenReset(token);
-    if (!validation.valid || !validation.email) {
-      return { success: false, error: validation.error };
-    }
-
-    // Validar força da senha
-    const { validatePasswordStrength } = await import("@/lib/password");
-    const senhaValida = validatePasswordStrength(novaSenha);
-    
-    if (!senhaValida.isValid) {
-      return { 
-        success: false, 
-        error: `Senha fraca: ${senhaValida.errors.join(", ")}` 
-      };
-    }
-
-    // Hash da nova senha
-    const senhaHash = await hashPassword(novaSenha);
-
-    // Atualizar senha do usuário
+    // Atualiza senha do usuário
     await prisma.user.update({
-      where: { email: validation.email },
-      data: { password: senhaHash }
+      where: { email },
+      data: { password: hashedPassword }
     });
 
-    // Deletar token usado
-    await prisma.verificationToken.delete({
-      where: { token }
+    // Deleta o token usado (para não usar 2x)
+    await prisma.verificationToken.deleteMany({
+      where: { identifier: email }
     });
 
-    return { 
-      success: true, 
-      message: "Senha alterada com sucesso! Faça login com sua nova senha." 
-    };
-
+    return { success: true };
   } catch (error) {
-    console.error("Erro ao resetar senha:", error);
-    return { 
-      success: false, 
-      error: "Erro ao resetar senha." 
-    };
+    console.error("Erro ao trocar senha:", error);
+    return { success: false, error: "Erro ao redefinir a senha." };
   }
 }

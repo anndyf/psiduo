@@ -3,15 +3,21 @@
 import { useState } from "react";
 import { cadastrarPaciente } from "../actions";
 
+// ... imports
+import BuyPatientsModal from "./BuyPatientsModal";
+
 export default function NewPatientModal({ onClose }: { onClose: () => void }) {
   const [nome, setNome] = useState("");
-  // Inicializar com a data de hoje formatada YYYY-MM-DD
   const [dataInicio, setDataInicio] = useState(new Date().toISOString().split('T')[0]);
   const [cpf, setCpf] = useState("");
   const [loading, setLoading] = useState(false);
   const [novoLink, setNovoLink] = useState("");
+  
+  // Estado para Exibir Modal de Compra
+  const [showBuyModal, setShowBuyModal] = useState(false);
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // ...
     let value = e.target.value.replace(/\D/g, "");
     if (value.length > 11) value = value.slice(0, 11);
     
@@ -32,14 +38,25 @@ export default function NewPatientModal({ onClose }: { onClose: () => void }) {
 
     const res = await cadastrarPaciente(nome, dataInicio, cpf);
     if (res.success && res.data) {
-       // Gerar link absoluto (assumindo que window.location.origin está disponível no client)
+       // Gerar link absoluto
        const link = `${window.location.origin}/diario/${res.data.tokenAcesso}`;
        setNovoLink(link);
     } else {
-       alert(res.error || "Erro ao criar paciente");
+       // SE LIMITE ATINGIDO -> MOSTRAR MODAL DE COMPRA
+       if (res.limitReached) {
+           setShowBuyModal(true);
+       } else {
+           alert(res.error || "Erro ao criar paciente");
+       }
     }
     setLoading(false);
   };
+
+  // Se o usuário clicar em comprar, mostramos o modal de compra sobreposto
+  // Ao fechar o modal de compra, voltamos para este modal (ou fechamos tudo? Acho melhor fechar o buy modal só e permitir tentar dnv)
+  if (showBuyModal) {
+      return <BuyPatientsModal onClose={() => setShowBuyModal(false)} />;
+  }
 
   const handleCopy = () => {
     navigator.clipboard.writeText(novoLink);

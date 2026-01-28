@@ -188,7 +188,7 @@ export default function ClientDiary({ paciente, token, historicoInicial, dataIni
   };
 
   const isDiaPreenchido = (dia: number) => {
-    return historicoInicial.find(h => new Date(h.data).getUTCDate() === dia);
+    return historicoInicial.find(h => h.dia === dia);
   };
 
   const renderGoals = () => {
@@ -496,7 +496,7 @@ export default function ClientDiary({ paciente, token, historicoInicial, dataIni
                     value={notas}
                     onChange={e => setNotas(e.target.value)}
                     placeholder={tags.includes('OUTRO') ? "Descreva o que impactou seu dia..." : "Escreva aqui se quiser detalhar algo..."}
-                    className={`w-full h-32 bg-white border-2 rounded-2xl p-4 text-sm font-bold text-slate-700 outline-none resize-none transition-colors
+                    className={`w-full h-32 bg-white border-2 rounded-2xl p-4 text-base font-bold text-slate-700 outline-none resize-none transition-colors
                         ${tags.includes('OUTRO') && !notas.trim() ? 'border-red-200 focus:border-red-400' : 'border-slate-200 focus:border-deep'}
                     `}
                 />

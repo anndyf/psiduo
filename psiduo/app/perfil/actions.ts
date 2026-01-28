@@ -122,7 +122,8 @@ export async function salvarEAtivarPerfilCompleto(id: string, dados: any) {
     dados.especialidades?.length > 0 && 
     whatsappLimpo.length >= 10 &&
     dados.cidade?.trim().length > 0 &&
-    dados.estado?.trim().length > 0;
+    dados.estado?.trim().length > 0 &&
+    dados.crp?.trim().length >= 6; // CRP Obrigatório para ativar
 
   const novoStatus = estaCompleto ? "ATIVO" : "PENDENTE";
 
@@ -137,6 +138,7 @@ export async function salvarEAtivarPerfilCompleto(id: string, dados: any) {
       biografia: dados.biografia || dados.bio,      
       abordagem: dados.abordagem,
       whatsapp: whatsappLimpo,
+      crp: dados.crp,
       preco: precoSessao,
       duracaoSessao: Number(dados.duracaoSessao),
       idade: dados.idade ? Number(dados.idade) : null,
@@ -231,7 +233,8 @@ export async function buscarDadosPainel(id: string) {
       psicologo.especialidades && psicologo.especialidades.length > 0 && 
       whatsappLimpo.length >= 10 &&
       psicologo.cidade && psicologo.cidade.trim().length > 0 &&
-      psicologo.estado && psicologo.estado.trim().length > 0;
+      psicologo.estado && psicologo.estado.trim().length > 0 &&
+      psicologo.crp && psicologo.crp.trim().length >= 6;
 
     let statusFinal = psicologo.status;
     let slugFinal = psicologo.slug;

@@ -6,7 +6,7 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
-import { cadastrarPsicologo, verificarCRP, validarStatusCRP } from "../catalogo/actions";
+import { cadastrarPsicologo } from "../catalogo/actions";
 
 import { ABORDAGENS } from "../../lib/constants";
 export default function Cadastro() {
@@ -19,16 +19,10 @@ export default function Cadastro() {
   const [confirmarEmail, setConfirmarEmail] = useState("");
   const [emailFeedback, setEmailFeedback] = useState<{msg: string, cor: string} | null>(null);
   
-  // Estado para validação de CRP em tempo real
-  const [crpEmUso, setCrpEmUso] = useState(false);
-  const [verificandoCrp, setVerificandoCrp] = useState(false);
-  const [crpValidado, setCrpValidado] = useState(false);
-
   const [formData, setFormData] = useState({
     nome: "",
     email: "",
     senha: "",
-    crp: "",
     whatsapp: "",
     abordagem: "Terapia Cognitivo-Comportamental (TCC)",
     especialidades: [] as string[],
@@ -67,11 +61,6 @@ export default function Cadastro() {
   // --- FUNÇÕES DE MÁSCARA ---
   const validarEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const formatarCRP = (valor: string) => {
-    const limpo = valor.replace(/\D/g, "");
-    return limpo.replace(/^(\d{2})(\d)/, "$1/$2").slice(0, 9);
-  };
-
   const formatarWhatsapp = (valor: string) => {
     const limpo = valor.replace(/\D/g, "");
     return limpo
@@ -88,37 +77,8 @@ export default function Cadastro() {
         setFieldErrors(prev => prev.filter(f => f !== name));
     }
 
-    if (name === "crp") {
-        value = formatarCRP(value);
-        setCrpEmUso(false);
-        setCrpValidado(false); // Reseta validação ao digitar
-    }
     if (name === "whatsapp") value = formatarWhatsapp(value);
     setFormData({ ...formData, [name]: value });
-  };
-
-  // --- VERIFICAÇÃO DE CRP (QUANDO SAI DO CAMPO) ---
-  const handleBlurCRP = async () => {
-    if (formData.crp.length >= 7) {
-      setVerificandoCrp(true);
-      try {
-        // IMPORTANTE: validarStatusCRP deve ser importado de ../catalogo/actions
-        const resultado = await validarStatusCRP(formData.crp);
-        
-        if (!resultado.valido) {
-           setError(resultado.mensagem || "CRP inválido.");
-           setCrpEmUso(true); // Bloqueia submit
-        } else {
-           setCrpEmUso(false);
-           setCrpValidado(true); // Marca como visualmente válido
-           setError(""); // Limpa erro se tiver
-        }
-      } catch (err) {
-        console.error("Erro ao verificar CRP", err);
-      } finally {
-        setVerificandoCrp(false);
-      }
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -126,17 +86,10 @@ export default function Cadastro() {
     setIsLoading(true);
     setError("");
 
-    if (crpEmUso) {
-        setError("Este CRP já está cadastrado. Tente fazer login.");
-        setIsLoading(false);
-        return;
-    }
-
     // Validação de Campos Vazios
     const emptyFields: string[] = [];
     if (!formData.nome) emptyFields.push("nome");
     if (!formData.email) emptyFields.push("email");
-    if (!formData.crp) emptyFields.push("crp");
     if (!formData.whatsapp) emptyFields.push("whatsapp");
     if (!formData.senha) emptyFields.push("senha");
     if (!formData.preco) emptyFields.push("preco");
@@ -169,12 +122,6 @@ export default function Cadastro() {
       setError("A senha deve ter no mínimo 8 caracteres, uma letra maiúscula, uma minúscula e um número.");
       setIsLoading(false);
       return;
-    }
-
-    if (formData.crp.length < 7) { 
-        setError("CRP incompleto.");
-        setIsLoading(false);
-        return;
     }
 
     try {
@@ -318,30 +265,8 @@ export default function Cadastro() {
                     </div>
                 </div>
 
-                {/* Grid Central: CRP e Zap */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="relative">
-                        <label className="block text-sm font-bold text-slate-700 mb-2 ml-1 flex justify-between">
-                            <span>CRP</span>
-                            {verificandoCrp && <span className="text-blue-500 text-xs font-normal animate-pulse">Verificando...</span>}
-                        </label>
-                        <input 
-                            name="crp" required type="text" 
-                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${crpEmUso || fieldErrors.includes('crp') ? 'border-red-500 bg-red-50 ring-red-100' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
-                            placeholder="Ex: 06/12345"
-                            value={formData.crp}
-                            onChange={handleChange}
-                            onBlur={handleBlurCRP} // DISPARA A VALIDAÇÃO
-                            maxLength={9}
-                        />
-                        {crpEmUso && (
-                            <span className="text-xs text-red-500 font-bold absolute -bottom-5 left-1">Verifique o erro acima.</span>
-                        )}
-                        {crpValidado && !crpEmUso && (
-                            <span className="text-xs text-green-600 font-bold absolute -bottom-5 left-1">✓ CRP Ativo e Válido</span>
-                        )}
-                    </div>
-                    <div>
+                    {/* Grid Zap (Único nesta linha agora, ou expandir para full width) */}
+                    <div className="grid grid-cols-1">
                         <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">WhatsApp</label>
                         <input 
                             name="whatsapp" required type="tel" 
@@ -352,7 +277,6 @@ export default function Cadastro() {
                             maxLength={15}
                         />
                     </div>
-                </div>
 
                 {/* Grid Senhas */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
@@ -446,7 +370,7 @@ export default function Cadastro() {
 
                 <div className="pt-4">
                     <button 
-                        disabled={isLoading || crpEmUso}
+                        disabled={isLoading}
                         type="submit" 
                         className="w-full bg-deep text-white font-bold py-4 rounded-xl shadow-lg hover:bg-primary transition disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2 text-lg"
                     >

@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { validarTokenReset, resetarSenha } from "../actions";
 
-export default function ResetSenhaToken({ params }: { params: { token: string } }) {
+export default function ResetSenhaToken() {
   const router = useRouter();
+  const params = useParams();
+  const token = params?.token as string;
+
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -18,7 +21,8 @@ export default function ResetSenhaToken({ params }: { params: { token: string } 
 
   useEffect(() => {
     async function validarToken() {
-      const result = await validarTokenReset(params.token);
+      if (!token) return;
+      const result = await validarTokenReset(token);
       if (result.valid && result.email) {
         setTokenValido(true);
         setEmail(result.email);
@@ -28,7 +32,7 @@ export default function ResetSenhaToken({ params }: { params: { token: string } 
       setIsValidating(false);
     }
     validarToken();
-  }, [params.token]);
+  }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +51,7 @@ export default function ResetSenhaToken({ params }: { params: { token: string } 
     setIsLoading(true);
 
     try {
-      const result = await resetarSenha(params.token, novaSenha);
+      const result = await resetarSenha(token, novaSenha);
 
       if (result.success) {
         setSuccess(true);
