@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LogoPsiDuo from "@/components/LogoPsiDuo";
 
 export default function Footer() {
   return (
@@ -18,9 +19,11 @@ export default function Footer() {
             
             {/* Coluna 1: Marca e Sobre */}
             <div>
-              <h3 className="text-2xl font-bold text-white mb-4 font-logo">Psi<span className="text-primary">Duo</span></h3>
+              <div className="mb-4">
+                 <LogoPsiDuo variant="light" width={140} height={70} />
+              </div>
               <p className="mb-6 leading-relaxed text-slate-400 text-xs">
-                Plataforma de conexão entre psicólogos e pacientes. Facilitamos o acesso à saúde mental com tecnologia, segurança e ética.
+                Plataforma de gestão clínica e conexão entre psicólogos e pacientes.
               </p>
               {/* Redes Sociais */}
               <div className="flex gap-4">
@@ -39,9 +42,12 @@ export default function Footer() {
               <ul className="space-y-3">
                 {/* Aqui usamos Link, tal como no Navbar */}
                 <li><Link href="/" className="hover:text-primary transition">Início</Link></li>
-                <li><Link href="/catalogo" className="hover:text-primary transition">Catálogo de Profissionais</Link></li>
-                <li><Link href="/sou-psicologo" className="hover:text-primary transition">Para Psicólogos</Link></li>
-                {/* <li><Link href="/faq" className="hover:text-primary transition">Dúvidas</Link></li> */}
+                <li><Link href="/recursos" className="hover:text-primary transition">Recursos</Link></li>
+                <li><Link href="/planos" className="hover:text-primary transition">Planos</Link></li>
+                <li><Link href="/catalogo" className="hover:text-primary transition">Ver Catálogo</Link></li>
+                <li><Link href="/sou-psicologo" className="hover:text-primary transition">Sou Profissional</Link></li>
+                <li><Link href="/etica" className="hover:text-primary transition">Ética e Transparência</Link></li>
+                <li><Link href="/termos" className="hover:text-primary transition">Termos de Uso</Link></li>
                 <li><Link href="/login" className="hover:text-primary transition">Login</Link></li>
               </ul>
             </div>
@@ -81,7 +87,6 @@ export default function Footer() {
               <p className="mb-1">© 2026 PsiDuo Tecnologia Ltda. Todos os direitos reservados.</p>
               <p className="text-slate-600">Responsável Técnica: Dra. Andressa Mirella (CRP 06/12345)</p>
             </div>
-            <p>Feito com 💙 para a psicologia.</p>
           </div>
         </div>
       </footer>

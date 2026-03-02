@@ -206,7 +206,7 @@ function generateToken(length = 12) {
 }
 
 // --- CRIAR PACIENTE (DUO II EXCLUSIVE) ---
-export async function cadastrarPaciente(nome: string, dataInicioISO?: string, cpf?: string) {
+export async function cadastrarPaciente(nome: string, dataInicioISO?: string, cpf?: string, whatsapp?: string) {
   const session = await getServerSession(authOptions);
   
   // @ts-ignore
@@ -264,13 +264,17 @@ export async function cadastrarPaciente(nome: string, dataInicioISO?: string, cp
         if (cpfExiste) return { success: false, error: "Este CPF já está cadastrado para outro paciente." };
     }
 
+    // WhatsApp Limpo
+    const whatsappLimpo = whatsapp ? whatsapp.replace(/\D/g, "") : null;
+
     const novoPaciente = await prisma.paciente.create({
       data: {
         nome,
         psicologoId,
         tokenAcesso: token,
         dataInicio,
-        cpf: cpfLimpo
+        cpf: cpfLimpo,
+        whatsapp: whatsappLimpo
       }
     });
 
@@ -339,7 +343,8 @@ export async function listarPacientes() {
 
   const pacientes = await prisma.paciente.findMany({
     where: { 
-        psicologoId
+        psicologoId,
+        tipo: 'INDIVIDUAL'
         // Removido 'ativo: true' para listar pausados também
     },
     orderBy: [
@@ -397,49 +402,105 @@ export async function excluirPaciente(id: string) {
     }
 }
 
-// --- BUSCAR DADOS DASHBOARD (DETALHADO) ---
+// --- BUSCAR TUDO PARA O DASHBOARD (DETALHADO E AUTORIZADO) ---
 export async function buscarDadosDashboard(pacienteId: string) {
     const session = await getServerSession(authOptions);
     // @ts-ignore
-    if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
+    const psicologoId = session?.user?.psicologoId;
+    if (!psicologoId) return { success: false, error: "Não autorizado" };
 
     try {
+        // 1. Busca Principal: Paciente com todas as relações diretas
+        // Isso elimina 5 queries separadas (notas, metas, anamnese, prontuario, instrumentos)
         const paciente = await prisma.paciente.findUnique({
             where: { id: pacienteId },
             include: { 
-                 _count: { select: { registros: true } }
+                _count: { select: { registros: true } },
+                anamnese: true,
+                prontuario: {
+                    include: {
+                        evolucoes: {
+                            orderBy: { data: 'desc' },
+                            include: {
+                                psicologo: { select: { id: true, nome: true, foto: true, crp: true } }
+                            }
+                        }
+                    }
+                },
+                notasClinicas: { orderBy: { criadoEm: 'desc' } },
+                metas: {
+                    orderBy: { criadoEm: 'desc' },
+                    include: {
+                        _count: { select: { registros: true } },
+                        registros: { orderBy: { data: 'desc' } }
+                    }
+                },
+                instrumentos: {
+                    orderBy: { data: 'desc' }
+                },
+                solicitacoesInstrumento: {
+                    where: { concluida: false },
+                    orderBy: { data: 'desc' }
+                }
             }
         });
 
-        // @ts-ignore
-        if (!paciente || paciente.psicologoId !== session.user.psicologoId) {
+        if (!paciente || paciente.psicologoId !== psicologoId) {
             return { success: false, error: "Paciente não encontrado ou sem permissão." };
         }
 
-        // Buscar últimos 7 dias (Semana) para o Gráfico Inicial
-        const endDate = new Date();
-        const startDate = new Date();
-        startDate.setDate(endDate.getDate() - 7); 
-        startDate.setHours(0,0,0,0); 
-
-        const registros = await prisma.registroDiario.findMany({
-            where: {
-                pacienteId,
-                data: { gte: startDate }
-            },
+        // 2. Registros Diários (Volume potencialmente alto, mantido separado mas otimizado)
+        // Buscamos TUDO de uma vez e filtramos os últimos 7 dias em memória, 
+        // economizando uma conexão de banco extra.
+        const registrosCompletos = await prisma.registroDiario.findMany({
+            where: { pacienteId },
             orderBy: { data: 'asc' }
         });
 
-        // Buscar TODOS os registros para o Histórico Detalhado
-        const registrosCompletos = await prisma.registroDiario.findMany({
-            where: { pacienteId },
-            orderBy: { data: 'asc' } // Ou desc, dependendo de como quer exibir
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+
+        const registros = registrosCompletos.filter(r => new Date(r.data) >= startDate);
+
+        // 3. Dados do Psicólogo Logado (simples)
+        const psicologoLogado = await prisma.psicologo.findUnique({
+            where: { id: psicologoId },
+            select: { id: true, nome: true, foto: true, crp: true }
         });
 
-        return { success: true, paciente, registros, registrosCompletos };
+        // 4. Mapear Dados Cadastrais (já vieram na query principal do paciente)
+        const dadosCadastrais = {
+            dataNascimento: paciente.dataNascimento,
+            sexo: paciente.sexo,
+            nacionalidade: paciente.nacionalidade,
+            estadoCivil: paciente.estadoCivil,
+            grauInstrucao: paciente.grauInstrucao,
+            profissao: paciente.profissao,
+            cidade: paciente.cidade,
+            estado: paciente.estado,
+            outrosContatos: paciente.outrosContatos,
+            telefone: paciente.telefone,
+            cep: paciente.cep,
+            endereco: paciente.endereco,
+        };
+
+        return {
+            success: true,
+            paciente, // Objeto completo com includes
+            registros,
+            registrosCompletos,
+            metas: paciente.metas,
+            notas: paciente.notasClinicas,
+            dadosCadastrais,
+            anamnese: paciente.anamnese,
+            prontuario: paciente.prontuario,
+            instrumentos: paciente.instrumentos,
+            psicologoLogado,
+        };
     } catch (error) {
-        console.error("Erro dashboard:", error);
-        return { success: false, error: "Erro interno." };
+        console.error("Erro crítico buscarDadosDashboard:", error);
+        return { success: false, error: "Erro interno ao buscar dados." };
     }
 }
 
@@ -540,5 +601,377 @@ export async function buscarNotasClinicas(pacienteId: string) {
     } catch (e) {
         console.error("Erro ao buscar notas:", e);
         return { success: false, error: "Erro ao buscar notas." };
+    }
+}
+
+// --- GRUPOS TERAPEUTICOS (NOVO) ---
+
+export async function listarGruposComParticipantes() {
+  const session = await getServerSession(authOptions);
+  // @ts-ignore
+  if (!session || !session.user?.psicologoId) return [];
+  // @ts-ignore
+  const psicologoId = session.user.psicologoId;
+
+  const grupos = await prisma.grupoTerapeutico.findMany({
+    where: { psicologoId },
+    include: {
+      participantes: {
+        orderBy: { nome: 'asc' },
+        select: {
+            id: true,
+            nome: true,
+            cpf: true,
+            whatsapp: true,
+            tipo: true,
+            grupoId: true,
+            registros: {
+                orderBy: { data: 'desc' },
+                take: 1,
+                select: {
+                    data: true,
+                    humor: true
+                }
+            },
+            _count: {
+                select: { registros: true }
+            }
+        }
+      }
+    },
+    orderBy: { criadoEm: 'desc' }
+  });
+
+  return grupos.map(g => ({
+    ...g,
+    precoMensal: g.precoMensal.toNumber(),
+    criadoEm: g.criadoEm.toISOString(),
+    atualizadoEm: g.atualizadoEm.toISOString()
+  }));
+}
+
+export async function adicionarPacienteAoGrupo(pacienteId: string, grupoId: string) {
+    const session = await getServerSession(authOptions);
+    // @ts-ignore
+    if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
+
+    try {
+        // Verificar se o grupo tem limite de vagas
+        const grupo = await prisma.grupoTerapeutico.findUnique({
+            where: { id: grupoId },
+            select: { vagasTotais: true, vagasOcupadas: true }
+        });
+
+        if (!grupo) {
+            return { success: false, error: "Grupo não encontrado." };
+        }
+
+        // Verificar se o grupo está cheio
+        if (grupo.vagasTotais !== null && grupo.vagasOcupadas >= grupo.vagasTotais) {
+            return { success: false, error: `Grupo completo! Limite de ${grupo.vagasTotais} participantes atingido.` };
+        }
+
+        await prisma.paciente.update({
+            where: { id: pacienteId },
+            data: { grupoId },
+        });
+        
+        // Atualizar contagem de vagas ocupadas
+        const count = await prisma.paciente.count({ where: { grupoId } });
+        await prisma.grupoTerapeutico.update({
+             where: { id: grupoId },
+             data: { vagasOcupadas: count }
+        });
+
+        revalidatePath("/painel/pacientes");
+        return { success: true };
+    } catch (e) {
+        console.error("Erro ao adicionar ao grupo:", e);
+        return { success: false, error: "Erro ao adicionar." };
+    }
+}
+
+export async function removerPacienteDoGrupo(pacienteId: string, grupoId: string) {
+    const session = await getServerSession(authOptions);
+    // @ts-ignore
+    if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
+
+    try {
+        await prisma.paciente.update({
+            where: { id: pacienteId },
+            data: { grupoId: null },
+        });
+
+         // Atualizar contagem de vagas ocupadas
+        const count = await prisma.paciente.count({ where: { grupoId } });
+        await prisma.grupoTerapeutico.update({
+             where: { id: grupoId },
+             data: { vagasOcupadas: count }
+        });
+
+        revalidatePath("/painel/pacientes");
+    } catch (e) {
+        console.error("Erro ao remover do grupo:", e);
+        return { success: false, error: "Erro ao remover." };
+    }
+}
+
+
+export async function cadastrarPacienteGrupo(grupoId: string, nome: string, whatsapp: string, cpf: string) {
+     const session = await getServerSession(authOptions);
+    // @ts-ignore
+    if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
+    // @ts-ignore
+    const psicologoId = session.user.psicologoId;
+
+    try {
+        let token = generateToken();
+        // Simple token uniqueness check loop
+        let tokenExiste = true;
+        while (tokenExiste) {
+            const check = await prisma.paciente.findUnique({ where: { tokenAcesso: token } });
+            if (!check) tokenExiste = false;
+            else token = generateToken();
+        }
+
+        // Verificar se o grupo tem limite de vagas
+        const grupo = await prisma.grupoTerapeutico.findUnique({
+            where: { id: grupoId },
+            select: { vagasTotais: true, vagasOcupadas: true }
+        });
+
+        if (!grupo) {
+            return { success: false, error: "Grupo não encontrado." };
+        }
+
+        // Verificar se o grupo está cheio
+        if (grupo.vagasTotais !== null && grupo.vagasOcupadas >= grupo.vagasTotais) {
+            return { success: false, error: `Grupo completo! Limite de ${grupo.vagasTotais} participantes atingido.` };
+        }
+
+        // Verificar CPF duplicado
+        if (cpf) {
+            const cpfExists = await prisma.paciente.findFirst({ where: { cpf } });
+            if (cpfExists) return { success: false, error: "CPF já cadastrado." };
+        }
+
+        const novoPaciente = await prisma.paciente.create({
+            data: {
+                nome,
+                whatsapp, // Salvar WhatsApp
+                cpf,      // Salvar CPF
+                psicologoId,
+                grupoId,
+                tokenAcesso: token,
+                tipo: 'GRUPO_EXCLUSIVO', 
+                dataInicio: new Date()
+            }
+        });
+
+        // Atualizar contagem
+        const count = await prisma.paciente.count({ where: { grupoId } });
+        await prisma.grupoTerapeutico.update({
+             where: { id: grupoId },
+             data: { vagasOcupadas: count }
+        });
+
+        revalidatePath("/painel/pacientes");
+        return { success: true, pacienteId: novoPaciente.id };
+
+    } catch(e) {
+        console.error("Erro criar paciente grupo:", e);
+        return { success: false, error: "Erro ao criar integrante." };
+    }
+}
+
+export async function promoverParaIndividual(pacienteId: string) {
+    const session = await getServerSession(authOptions);
+    // @ts-ignore
+    if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
+
+    try {
+        await prisma.paciente.update({
+            where: { id: pacienteId },
+            data: { tipo: 'INDIVIDUAL' }
+        });
+        
+        revalidatePath("/painel/pacientes");
+        return { success: true };
+    } catch (e) {
+        return { success: false, error: "Erro ao promover paciente." };
+    }
+}
+// --- SOLICITAR INSTRUMENTOS ---
+export async function solicitarInstrumentos(pacienteId: string, tipos: string[]) {
+    const session = await getServerSession(authOptions);
+    // @ts-ignore
+    if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
+
+    try {
+        // Criar solicitações
+        const requests = tipos.map(tipo => 
+            prisma.solicitacaoInstrumento.create({
+                data: {
+                    pacienteId,
+                    tipo: tipo.replace(/[^a-zA-Z0-9]/g, "").toUpperCase(), 
+                    concluida: false
+                }
+            })
+        );
+
+        await Promise.all(requests);
+        
+        revalidatePath(`/painel/pacientes/${pacienteId}`);
+        return { success: true };
+    } catch (e) {
+        console.error("Erro ao solicitar instrumentos:", e);
+        return { success: false, error: "Erro ao registrar solicitação." };
+    }
+}
+
+export async function cancelarSolicitacao(solicitacaoId: string, pacienteId: string) {
+    const session = await getServerSession(authOptions);
+    // @ts-ignore
+    if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
+
+    try {
+        await prisma.solicitacaoInstrumento.delete({
+            where: { id: solicitacaoId }
+        });
+        
+        revalidatePath(`/painel/pacientes/${pacienteId}`);
+        return { success: true };
+    } catch (e) {
+        console.error("Erro ao cancelar solicitação:", e);
+        return { success: false, error: "Erro ao cancelar solicitação." };
+    }
+}
+
+// --- INSTRUMENTOS (PHQ-9, GAD-7, etc) ---
+
+export async function salvarAplicacaoInstrumento(pacienteId: string, tipo: string, respostas: any, resultado: any) {
+    const session = await getServerSession(authOptions);
+    // @ts-ignore
+    if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
+
+    try {
+        const aplicacao = await (prisma as any).aplicacaoInstrumento.create({
+            data: {
+                pacienteId,
+                tipo,
+                respostas,
+                resultado
+            }
+        });
+
+        revalidatePath(`/painel/pacientes/${pacienteId}`);
+        return { success: true, id: aplicacao.id };
+    } catch (error) {
+        console.error("Erro salvar instrumento:", error);
+        return { success: false, error: "Erro ao salvar resultados." };
+    }
+}
+
+export async function excluirAplicacaoInstrumento(id: string, pacienteId: string) {
+    const session = await getServerSession(authOptions);
+    // @ts-ignore
+    if (!session || !session.user?.psicologoId) return { success: false, error: "Não autorizado" };
+
+    try {
+        await (prisma as any).aplicacaoInstrumento.delete({
+            where: { id }
+        });
+
+        revalidatePath(`/painel/pacientes/${pacienteId}`);
+        return { success: true };
+    } catch (error) {
+        console.error("Erro excluir instrumento:", error);
+        return { success: false, error: "Erro ao excluir." };
+    }
+}
+export async function salvarInstrumentoViaLink(pacienteId: string, cpf: string, tipo: string, respostas: any, resultado: any) {
+    try {
+        // Validação de segurança simples: CPF deve bater com o do paciente
+        const paciente = await prisma.paciente.findUnique({
+            where: { id: pacienteId }
+        });
+
+        if (!paciente) {
+            return { success: false, error: "Paciente não encontrado." };
+        }
+
+        // Limpar CPFs para comparação
+        const cpfDigitoPaciente = paciente.cpf?.replace(/\D/g, "") || "";
+        const cpfDigitoInput = cpf.replace(/\D/g, "");
+
+        if (cpfDigitoPaciente !== cpfDigitoInput) {
+            return { success: false, error: "CPF incorreto." };
+        }
+
+        const aplicacao = await (prisma as any).aplicacaoInstrumento.create({
+            data: {
+                pacienteId,
+                tipo,
+                respostas,
+                resultado
+            }
+        });
+
+        // Marcar solicitação como concluída se existir
+        const tipoLimpo = tipo.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+        await prisma.solicitacaoInstrumento.updateMany({
+            where: {
+                pacienteId,
+                tipo: tipoLimpo,
+                concluida: false
+            },
+            data: { concluida: true }
+        });
+
+        revalidatePath(`/painel/pacientes/${pacienteId}`);
+        return { success: true, id: aplicacao.id };
+
+    } catch (error) {
+        console.error("Erro salvar instrumento link:", error);
+        return { success: false, error: "Erro ao salvar resultados." };
+    }
+}
+
+export async function verificarAcessoPaciente(pacienteId: string, cpf: string) {
+    try {
+        const paciente = await prisma.paciente.findUnique({
+            where: { id: pacienteId },
+            include: { psicologo: { select: { nome: true } } }
+        });
+
+        if (!paciente) return { success: false, error: "Paciente não encontrado." };
+
+        const cpfDigitoPaciente = paciente.cpf?.replace(/\D/g, "") || "";
+        const cpfDigitoInput = cpf.replace(/\D/g, "");
+
+        if (cpfDigitoPaciente !== cpfDigitoInput) {
+            return { success: false, error: "CPF incorreto." };
+        }
+
+        // Buscar solicitações pendentes
+        const solicitacoesDb = await prisma.solicitacaoInstrumento.findMany({
+            where: {
+                pacienteId,
+                concluida: false
+            },
+            select: { tipo: true }
+        });
+
+        // Normalize solicitacoes format so it matches Avaliacoes checks like "PHQ9"
+        const solicitacoes = solicitacoesDb.map(s => s.tipo.replace(/[^a-zA-Z0-9]/g, "").toUpperCase());
+
+        return { 
+            success: true, 
+            nome: paciente.nome, 
+            psicologoNome: paciente.psicologo.nome,
+            solicitacoes: solicitacoes
+        };
+    } catch (e) {
+        return { success: false, error: "Erro ao verificar acesso." };
     }
 }

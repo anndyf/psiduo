@@ -67,7 +67,7 @@ export default function AccountSettingsModal({ isOpen, onClose, currentEmail, on
         <header className="mb-10 flex justify-between items-start">
           <div>
             <h2 className="text-xl md:text-2xl font-black text-slate-900 uppercase tracking-widest mb-2">SISTEMA</h2>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Configurações de Acesso</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Configurações de Acesso</p>
           </div>
           <button onClick={onClose} className="text-slate-300 hover:text-red-600 transition-colors text-3xl">✕</button>
         </header>
@@ -81,7 +81,7 @@ export default function AccountSettingsModal({ isOpen, onClose, currentEmail, on
         <div className="space-y-8">
           <div>
             <div className="flex justify-between mb-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">E-mail de Acesso</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-600">E-mail de Acesso</label>
               <button onClick={() => setEditandoEmail(!editandoEmail)} className="text-[10px] font-black text-deep uppercase hover:underline">Alterar</button>
             </div>
             <Input 
@@ -93,7 +93,7 @@ export default function AccountSettingsModal({ isOpen, onClose, currentEmail, on
           </div>
 
           <div>
-             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Alterar Senha</label>
+             <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 block mb-2">Alterar Senha</label>
              <div className="space-y-3">
                 <Input 
                   type="password" 

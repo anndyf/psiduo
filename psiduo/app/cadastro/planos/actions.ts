@@ -4,8 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { createSubscription, getPixQrCode } from "@/lib/asaas";
 
 // PREÇOS
-const PRICE_MONTHLY = 39.99;
-const PRICE_YEARLY = 429.90;
+const PRICE_MONTHLY = 40.00;
+const PRICE_YEARLY = 430.00;
 
 export async function gerarAssinaturaPix(email: string, interval: "MONTHLY" | "YEARLY" = "MONTHLY", cpf: string) {
   try {

@@ -1,0 +1,112 @@
+// ============================================
+// FERRAMENTAS DE GRUPO TERAPÊUTICO
+// ============================================
+
+// 1. TERMÔMETRO COLETIVO (Check-in Emocional)
+model CheckInGrupo {
+  id          String   @id @default(cuid())
+  grupoId     String
+  titulo      String   // Ex: "Check-in antes da sessão de hoje"
+  descricao   String?  @db.Text
+  dataEnvio   DateTime @default(now())
+  dataExpira  DateTime // 1 hora antes da sessão
+  ativo       Boolean  @default(true)
+  
+  grupo       GrupoTerapeutico @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  respostas   RespostaCheckIn[]
+  
+  @@index([grupoId])
+  @@index([ativo])
+}
+
+model RespostaCheckIn {
+  id          String   @id @default(cuid())
+  checkInId   String
+  pacienteId  String
+  emocao      String   // "BATERIA_BAIXA", "AGITADO", "DEFENSIVO", "ABERTO"
+  criadoEm    DateTime @default(now())
+  
+  checkIn     CheckInGrupo @relation(fields: [checkInId], references: [id], onDelete: Cascade)
+  paciente    Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  
+  @@unique([checkInId, pacienteId]) // Um paciente responde apenas uma vez por check-in
+  @@index([checkInId])
+}
+
+// 2. MURAL DAS VITÓRIAS
+model VitoriaGrupo {
+  id          String   @id @default(cuid())
+  grupoId     String
+  pacienteId  String
+  texto       String   @db.Text
+  aprovado    Boolean  @default(false)
+  criadoEm    DateTime @default(now())
+  
+  grupo       GrupoTerapeutico @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  paciente    Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  reacoes     ReacaoVitoria[]
+  
+  @@index([grupoId])
+  @@index([aprovado])
+}
+
+model ReacaoVitoria {
+  id          String   @id @default(cuid())
+  vitoriaId   String
+  pacienteId  String
+  emoji       String   // "PALMAS", "CORACAO", "FOGO"
+  criadoEm    DateTime @default(now())
+  
+  vitoria     VitoriaGrupo @relation(fields: [vitoriaId], references: [id], onDelete: Cascade)
+  paciente    Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  
+  @@unique([vitoriaId, pacienteId]) // Um paciente reage apenas uma vez por vitória
+  @@index([vitoriaId])
+}
+
+// 3. MISSÃO DA SEMANA
+model MissaoGrupo {
+  id          String   @id @default(cuid())
+  grupoId     String
+  titulo      String
+  descricao   String   @db.Text
+  dataInicio  DateTime @default(now())
+  dataFim     DateTime
+  ativo       Boolean  @default(true)
+  
+  grupo       GrupoTerapeutico @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  conclusoes  ConclusaoMissao[]
+  
+  @@index([grupoId])
+  @@index([ativo])
+}
+
+model ConclusaoMissao {
+  id          String   @id @default(cuid())
+  missaoId    String
+  pacienteId  String
+  concluido   Boolean  @default(false)
+  dataConclusao DateTime?
+  criadoEm    DateTime @default(now())
+  
+  missao      MissaoGrupo @relation(fields: [missaoId], references: [id], onDelete: Cascade)
+  paciente    Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  
+  @@unique([missaoId, pacienteId]) // Um paciente marca conclusão apenas uma vez por missão
+  @@index([missaoId])
+}
+
+// ============================================
+// ATUALIZAÇÕES NECESSÁRIAS
+// ============================================
+
+// Adicionar ao model GrupoTerapeutico:
+//   checkIns      CheckInGrupo[]
+//   vitorias      VitoriaGrupo[]
+//   missoes       MissaoGrupo[]
+
+// Adicionar ao model Paciente:
+//   respostasCheckIn  RespostaCheckIn[]
+//   vitorias          VitoriaGrupo[]
+//   reacoesVitoria    ReacaoVitoria[]
+//   conclusoesMissao  ConclusaoMissao[]

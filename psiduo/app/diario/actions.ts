@@ -60,22 +60,26 @@ export async function salvarRegistro(token: string, dataISO: string, dados: {
     if (!check) return { success: false, error: "Token inválido" };
 
     try {
-        // 2. Normalizar Data (UTC Midnight) Manually
+        // 2. Normalizar Data (UTC Noon) Manually to avoid Timezone shifts (Midnight vs Previous Day)
         // O input dataISO deve vir como YYYY-MM-DD
         const [ano, mes, dia] = dataISO.split('-').map(Number);
         
-        // Criar data UTC pura direto dos componentes
-        // Note: mes no Date.UTC é 0-indexado (0 = Janeiro)
-        const dataAlvo = new Date(Date.UTC(ano, mes - 1, dia));
+        // Ranges para busca (O dia inteiro em UTC)
+        const startOfDay = new Date(Date.UTC(ano, mes - 1, dia, 0, 0, 0));
+        const endOfDay = new Date(Date.UTC(ano, mes - 1, dia, 23, 59, 59, 999));
+
+        // Data Alvo para Salvar (Meio-dia UTC)
+        // Isso garante que mesmo com shifts de timezone (-3, +3), continue no mesmo dia
+        const dataSalvar = new Date(Date.UTC(ano, mes - 1, dia, 12, 0, 0));
 
         // 3. Buscar se já existe registro nesse dia para esse paciente
-        // Como DateTime no banco tem hora, precisamos buscar por range do dia OU confiar na normalização exata
-        // Melhor buscar exato, assumindo que sempre salvaremos normalizado zerado.
-        
         const registroExistente = await prisma.registroDiario.findFirst({
             where: {
                 pacienteId: check.id,
-                data: dataAlvo // Prisma compara exato se passar Date object
+                data: {
+                    gte: startOfDay,
+                    lte: endOfDay
+                }
             }
         });
 
@@ -88,6 +92,7 @@ export async function salvarRegistro(token: string, dataISO: string, dados: {
                     sono: dados.sono,
                     tags: dados.tags,
                     notas: dados.notas,
+                    data: dataSalvar // Atualiza para Noon UTC se não estiver
                 }
             });
         } else {
@@ -95,7 +100,7 @@ export async function salvarRegistro(token: string, dataISO: string, dados: {
             await prisma.registroDiario.create({
                 data: {
                     pacienteId: check.id,
-                    data: dataAlvo,
+                    data: dataSalvar,
                     humor: dados.humor,
                     sono: dados.sono,
                     tags: dados.tags,
@@ -118,8 +123,8 @@ export async function buscarHistorico(token: string, ano: number, mes: number) {
     const check = await validatingTokenInternal(token);
     if (!check) return [];
 
-    const inicio = new Date(Date.UTC(ano, mes, 1));
-    const fim = new Date(Date.UTC(ano, mes + 1, 0)); // Último dia do mês
+    const inicio = new Date(Date.UTC(ano, mes, 1, 0, 0, 0));
+    const fim = new Date(Date.UTC(ano, mes + 1, 0, 23, 59, 59, 999)); // Último dia do mês (Noite)
 
     const registros = await prisma.registroDiario.findMany({
         where: {

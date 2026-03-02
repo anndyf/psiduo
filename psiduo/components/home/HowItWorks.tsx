@@ -2,66 +2,63 @@ export const HowItWorks = () => {
   const steps = [
     {
       number: 1,
-      title: "Inicie a Conexão",
-      description: "Responda ao nosso questionário rápido. O sistema filtra e apresenta os profissionais ideais para sua necessidade.",
-      highlight: "Serviço 100% Gratuito."
+      title: "Setup de Perfil",
+      description: "Cadastre seu CRP, crie seu perfil público enriquecido com vídeo e especialidades.",
+      highlight: "Verificação Instantânea."
     },
     {
       number: 2,
-      title: "Analise e Escolha",
-      description: "Veja o perfil completo, vídeo de apresentação, valores e especialidades. Você tem total liberdade para escolher quem mais lhe agrada."
+      title: "Configuração Clínica",
+      description: "Defina seus horários na agenda, configure seus valores de sessão e ferramentas de diário.",
     },
     {
       number: 3,
-      title: "Conexão Direta",
-      description: "Clique no botão e fale diretamente no WhatsApp do psicólogo.",
-      footer: "Pagamento direto ao profissional."
+      title: "Operação Ativa",
+      description: "Apareça no catálogo, receba solicitações via WhatsApp e gerencie tudo pelo painel.",
     }
   ];
 
   return (
-    <section className="py-24 bg-white relative z-10">
+    <section className="py-24 bg-white relative z-10 border-t border-slate-100">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-4xl font-bold text-deep mb-4">
-            Como funciona o PsiDuo?
-          </h2>
-          <p className="text-slate-500 max-w-2xl mx-auto text-lg">
-            Um processo simples, gratuito para pacientes e sem intermediários. Você no controle da sua jornada.
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+          <div className="max-w-2xl">
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 leading-tight">
+              Sua clínica digital em <br/><span className="text-blue-600">3 passos simples.</span>
+            </h2>
+          </div>
+          <p className="text-slate-500 max-w-md text-sm leading-relaxed">
+            Uma transição suave do manual para o automático, com suporte total em cada etapa do processo.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-10 max-w-6xl mx-auto relative mb-16">
-          {/* Linha conectora (Desktop) */}
-          <div className="hidden md:block absolute top-12 left-0 w-full h-1 bg-blue-50 -z-10"></div>
-
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {steps.map((step) => (
-            <div key={step.number} className="flex flex-col items-center text-center group">
-              <div className="w-24 h-24 bg-white border-4 border-blue-50 rounded-full flex items-center justify-center mb-6 shadow-sm group-hover:border-primary transition-colors duration-300 relative">
-                <span className="text-4xl font-bold text-primary">{step.number}</span>
+            <div key={step.number} className="relative p-6 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 group">
+              <div className="absolute -top-4 -left-4 w-10 h-10 bg-slate-900 text-white rounded-lg flex items-center justify-center font-bold text-sm shadow-lg group-hover:bg-blue-600 transition-colors">
+                0{step.number}
               </div>
-              <h3 className="text-xl font-bold text-deep mb-3">{step.title}</h3>
-              <p className="text-slate-600 px-4 text-sm leading-relaxed">
-                {step.description}
+              
+              <div className="space-y-4 pt-2">
+                <h3 className="text-lg font-bold text-slate-900 uppercase tracking-tight">{step.title}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  {step.description}
+                </p>
+                
                 {step.highlight && (
-                  <span className="block mt-2 font-bold text-primary">{step.highlight}</span>
+                  <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                    <span className="w-1 h-1 rounded-full bg-blue-600 animate-pulse"></span>
+                    {step.highlight}
+                  </div>
                 )}
-                {step.footer && (
-                  <span className="block mt-2 text-slate-500 font-medium bg-slate-50 py-1 px-2 rounded">
-                    {step.footer}
-                  </span>
-                )}
-              </p>
+                
+
+              </div>
             </div>
           ))}
         </div>
 
-        <div className="max-w-3xl mx-auto text-center border-t border-slate-100 pt-8">
-           <p className="text-sm text-slate-400 leading-relaxed">
-             <span className="font-bold text-slate-500">Nota de Transparência:</span> O PsiDuo atua apenas como facilitador da conexão. 
-             Não cobramos taxas sobre as consultas e não interferimos na agenda. Toda a negociação é privada entre você e o psicólogo.
-           </p>
-        </div>
+
       </div>
     </section>
   );

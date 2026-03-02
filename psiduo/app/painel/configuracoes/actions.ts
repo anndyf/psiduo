@@ -126,6 +126,7 @@ export async function buscarConfiguracoes(email: string) {
             success: true,
             dados: {
                 nome: user.psicologo.nome,
+                email: user.email,
                 plano: user.psicologo.plano,
                 planoValidade: user.psicologo.planoValidade,
                 subscriptionId: user.psicologo.subscriptionId,

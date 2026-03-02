@@ -36,8 +36,8 @@ export default function PaymentModal({ email, onClose, onSuccess }: PaymentModal
     });
 
     // PRICES
-    const PRICE_MONTHLY = 39.99;
-    const PRICE_YEARLY = 429.90; 
+    const PRICE_MONTHLY = 40.00;
+    const PRICE_YEARLY = 430.00; 
     
     // MASKS / FORMATTERS
     const formatCardNumber = (value: string) => value.replace(/\D/g, "").replace(/(\d{4})/g, "$1 ").trim().substring(0, 19);
@@ -130,13 +130,13 @@ export default function PaymentModal({ email, onClose, onSuccess }: PaymentModal
                             onClick={() => setCycle("MONTHLY")}
                             className={`flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${cycle === "MONTHLY" ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
                         >
-                            Mensal (R$ 39,99)
+                            Mensal (R$ 40,00)
                         </button>
                         <button 
                             onClick={() => setCycle("YEARLY")}
                             className={`flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-lg transition-all relative ${cycle === "YEARLY" ? "bg-white text-blue-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
                         >
-                            Anual (R$ 429,90)
+                            Anual (R$ 430,00)
                             <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[9px] px-2 py-0.5 rounded-full shadow-sm animate-bounce">ECONOMIZE</span>
                         </button>
                     </div>

@@ -5,8 +5,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 // --- SEGURANÇA ---
-const ADMIN_USER = "Admin";
-const ADMIN_PASS = "Duo2026#!Admin";
+const ADMIN_USER = "Andressa";
+const ADMIN_PASS = "Duo2026#Admin";
 const COOKIE_NAME = "psiduo_admin_token";
 
 export async function adminLogin(formData: FormData) {
@@ -87,6 +87,7 @@ export async function getPsicologosList() {
         verificado: true,
         whatsapp: true,
         criadoEm: true,
+        ciclo: true,
         _count: {
           select: { pacientes: true }
         },
@@ -106,6 +107,7 @@ export async function getPsicologosList() {
       verificado: p.verificado,
       whatsapp: p.whatsapp,
       pacientes: p._count.pacientes,
+      ciclo: p.ciclo,
       criadoEm: p.criadoEm.toISOString() 
     }));
   } catch (error: any) {
@@ -198,8 +200,8 @@ export async function getFinancialMetrics() {
   ]);
 
   // Estimativa de MRR (Receita Recorrente Mensal)
-  const mrrFromMonthly = monthlyUsers * 39.99;
-  const mrrFromYearly = yearlyUsers * (429.90 / 12);
+  const mrrFromMonthly = monthlyUsers * 40;
+  const mrrFromYearly = yearlyUsers * (430 / 12);
   const totalMRR = mrrFromMonthly + mrrFromYearly;
 
   return {
@@ -216,4 +218,97 @@ export async function getFinancialMetrics() {
       yearlyShare: mrrFromYearly
     }
   };
+}
+
+export async function enviarMensagemAdmin(psicologoId: string, conteudo: string) {
+    await checkAdmin();
+    try {
+        await (prisma as any).internalMessage.create({
+            data: {
+                psicologoId,
+                conteudo,
+                remetente: "ADMIN"
+            }
+        });
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: "Erro ao enviar mensagem" };
+    }
+}
+
+export async function getMensagensAdmin(psicologoId: string) {
+    await checkAdmin();
+    try {
+        return await (prisma as any).internalMessage.findMany({
+            where: { psicologoId },
+            orderBy: { criadoEm: 'desc' }
+        });
+    } catch (error) {
+        return [];
+    }
+}
+
+export async function getTodosPedidosSuporte() {
+    await checkAdmin();
+    try {
+        const model = (prisma as any).internalMessage;
+        if (!model) return [];
+        
+        const msgs = await model.findMany({
+            where: { remetente: "PSICOLOGO" },
+            include: {
+                psicologo: {
+                    select: { id: true, nome: true, crp: true, whatsapp: true }
+                }
+            },
+            orderBy: { criadoEm: 'desc' }
+        });
+
+        const groupedMap: Record<string, any> = {};
+
+        msgs.forEach((m: any) => {
+            const psiId = m.psicologoId;
+            if (!groupedMap[psiId]) {
+                groupedMap[psiId] = {
+                    id: psiId, // Adicionando ID do grupo para referência
+                    psicologo: m.psicologo,
+                    messages: [],
+                    latestMessageAt: m.criadoEm,
+                    isNew: false
+                };
+            }
+            groupedMap[psiId].messages.push(m);
+            if (!m.lida) groupedMap[psiId].isNew = true;
+        });
+
+        const result = Object.values(groupedMap).sort((a: any, b: any) => 
+            new Date(b.latestMessageAt).getTime() - new Date(a.latestMessageAt).getTime()
+        );
+        
+        return JSON.parse(JSON.stringify(result));
+    } catch (error) {
+        console.error("Error grouping support messages:", error);
+        return [];
+    }
+}
+
+export async function marcarLidaPorAdmin(id?: string, psicologoId?: string) {
+    await checkAdmin();
+    try {
+        const model = (prisma as any).internalMessage;
+        if (id) {
+            await model.update({
+                where: { id },
+                data: { lida: true }
+            });
+        } else if (psicologoId) {
+            await model.updateMany({
+                where: { psicologoId, remetente: "PSICOLOGO", lida: false },
+                data: { lida: true }
+            });
+        }
+        return { success: true };
+    } catch (error) {
+        return { success: false };
+    }
 }

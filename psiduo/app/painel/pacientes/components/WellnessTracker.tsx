@@ -31,7 +31,7 @@ export default function WellnessTracker({ registros = [] }: WellnessTrackerProps
      <section className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm mt-8">
          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4 px-2">
              <h5 className="text-xs font-black uppercase text-slate-800 tracking-widest flex items-center gap-2">
-                 <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
+                 <div className="w-1 h-4 bg-deep rounded-full"></div>
                  Bem-Estar (Humor e Sono)
              </h5>
              
@@ -74,7 +74,7 @@ export default function WellnessTracker({ registros = [] }: WellnessTrackerProps
                                         key={d} 
                                         onMouseEnter={() => setHoveredDay(d)}
                                         onMouseLeave={() => setHoveredDay(null)}
-                                        className={`flex flex-col items-center justify-center py-2 border-r border-slate-50 last:border-r-0 transition-colors cursor-pointer ${hoveredDay === d ? 'bg-blue-100' : ''}`}
+                                        className={`flex flex-col items-center justify-center py-2 border-r border-slate-50 last:border-r-0 transition-colors cursor-pointer ${hoveredDay === d ? 'bg-slate-100' : ''}`}
                                      >
                                          <span className="text-[8px] font-bold text-slate-300 uppercase mb-0.5">{weekDay}</span>
                                          <span className="text-[10px] font-black text-slate-400">{d}</span>
@@ -89,7 +89,7 @@ export default function WellnessTracker({ registros = [] }: WellnessTrackerProps
                          <div className="flex group">
                              {/* Label Fixo */}
                              <div className="sticky left-0 z-30 bg-white min-w-[140px] md:min-w-[200px] flex items-center gap-2 px-4 border-r border-slate-50 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)] py-2">
-                                 <div className="w-full flex items-center gap-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors">
+                                 <div className="w-full flex items-center gap-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 group-hover:bg-slate-50 group-hover:border-slate-200 transition-colors">
                                      <Smile size={14} className="text-deep"/>
                                      <span className="text-[9px] font-black text-slate-700 uppercase tracking-tight block truncate">Humor Geral</span>
                                  </div>
@@ -107,7 +107,7 @@ export default function WellnessTracker({ registros = [] }: WellnessTrackerProps
                                          if(rec.humor <= 1) icon = <Frown size={14} className="text-red-500"/>
                                          else if(rec.humor <= 2) icon = <Frown size={14} className="text-orange-500"/>
                                          else if(rec.humor <= 3) icon = <Meh size={14} className="text-yellow-500"/>
-                                         else if(rec.humor <= 4) icon = <Smile size={14} className="text-blue-500"/>
+                                         else if(rec.humor <= 4) icon = <Smile size={14} className="text-deep"/>
                                          else icon = <Smile size={14} className="text-green-500"/>
                                      }
 
@@ -116,7 +116,7 @@ export default function WellnessTracker({ registros = [] }: WellnessTrackerProps
                                             key={d} 
                                             onMouseEnter={() => setHoveredDay(d)}
                                             onMouseLeave={() => setHoveredDay(null)}
-                                            className={`flex items-center justify-center h-14 border-r border-slate-50/50 last:border-r-0 transition-colors cursor-pointer ${hoveredDay === d ? 'bg-blue-100' : 'hover:bg-white'}`}
+                                            className={`flex items-center justify-center h-14 border-r border-slate-50/50 last:border-r-0 transition-colors cursor-pointer ${hoveredDay === d ? 'bg-slate-100' : 'hover:bg-white'}`}
                                         >
                                             {icon || <div className="w-1 h-1 bg-slate-200 rounded-full"></div>}
                                         </div>
@@ -129,8 +129,8 @@ export default function WellnessTracker({ registros = [] }: WellnessTrackerProps
                          <div className="flex group">
                              {/* Label Fixo */}
                              <div className="sticky left-0 z-30 bg-white min-w-[140px] md:min-w-[200px] flex items-center gap-2 px-4 border-r border-slate-50 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)] py-2">
-                                 <div className="w-full flex items-center gap-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors">
-                                     <Moon size={14} className="text-blue-500"/>
+                                 <div className="w-full flex items-center gap-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 group-hover:bg-slate-50 group-hover:border-slate-200 transition-colors">
+                                     <Moon size={14} className="text-deep"/>
                                      <span className="text-[9px] font-black text-slate-700 uppercase tracking-tight block truncate">Qualidade Sono</span>
                                  </div>
                              </div>
@@ -147,7 +147,7 @@ export default function WellnessTracker({ registros = [] }: WellnessTrackerProps
                                             key={d} 
                                             onMouseEnter={() => setHoveredDay(d)}
                                             onMouseLeave={() => setHoveredDay(null)}
-                                            className={`flex items-center justify-center h-14 border-r border-slate-50/50 last:border-r-0 transition-colors cursor-pointer ${hoveredDay === d ? 'bg-blue-100' : 'hover:bg-white'}`}
+                                            className={`flex items-center justify-center h-14 border-r border-slate-50/50 last:border-r-0 transition-colors cursor-pointer ${hoveredDay === d ? 'bg-slate-100' : 'hover:bg-white'}`}
                                         >
                                             {rec ? (
                                                 <span className={`text-[11px] font-black ${

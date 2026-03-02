@@ -1,255 +1,272 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import {
-  ComposedChart,
-  Line,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer
+  ComposedChart, Line, Bar, XAxis, YAxis,
+  CartesianGrid, Tooltip, ResponsiveContainer, Area
 } from 'recharts';
-import { Frown, Meh, Smile, Moon } from 'lucide-react';
+import { Frown, Meh, Smile, Moon, TrendingUp } from 'lucide-react';
 
 interface Registro {
   data: string | Date;
   humor: number;
   sono: number;
-  notas: string | null;
-  tags: string[];
+  notas?: string | null;
+  tags?: string[];
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload.fullData;
-    if (!data) return null; // Não mostra tooltip em dias vazios
+type Periodo = '7d' | '15d' | '30d' | 'all';
 
-    const getHumorIcon = (humor: number) => {
-        if (humor <= 1) return <Frown size={16} className="text-red-500" strokeWidth={2.5} />;
-        if (humor <= 2) return <Frown size={16} className="text-orange-500" />;
-        if (humor <= 3) return <Meh size={16} className="text-yellow-500" />;
-        if (humor <= 4) return <Smile size={16} className="text-blue-500" />;
-        return <Smile size={16} className="text-green-500" strokeWidth={2.5} />;
-    };
+const PERIODOS: { key: Periodo; label: string }[] = [
+  { key: '7d',  label: '7 dias'  },
+  { key: '15d', label: '15 dias' },
+  { key: '30d', label: '30 dias' },
+  { key: 'all', label: 'Tudo'    },
+];
 
-    return (
-      <div className="bg-white p-4 border border-slate-200 shadow-xl rounded-xl max-w-[220px]">
-        <p className="font-black text-slate-900 uppercase text-xs mb-3 border-b pb-2">{new Date(data.data).toLocaleDateString('pt-BR')}</p>
-        
-        <div className="space-y-2 mb-3">
-            <div className="flex justify-between items-center text-xs">
-                <span className="text-deep font-bold flex items-center gap-1">Humor:</span>
-                <span className="flex items-center gap-2 font-bold text-slate-700">
-                    {getHumorIcon(data.humor)}
-                    Note: {data.humor}/5
-                </span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-                <span className="text-blue-500 font-bold flex items-center gap-1">Sono:</span>
-                <span className="flex items-center gap-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                         <Moon key={i} size={10} className={i < data.sono ? "fill-blue-400 text-blue-400" : "text-slate-200"} />
-                    ))}
-                </span>
-            </div>
-        </div>
-
-        {data.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2">
-                {data.tags.map((t: string) => (
-                    <span key={t} className="px-1.5 py-0.5 bg-slate-100 text-[9px] rounded-md font-bold uppercase text-slate-500 border border-slate-200">{t}</span>
-                ))}
-            </div>
-        )}
-
-        {data.notas && (
-            <p className="text-[10px] italic text-slate-500 bg-slate-50 p-2 rounded-lg mt-2 leading-relaxed">"{data.notas}"</p>
-        )}
-      </div>
-    );
-  }
-  return null;
+const HUMOR_LABELS: Record<number, string> = {
+  1: 'Péssimo', 2: 'Ruim', 3: 'Neutro', 4: 'Bom', 5: 'Ótimo'
 };
 
-export default function MoodChart({ data, periodo = '7d' }: { data: Registro[], periodo?: '7d' | '30d' | '1y' | 'all' }) {
-  
-  // Definir título baseado no período
-  const titulos = {
-    '7d': 'Últimos 7 Dias',
-    '30d': 'Termômetro Mensal (30 Dias)',
-    '1y': 'Histórico Anual',
-    'all': 'Histórico Completo'
+// ─── Tooltip customizado ──────────────────────────────────────────────────
+const CustomTooltip = ({ active, payload }: any) => {
+  if (!active || !payload?.length) return null;
+  const d = payload[0]?.payload?.fullData;
+  if (!d) return null;
+
+  const getIcon = (h: number) => {
+    if (h <= 1) return <Frown size={14} className="text-red-400" strokeWidth={2} />;
+    if (h <= 2) return <Frown size={14} className="text-orange-400" />;
+    if (h <= 3) return <Meh  size={14} className="text-yellow-400" />;
+    if (h <= 4) return <Smile size={14} className="text-deep" />;
+    return <Smile size={14} className="text-emerald-500" strokeWidth={2} />;
   };
 
-  // Lógica de Processamento de Dados
-  let formattedData: any[] = [];
+  return (
+    <div className="bg-white border border-slate-100 shadow-xl rounded-xl p-3 text-xs max-w-[200px]">
+      <p className="font-medium text-slate-700 mb-2 pb-1.5 border-b border-slate-50">
+        {new Date(d.data).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}
+      </p>
+      <div className="space-y-1.5">
+        <div className="flex justify-between items-center gap-4">
+          <span className="text-slate-400 font-medium">Humor</span>
+          <span className="flex items-center gap-1.5 font-medium text-slate-700">
+            {getIcon(d.humor)} {HUMOR_LABELS[d.humor] ?? d.humor}
+          </span>
+        </div>
+        <div className="flex justify-between items-center gap-4">
+          <span className="text-slate-400 font-medium">Sono</span>
+          <span className="flex items-center gap-1">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Moon key={i} size={9} className={i < d.sono ? "fill-deep text-deep" : "text-slate-200"} />
+            ))}
+            <span className="text-slate-500 ml-1">{d.sono}h</span>
+          </span>
+        </div>
+        {d.tags?.length > 0 && (
+          <div className="flex flex-wrap gap-1 pt-1">
+            {d.tags.map((t: string) => (
+              <span key={t} className="px-1.5 py-0.5 bg-slate-50 rounded text-[10px] text-slate-500 border border-slate-100">{t}</span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
-  if (periodo === '7d' || periodo === '30d') {
-      const diasCount = periodo === '7d' ? 7 : 30;
-      
-      let dias: string[] = [];
-      
-      // Helper para tratar datas como UTC puro (evita shift de fuso horário)
-      const formatDateUTC = (date: Date) => {
-        const year = date.getUTCFullYear();
-        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-        const day = String(date.getUTCDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      };
+// ─── Eixo Y com emojis ────────────────────────────────────────────────────
+const CustomYTick = ({ x, y, payload }: any) => {
+  const v = payload.value;
+  return (
+    <g transform={`translate(${x - 26},${y - 10})`}>
+      {v === 1 && <Frown size={18} className="text-red-300"     strokeWidth={2} />}
+      {v === 2 && <Frown size={18} className="text-orange-300"              />}
+      {v === 3 && <Meh   size={18} className="text-yellow-300"             />}
+      {v === 4 && <Smile size={18} className="text-slate-400"               />}
+      {v === 5 && <Smile size={18} className="text-emerald-400" strokeWidth={2} />}
+    </g>
+  );
+};
 
-      if (periodo === '7d') {
-          // Ajuste para 7d: Rolling Window (Últimos 7 Dias Consecutivos até Hoje)
-          dias = Array.from({ length: 7 }, (_, i) => {
-            const d = new Date();
-            d.setDate(d.getDate() - (6 - i)); 
-             // Ajuste crucial: Criar data UTC pura para string de comparação
-            const utcDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-            return formatDateUTC(utcDate);
-          });
-      } else {
-          // Ajuste para 30d: Rolling Window (Últimos 30 dias)
-          dias = Array.from({ length: 30 }, (_, i) => {
-            const d = new Date();
-            d.setDate(d.getDate() - (29 - i)); 
-            const utcDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-            return formatDateUTC(utcDate);
-          });
-      }
+// ─── Helpers ──────────────────────────────────────────────────────────────
+const toUTCStr = (d: Date | string): string => {
+  const dt = d instanceof Date ? d : new Date(d);
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+};
 
-      formattedData = dias.map(dataStr => {
-        const registro = data.find(d => {
-            // Se d.data for Date (do Prisma), usamos UTC para comparar
-            // Se for string (ISO), pegamos a parte da data
-            let dStr = '';
-            if (d.data instanceof Date) {
-                 dStr = formatDateUTC(d.data);
-            } else {
-                 dStr = (d.data as string).split('T')[0];
-            }
-            return dStr === dataStr;
+const buildDaySlots = (count: number) =>
+  Array.from({ length: count }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (count - 1 - i));
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
+
+// ─── Componente principal ─────────────────────────────────────────────────
+export default function MoodChart({ data }: { data: Registro[] }) {
+  const [periodo, setPeriodo] = useState<Periodo>('7d');
+
+  const chartData = useMemo(() => {
+    if (periodo === 'all') {
+      // Mostra todos os registros existentes
+      return [...data]
+        .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
+        .map(d => {
+          const dt = d.data instanceof Date ? d.data : new Date(d.data);
+          return {
+            dataShort: dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }),
+            humor: d.humor,
+            sono: d.sono,
+            fullData: d,
+          };
         });
+    }
 
-        // Criar objeto Date tratando fuso horário explicitamente como UTC
-        const [ano, mes, dia] = dataStr.split('-').map(Number);
-        const dateObj = new Date(Date.UTC(ano, mes - 1, dia + 1)); // +1 pq Date.UTC considera 00:00, mas visualização pode variar. 
-        // Correção: Para visualizar certo dia/mes em UTC, basta criar com UTC.
-        
-        const displayDate = new Date(ano, mes - 1, dia); // Data Local Pura para exibição correta sem shift de toLocaleString
+    const count = periodo === '7d' ? 7 : periodo === '15d' ? 15 : 30;
+    const slots = buildDaySlots(count);
 
-        const diaSemana = displayDate.toLocaleDateString('pt-BR', { weekday: 'short' }); 
-        const diaMes = displayDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    return slots.map(slot => {
+      const reg = data.find(d => toUTCStr(d.data) === slot);
+      const [y, m, day] = slot.split('-').map(Number);
+      const dt = new Date(y, m - 1, day);
+      const diaSemana = dt.toLocaleDateString('pt-BR', { weekday: 'short' });
+      const diaMes    = dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 
-        return {
-            dataShort: periodo === '7d' ? `${diaSemana} ${diaMes}` : diaMes, // 30d mostra só dia/mês para caber
-            humor: registro?.humor || null,
-            sono: registro?.sono || null,
-            fullData: registro
-        };
-      });
+      return {
+        dataShort: count === 7 ? `${diaSemana} ${diaMes}` : diaMes,
+        humor: reg?.humor ?? null,
+        sono:  reg?.sono  ?? null,
+        fullData: reg ?? null,
+      };
+    });
+  }, [data, periodo]);
 
-  } else {
-      // Para Ano e Tudo: Mostrar apenas dados existentes (ou todos os dias seria gráfico muito pesado)
-      // Ajuste: User pediu "registros de todos os chekins devem ser exibidos"
-      // Vamos mostrar os dados brutos ordenados, sem preencher dias vazios (connectNulls já ajuda)
-      // Se tiver muitos dados, o scroll horizontal cuida.
-      
-      formattedData = data.map(d => {
-           // Garantir Date object
-           const dateObj = d.data instanceof Date ? d.data : new Date(d.data as string);
-           
-           return {
-               dataShort: dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }),
-               humor: d.humor,
-               sono: d.sono,
-               fullData: d
-           };
-      });
-  }
+  const hasData = data.length > 0;
+  const barSize = periodo === '7d' ? 28 : periodo === '15d' ? 16 : 10;
+  const xInterval = periodo === '30d' ? 1 : 0;
 
   return (
-    <div className="w-full h-[400px] bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
-        <h3 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-6 ml-6">{titulos[periodo]}</h3>
-        
-        {/* Container Scrollável para Mobile */}
-        <div className="w-full h-full overflow-x-auto pb-4">
-            <div className="min-w-[600px] h-full"> {/* Força largura mínima para não espremer */}
-                <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart
-                        data={formattedData}
-                        margin={{ top: 20, right: 20, bottom: 20, left: 10 }}
-                    >
-                        <CartesianGrid stroke="#f1f5f9" vertical={false} />
-                        <XAxis 
-                            dataKey="dataShort" 
-                            tick={{fontSize: 10, fill: '#94a3b8', fontWeight: 700}} 
-                            axisLine={false} 
-                            tickLine={false}
-                            interval={periodo === '30d' ? 1 : 0} // 30 dias pula 1 label para não encavalar
-                        />
-                        
+    <div className="w-full">
+      {/* Filtros de período */}
+      <div className="flex items-center gap-1 mb-5">
+        {PERIODOS.map(p => (
+          <button
+            key={p.key}
+            onClick={() => setPeriodo(p.key)}
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-medium uppercase tracking-wide transition-all border ${
+              periodo === p.key
+                ? 'bg-deep text-white border-deep shadow-sm'
+                : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-deep'
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
 
-                        {/* Eixo Y da Esquerda: Humor (Linha) */}
-                        <YAxis 
-                            yAxisId="left" 
-                            domain={[0, 6]} 
-                            ticks={[1,2,3,4,5]} 
-                            tick={({ x, y, payload }) => {
-                                const val = payload.value;
-                                return (
-                                    <g transform={`translate(${x - 25},${y - 12})`}>
-                                        {val <= 1 && <Frown size={20} className="text-red-500" strokeWidth={2.5} />}
-                                        {val === 2 && <Frown size={20} className="text-orange-500" />}
-                                        {val === 3 && <Meh size={20} className="text-yellow-500" />}
-                                        {val === 4 && <Smile size={20} className="text-blue-500" />}
-                                        {val === 5 && <Smile size={20} className="text-green-500" strokeWidth={2.5} />}
-                                    </g>
-                                );
-                            }}
-                            axisLine={false}
-                            tickLine={false}
-                            width={40}
-                        />
-
-                        {/* Eixo Y da Direita: Sono (Barra) */}
-                        <YAxis 
-                            yAxisId="right" 
-                            orientation="right" 
-                            domain={[0, 6]} 
-                            hide 
-                        />
-
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend wrapperStyle={{fontSize: '10px', textTransform: 'uppercase', fontWeight: 900}} />
-
-                        {/* Barras de Sono (Background) */}
-                        <Bar 
-                            yAxisId="right" 
-                            dataKey="sono" 
-                            name="Qualidade do Sono" 
-                            barSize={periodo === '7d' ? 40 : 20} // Barras mais finas para períodos longos
-                            fill="#bfdbfe" 
-                            opacity={0.5} 
-                            radius={[8, 8, 0, 0]}
-                        />
-
-                        {/* Linha de Humor */}
-                        <Line 
-                            yAxisId="left" 
-                            type="monotone" 
-                            dataKey="humor" 
-                            name="Humor Geral" 
-                            stroke="#0f172a" 
-                            strokeWidth={3}
-                            dot={{r: 4, fill: '#0f172a', strokeWidth: 0}}
-                            activeDot={{r: 6}}
-                            connectNulls // Conectar pontos mesmo se houver dias vazios no meio
-                        />
-                    </ComposedChart>
-                </ResponsiveContainer>
-            </div>
+      {/* Gráfico */}
+      {!hasData ? (
+        <div className="h-64 flex flex-col items-center justify-center text-slate-300 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
+          <TrendingUp size={28} className="mb-2 opacity-40" strokeWidth={1.5} />
+          <p className="text-xs font-medium text-slate-400">Sem registros ainda</p>
+          <p className="text-[10px] text-slate-300 mt-1">Os dados aparecerão aqui conforme o paciente preencher o diário</p>
         </div>
+      ) : (
+        <div className="w-full overflow-x-auto">
+          <div style={{ minWidth: periodo === 'all' && data.length > 15 ? data.length * 40 : 500 }} className="h-[320px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={chartData} margin={{ top: 10, right: 16, bottom: 10, left: 10 }}>
+                <defs>
+                  <linearGradient id="humorGrad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%"   stopColor="#0B1E3B" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#64748b" stopOpacity={1} />
+                  </linearGradient>
+                  <linearGradient id="sonoFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"   stopColor="#e2e8f0" stopOpacity={0.8} />
+                    <stop offset="100%" stopColor="#f8fafc" stopOpacity={0.2} />
+                  </linearGradient>
+                </defs>
+
+                <CartesianGrid stroke="#f1f5f9" strokeDasharray="4 4" vertical={false} />
+
+                <XAxis
+                  dataKey="dataShort"
+                  tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 500 }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval={xInterval}
+                />
+
+                {/* Eixo Y Humor (esquerda) — emojis */}
+                <YAxis
+                  yAxisId="left"
+                  domain={[0, 6]}
+                  ticks={[1, 2, 3, 4, 5]}
+                  tick={<CustomYTick />}
+                  axisLine={false}
+                  tickLine={false}
+                  width={38}
+                />
+
+                {/* Eixo Y Sono (direita) — oculto */}
+                <YAxis yAxisId="right" orientation="right" domain={[0, 10]} hide />
+
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc', radius: 8 }} />
+
+                {/* Barras de sono */}
+                <Bar
+                  yAxisId="right"
+                  dataKey="sono"
+                  name="Sono"
+                  barSize={barSize}
+                  fill="url(#sonoFill)"
+                  stroke="#e2e8f0"
+                  strokeWidth={1}
+                  radius={[4, 4, 0, 0]}
+                />
+
+                {/* Área sob a linha de humor */}
+                <Area
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="humor"
+                  stroke="none"
+                  fill="#0B1E3B"
+                  fillOpacity={0.04}
+                  connectNulls
+                />
+
+                {/* Linha de humor */}
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="humor"
+                  name="Humor"
+                  stroke="url(#humorGrad)"
+                  strokeWidth={2.5}
+                  dot={{ r: 4, fill: '#fff', stroke: '#0B1E3B', strokeWidth: 2 }}
+                  activeDot={{ r: 6, strokeWidth: 0, fill: '#0B1E3B' }}
+                  connectNulls
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Legenda */}
+      {hasData && (
+        <div className="flex items-center gap-5 mt-3 ml-10">
+          <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-400">
+            <div className="w-5 h-0.5 bg-gradient-to-r from-deep to-slate-400 rounded-full" />
+            Humor
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-400">
+            <div className="w-4 h-3 bg-slate-200 rounded-sm" />
+            Sono
+          </div>
+        </div>
+      )}
     </div>
   );
 }

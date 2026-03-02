@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+
 import { findMatches, QuizData } from "@/app/match/actions";
 import { 
   DEMANDAS_CASAL,
@@ -89,7 +88,6 @@ export default function QuizCasal() {
 
   return (
     <main className="min-h-screen bg-mist font-sans flex flex-col overflow-x-hidden">
-      <Navbar />
 
       <div className="flex-1 container mx-auto max-w-2xl px-6 py-12 lg:py-24">
         
@@ -460,7 +458,6 @@ export default function QuizCasal() {
         )}
       </div>
 
-      <Footer />
     </main>
   );
 }

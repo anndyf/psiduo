@@ -21,9 +21,12 @@ export default async function Page({ params }: { params: Promise<{ token: string
     }
 
     // Buscar histórico do mês atual e METAS
-    const hoje = new Date();
+    // Sincronizar com horário de Brasília (UTC-3) para evitar saltos de dia à noite no servidor
+    const agora = new Date();
+    const hoje = new Date(agora.getTime() - (3 * 60 * 60 * 1000));
+    
     const [historico, metasRes] = await Promise.all([
-        buscarHistorico(token, hoje.getFullYear(), hoje.getMonth()),
+        buscarHistorico(token, hoje.getUTCFullYear(), hoje.getUTCMonth()),
         buscarMetasPeloToken(token)
     ]);
 

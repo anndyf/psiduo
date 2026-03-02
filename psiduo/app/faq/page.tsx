@@ -81,7 +81,7 @@ export default function FAQ() {
       </section>
 
       {/* --- TABS --- */}
-      <section className="bg-white -mt-10 relative z-20 pb-24">
+      <section className="bg-white -mt-10 relative z-20 pb-12">
         <div className="container mx-auto max-w-4xl px-6">
           <div className="bg-mist p-2 rounded-2xl flex gap-2 mb-16 shadow-inner border border-slate-100">
             <button 
@@ -145,7 +145,7 @@ export default function FAQ() {
           </div>
 
           {/* --- CONTACT CTA --- */}
-          <div className="mt-24 text-center p-12 lg:p-16 bg-slate-900 rounded-[3rem] shadow-2xl relative overflow-hidden group">
+          <div className="mt-16 text-center p-12 lg:p-16 bg-slate-900 rounded-[3rem] shadow-2xl relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] -mr-32 -mt-32"></div>
             <h3 className="text-2xl lg:text-3xl font-black text-white uppercase tracking-tighter mb-6 relative z-10">Ainda tem alguma pergunta?</h3>
             <p className="text-slate-400 font-medium mb-10 max-w-xl mx-auto opacity-80 relative z-10">Se você não encontrou o que precisava, nosso time está pronto para ajudar você.</p>

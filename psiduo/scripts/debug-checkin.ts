@@ -1,0 +1,1 @@
+import { prisma } from "@/lib/prisma"; async function main() { const id = "cmkysjabq0003sot1riwm8quf"; const checkin = await (prisma as any).checkInGrupo.findUnique({ where: { id } }); console.log("CheckIn:", checkin); console.log("Current Time:", new Date()); } main();

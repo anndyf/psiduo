@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { salvarRegistro } from "../actions";
-import { marcarMeta, buscarMetasPeloToken } from "@/app/metas/actions";
-import { toast } from "sonner";
+import { marcarMeta, buscarMetasPeloToken, limparMetasDia } from "@/app/metas/actions";
+import { toast, Toaster } from "sonner";
 import { Frown, Meh, Smile, Moon, AlertTriangle, ShieldCheck, CheckSquare, Square, ArrowRight } from "lucide-react";
+import LogoPsiDuo from "@/components/LogoPsiDuo";
 
 interface Paciente {
   id: string;
@@ -124,9 +125,21 @@ export default function ClientDiary({ paciente, token, historicoInicial, dataIni
     }
   };
 
-  const handleConfirmOverwrite = () => {
+  const handleConfirmOverwrite = async () => {
     setOverwriteModalOpen(false);
     resetForm();
+    
+    // Limpar metas no DB para este dia
+    const ano = dataSelecionada.getFullYear();
+    const mes = String(dataSelecionada.getMonth() + 1).padStart(2, '0');
+    const dia = String(dataSelecionada.getDate()).padStart(2, '0');
+    const dataString = `${ano}-${mes}-${dia}`;
+    
+    await limparMetasDia(token, dataString);
+    
+    // Resetar estado local das metas para "não respondido"
+    setMetasLocais(prev => prev.map(m => ({ ...m, feitoHoje: undefined })));
+
     if (metasLocais.length > 0) {
         setStep('GOALS');
     } else {
@@ -545,95 +558,116 @@ export default function ClientDiary({ paciente, token, historicoInicial, dataIni
   );
 
   return (
-    <div className="min-h-screen bg-mist flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Background Texture/Gradient Overlay if needed (optional based on interpretation, but bg-mist is the base) */}
+    <div className="min-h-screen bg-slate-50 font-sans">
+        <Toaster position="top-center" richColors />
         
-        <div className="w-full max-w-md min-h-[600px] bg-white/50 backdrop-blur-md rounded-[2rem] shadow-none md:shadow-2xl border border-white/60 p-6 relative z-10 transition-all">
-            {/* Global Logo - Visible in all steps */}
-            <div className="text-center mb-4">
-                <span className="text-4xl font-black tracking-tighter text-deep">
-                  Psi<span className="text-blue-500">Duo</span>
-                </span>
-                <div className="w-12 h-1 bg-slate-200/50 mx-auto mt-3 rounded-full"></div>
+        {/* Professional Top Navbar */}
+        <nav className="bg-white border-b border-slate-200 sticky top-0 z-20 px-4 sm:px-8 h-16 flex items-center justify-between shadow-sm/50">
+            <div className="flex items-center gap-2">
+                <LogoPsiDuo variant="dark" width={110} />
             </div>
+            
+            <div className="flex items-center gap-3 sm:gap-4">
+                <div className="hidden sm:flex flex-col items-end mr-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Paciente de</span>
+                    <span className="text-xs font-bold text-slate-700">{paciente.psicologo?.nome || 'PsiDuo'}</span>
+                </div>
+                <div className="h-8 w-px bg-slate-100 hidden sm:block"></div>
+                <div className="flex items-center gap-2 pl-1">
+                    <div className="w-9 h-9 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-md shadow-indigo-200 ring-2 ring-white">
+                        {paciente.nome.charAt(0)}
+                    </div>
+                    <span className="text-sm font-semibold text-slate-700 hidden sm:block">
+                        {paciente.nome.split(' ')[0]}
+                    </span>
+                </div>
+            </div>
+        </nav>
+        
+        {/* Main Content Area */}
+        <main className="max-w-3xl mx-auto p-4 sm:p-6 py-8 sm:py-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden relative">
+                <div className="p-6 sm:p-10">
+                    {step === 'CALENDAR' && renderCalendar()}
+                    {step === 'GOALS' && renderGoals()}
+                    {step === 'MOOD' && renderStepMood()}
+                    {step === 'SLEEP' && renderStepSleep()}
+                    {step === 'CONTEXT' && renderStepContext()}
+                    {step === 'SUCCESS' && renderSuccess()}
+                </div>
+            </div>
+        </main>
 
-            {step === 'CALENDAR' && renderCalendar()}
-            {step === 'GOALS' && renderGoals()}
-            {step === 'MOOD' && renderStepMood()}
-            {step === 'SLEEP' && renderStepSleep()}
-            {step === 'CONTEXT' && renderStepContext()}
-            {step === 'SUCCESS' && renderSuccess()}
+        {/* Overwrite Modal */}
+        {overwriteModalOpen && registroAnterior && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-white/90 backdrop-blur-md animate-in fade-in duration-200">
+                <div className="w-full max-w-sm text-center bg-white rounded-3xl shadow-2xl shadow-slate-200/50 border border-slate-100 p-8">
+                    <div className="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-6 text-yellow-500 border border-yellow-100">
+                        <AlertTriangle size={40} />
+                    </div>
+                    
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">
+                        Atenção!
+                    </h3>
+                    <p className="text-sm font-bold text-slate-500 mb-8">
+                        Já existe um registro neste dia. Se continuar, os dados abaixo serão substituídos.
+                    </p>
 
-            {overwriteModalOpen && registroAnterior && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-white/90 backdrop-blur-md rounded-[2rem] animate-in fade-in duration-200">
-                    <div className="w-full max-w-sm text-center">
-                        <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6 text-yellow-600">
-                            <AlertTriangle size={40} />
+                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-8 text-left">
+                        <div className="flex items-center gap-4 mb-4">
+                            <span className="scale-75 origin-left">
+                                {getIcon(registroAnterior.humor)}
+                            </span>
+                            <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Humor</p>
+                                <p className="text-sm font-bold text-slate-700">
+                                    {SCALE_LABELS.find(h => h.valor === registroAnterior.humor)?.label}
+                                </p>
+                            </div>
                         </div>
                         
-                        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">
-                            Atenção!
-                        </h3>
-                        <p className="text-sm font-bold text-slate-500 mb-8">
-                            Já existe um registro neste dia. Se continuar, os dados abaixo serão substituídos.
-                        </p>
-
-                        <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-8 text-left">
-                            <div className="flex items-center gap-4 mb-4">
-                                <span className="scale-75 origin-left">
-                                    {getIcon(registroAnterior.humor)}
-                                </span>
-                                <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Humor</p>
-                                    <p className="text-sm font-bold text-slate-700">
-                                        {SCALE_LABELS.find(h => h.valor === registroAnterior.humor)?.label}
-                                    </p>
-                                </div>
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="w-10 h-10 flex items-center justify-center bg-blue-50 rounded-full text-blue-500">
+                                <Moon size={20} />
                             </div>
-                            
-                            <div className="flex items-center gap-4 mb-4">
-                                <div className="w-10 h-10 flex items-center justify-center bg-blue-50 rounded-full text-blue-500">
-                                    <Moon size={20} />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Sono</p>
-                                    <p className="text-sm font-bold text-slate-700">
-                                        {SONO_LABELS[registroAnterior.sono - 1]}
-                                    </p>
-                                </div>
+                            <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Sono</p>
+                                <p className="text-sm font-bold text-slate-700">
+                                    {SONO_LABELS[registroAnterior.sono - 1]}
+                                </p>
                             </div>
-
-                            {registroAnterior.tags && registroAnterior.tags.length > 0 && (
-                                <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Impactos</p>
-                                    <div className="flex flex-wrap gap-1">
-                                        {registroAnterior.tags.slice(0, 3).map((t: string) => (
-                                            <span key={t} className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600 uppercase">{t}</span>
-                                        ))}
-                                        {registroAnterior.tags.length > 3 && <span className="text-[10px] text-slate-400 font-bold self-center">+{registroAnterior.tags.length - 3}</span>}
-                                    </div>
-                                </div>
-                            )}
                         </div>
 
-                        <div className="flex gap-3">
-                            <button 
-                                onClick={() => setOverwriteModalOpen(false)}
-                                className="flex-1 py-4 bg-white border border-slate-200 text-slate-500 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-slate-50 transition-all"
-                            >
-                                Cancelar
-                            </button>
-                            <button 
-                                onClick={handleConfirmOverwrite}
-                                className="flex-1 py-4 bg-slate-900 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg hover:bg-black transition-all"
-                            >
-                                Substituir
-                            </button>
-                        </div>
+                        {registroAnterior.tags && registroAnterior.tags.length > 0 && (
+                            <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Impactos</p>
+                                <div className="flex flex-wrap gap-1">
+                                    {registroAnterior.tags.slice(0, 3).map((t: string) => (
+                                        <span key={t} className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600 uppercase">{t}</span>
+                                    ))}
+                                    {registroAnterior.tags.length > 3 && <span className="text-[10px] text-slate-400 font-bold self-center">+{registroAnterior.tags.length - 3}</span>}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex gap-3">
+                        <button 
+                            onClick={() => setOverwriteModalOpen(false)}
+                            className="flex-1 py-4 bg-white border border-slate-200 text-slate-500 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-slate-50 transition-all"
+                        >
+                            Cancelar
+                        </button>
+                        <button 
+                            onClick={handleConfirmOverwrite}
+                            className="flex-1 py-4 bg-slate-900 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg hover:bg-black transition-all"
+                        >
+                            Substituir
+                        </button>
                     </div>
                 </div>
-            )}
-        </div>
+            </div>
+        )}
     </div>
   );
 }

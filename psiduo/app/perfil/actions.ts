@@ -130,7 +130,7 @@ export async function salvarEAtivarPerfilCompleto(id: string, dados: any) {
   try {
     const perfilAtual = await (prisma.psicologo as any).findUnique({ 
       where: { id }, 
-      select: { plano: true, slug: true } 
+      select: { plano: true, slug: true, especialidades: true } 
     });
 
     const dataUpdate: any = {
@@ -169,6 +169,37 @@ export async function salvarEAtivarPerfilCompleto(id: string, dados: any) {
       dataUpdate.agendaConfig = dados.agendaConfig;
     }
 
+    // --- LOGICA DE GRUPOS TERAPÊUTICOS ---
+    // Se não tiver "Terapia em Grupo" selecionado no envio atual, garante que todos os grupos sejam desativados.
+    // Isso corrige casos onde o estado anterior poderia estar dessincronizado.
+    const mantemGrupo = dados.publicoAlvo?.includes("Terapia em Grupo");
+    let mensagemGrupo = "";
+
+    if (!mantemGrupo) {
+        // Desativa todos os grupos que estejam ativos
+        const resultado = await prisma.grupoTerapeutico.updateMany({
+            where: { 
+                psicologoId: id,
+                ativo: true 
+            },
+            data: { ativo: false }
+        });
+
+        if (resultado.count > 0) {
+             mensagemGrupo = " Atenção: Seus grupos foram congelados pois a modalidade 'Terapia em Grupo' não está selecionada.";
+        }
+    }
+    // Se adicionar de volta, não faz nada automático (usuário deve reativar manualmente),
+    // mas poderíamos avisar se quiséssemos. O requisito diz "exibe mensagem que ele deve reativar".
+    // Se ele acabou de ADICIONAR (não tinha, agora tem), ele pode ir lá criar.
+    // O requisito: "se ... desmarcar ... exibe mensagem". 
+    
+    const tinhaGrupo = perfilAtual?.publicoAlvo?.includes("Terapia em Grupo");
+    // Se ele MARCAR DE VOLTA (tinha=false, tem=true), idealmente avisamos: "Seus grupos antigos permanecem inativos. Vá ao painel para reativá-los."
+    if (!tinhaGrupo && mantemGrupo) {
+         mensagemGrupo = " Lembre-se de reativar manualmente seus grupos no painel.";
+    }
+
     const atualizado = await (prisma.psicologo as any).update({
       where: { id },
       data: dataUpdate,
@@ -177,11 +208,12 @@ export async function salvarEAtivarPerfilCompleto(id: string, dados: any) {
     revalidatePath("/catalogo");
     revalidatePath(`/perfil/${id}`);
     revalidatePath("/painel"); 
+    revalidatePath("/painel/grupos"); 
 
     return { 
       success: true, 
       status: atualizado.status,
-      message: "Perfil atualizado com sucesso!" 
+      message: "Perfil atualizado com sucesso!" + mensagemGrupo 
     };
   } catch (error) {
     console.error("Erro ao salvar:", error);
@@ -215,6 +247,7 @@ export async function buscarDadosPainel(id: string) {
         foto: true,
         biografia: true,
         especialidades: true,
+        publicoAlvo: true,
         whatsapp: true,
         cliquesWhatsapp: true
       }
@@ -268,7 +301,9 @@ export async function buscarDadosPainel(id: string) {
       acessos: psicologo.acessos || 0,
       cliquesWhatsapp: psicologo.cliquesWhatsapp || 0,
       cidade: psicologo.cidade || "",
-      estado: psicologo.estado || ""
+      estado: psicologo.estado || "",
+      especialidades: psicologo.especialidades || [],
+      publicoAlvo: psicologo.publicoAlvo || []
     };
   } catch (error: any) {
     console.error("Erro crítico no buscarDadosPainel:", error);
@@ -330,19 +365,18 @@ export async function buscarAvaliacoes(id: string) {
 /**
  * ENVIA UMA NOVA AVALIAÇÃO
  */
-export async function enviarAvaliacao(psicologoId: string, nota: number, comentario: string, localizacao?: string) {
+export async function enviarAvaliacao(psicologoId: string, nota: number, comentario: string) {
   if (!psicologoId || psicologoId === "undefined") return { error: "Psicólogo não identificado." };
   
   try {
     // Log para depuração
-    console.log("Tentando salvar avaliação:", { psicologoId, nota, localizacao });
+    console.log("Tentando salvar avaliação:", { psicologoId, nota });
 
     const res = await (prisma.avaliacao as any).create({
       data: {
         psicologoId,
         nota: Number(nota),
         comentario: comentario?.trim() || "",
-        localizacao: localizacao || "Origem não identificada",
       }
     });
 
@@ -351,5 +385,27 @@ export async function enviarAvaliacao(psicologoId: string, nota: number, comenta
   } catch (error: any) {
     console.error("ERRO PRISMA:", error);
     return { error: `Erro no servidor: ${error.message || "Tente novamente"}` };
+  }
+}
+
+/**
+ * SALVA APENAS A AGENDA DO PSICOLOGO
+ */
+export async function salvarAgendaPsicologo(id: string, agendaConfig: any) {
+  if (!id || id === "undefined") return { error: "ID inválido." };
+
+  try {
+    await prisma.psicologo.update({
+      where: { id },
+      data: { agendaConfig }
+    });
+
+    revalidatePath("/painel");
+    revalidatePath(`/perfil/${id}`);
+    
+    return { success: true, message: "Agenda atualizada com sucesso!" };
+  } catch (error: any) {
+    console.error("Erro ao salvar agenda:", error);
+    return { error: "Erro ao salvar agenda." };
   }
 }

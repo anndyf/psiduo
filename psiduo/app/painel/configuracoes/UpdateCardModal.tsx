@@ -60,7 +60,7 @@ export function UpdateCardModal({ isOpen, onClose, onSuccess, userEmail }: Updat
 
                 <div className="p-8 space-y-6">
                     <div>
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Nome no Cartão</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2 block">Nome no Cartão</label>
                         <div className="relative">
                             <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
                             <input 
@@ -74,7 +74,7 @@ export function UpdateCardModal({ isOpen, onClose, onSuccess, userEmail }: Updat
                     </div>
 
                     <div>
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Número do Cartão</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2 block">Número do Cartão</label>
                         <div className="relative">
                             <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
                             <input 
@@ -90,7 +90,7 @@ export function UpdateCardModal({ isOpen, onClose, onSuccess, userEmail }: Updat
 
                     <div className="flex gap-4">
                         <div className="flex-1">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Validade</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2 block">Validade</label>
                             <div className="flex gap-2">
                                 <input 
                                     type="text"
@@ -112,7 +112,7 @@ export function UpdateCardModal({ isOpen, onClose, onSuccess, userEmail }: Updat
                         </div>
 
                         <div className="w-24">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">CCV</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2 block">CCV</label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={14} />
                                 <input 
@@ -135,7 +135,7 @@ export function UpdateCardModal({ isOpen, onClose, onSuccess, userEmail }: Updat
                         {loading ? "Salvando..." : "Atualizar Método de Pagamento"}
                     </button>
                     
-                    <p className="text-[10px] text-slate-400 text-center flex items-center justify-center gap-1">
+                    <p className="text-[10px] text-slate-500 text-center flex items-center justify-center gap-1">
                         <Lock size={10} /> Seus dados são criptografados e enviados diretamente ao processador.
                     </p>
                 </div>

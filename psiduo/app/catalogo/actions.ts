@@ -7,19 +7,32 @@ import { signupRateLimit, checkRateLimit } from "@/lib/rate-limit";
 import { enviarEmailBoasVindas } from "@/lib/mail";
 
 // --- FUNÇÃO DE LEITURA (PAGINA INICIAL / DESTAQUE) ---
+// --- FUNÇÃO DE LEITURA (PAGINA INICIAL / DESTAQUE) ---
 export async function getPsicologosDestaque() {
   const data = await prisma.psicologo.findMany({
     where: {
       status: "ATIVO" 
     },
-    orderBy: [
-      { plano: 'desc' }, // DUO_II antes de DUO_I
-      { criadoEm: 'desc' }
-    ],
-    take: 10
+    // Removendo order fixo para permitir aleatoriedade real
+    take: 50 
   });
+
+  // Fisher-Yates Shuffle
+  const shuffled = [...data];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
   
-  return data.map(psi => ({
+  // Prioriza exibir alguns DUO_II se existirem, mas mantém o resto aleatório
+  const duo2 = shuffled.filter(p => p.plano === "DUO_II");
+  const others = shuffled.filter(p => p.plano !== "DUO_II");
+  
+  // Pega até 10, misturando (DUO_II primeiro se quiser manter o destaque comercial, ou tudo aleatório)
+  // Vamos deixar TUDO aleatório para atender o pedido de "mudar sempre" de forma perceptível
+  const selected = shuffled.slice(0, 10);
+
+  return selected.map(psi => ({
     ...psi,
     preco: psi.preco.toNumber(),
     criadoEm: psi.criadoEm.toISOString(),
@@ -28,20 +41,64 @@ export async function getPsicologosDestaque() {
 }
 
 // --- FUNÇÃO DE LEITURA (CATALOGO COMPLETO) ---
+// --- FUNÇÃO DE LEITURA (CATALOGO COMPLETO MISTO) ---
 export async function getPsicologos() {
-  const data = await prisma.psicologo.findMany({
-    where: {
-      status: "ATIVO" 
-    },
-    orderBy: { criadoEm: 'desc' }
-  });
+  const [psicologos, grupos] = await Promise.all([
+    prisma.psicologo.findMany({
+      where: { status: "ATIVO" },
+      orderBy: { criadoEm: 'desc' }
+    }),
+    prisma.grupoTerapeutico.findMany({
+      where: { ativo: true },
+      include: { psicologo: true },
+      orderBy: { criadoEm: 'desc' }
+    })
+  ]);
   
-  return data.map(psi => ({
+  const listaPsicologos = psicologos.map(psi => ({
     ...psi,
+    type: 'individual',
     preco: psi.preco.toNumber(),
     criadoEm: psi.criadoEm.toISOString(),
     atualizadoEm: psi.atualizadoEm.toISOString(),
   }));
+
+  const listaGrupos = grupos.map(grupo => ({
+    // Map Group fields to Catalog Card interface
+    id: grupo.id,
+    type: 'grupo',
+    nome: grupo.titulo, // Title as Name
+    foto: grupo.psicologo.foto, // Use psychologist photo for now, or maybe an icon
+    crp: grupo.psicologo.crp,
+    whatsapp: grupo.psicologo.whatsapp,
+    abordagem: "Grupo Terapêutico", // Categorize as Group
+    especialidades: ["Terapia em Grupo"],
+    temas: grupo.temas,
+    preco: grupo.precoMensal.toNumber(),
+    duracaoSessao: grupo.duracaoSessao,
+    publicoAlvo: grupo.publicoAlvo,
+    biografia: grupo.descricao,
+    slug: `grupo/${grupo.id}`, // Custom slug format
+    plano: grupo.psicologo.plano, // Inherit plan for styling
+    // Extra fields
+    diaSemana: grupo.diaSemana,
+    horario: grupo.horario,
+    periodicidade: grupo.periodicidade,
+    psicologoNome: grupo.psicologo.nome,
+    vagasTotais: grupo.vagasTotais,
+    vagasOcupadas: grupo.vagasOcupadas,
+    cidade: grupo.cidade || grupo.psicologo.cidade,
+    estado: grupo.estado || grupo.psicologo.estado,
+    atendeOnline: grupo.modalidade === 'ONLINE',
+    atendePresencial: grupo.modalidade === 'PRESENCIAL',
+    criadoEm: grupo.criadoEm.toISOString(),
+    atualizadoEm: grupo.atualizadoEm.toISOString(),
+  }));
+
+  // Merge and sort by creation date (newest first)
+  return [...listaGrupos, ...listaPsicologos].sort((a, b) => 
+    new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime()
+  );
 }
 
 export async function registrarCliqueWhatsapp(idOuSlug: string) {
@@ -311,13 +368,16 @@ export async function verificarCRP(crp: string) {
     return false;
 }
 
-export async function atualizarPlanoDuoII(id: string) {
+export async function atualizarPlanoDuoII(id: string, validade?: Date) {
   try {
+    const dataUpdate: any = { plano: "DUO_II" };
+    if (validade) {
+        dataUpdate.planoValidade = validade;
+    }
+
     await prisma.psicologo.update({
       where: { id },
-      data: {
-        plano: "DUO_II",
-      }
+      data: dataUpdate
     });
 
     revalidatePath('/catalogo');

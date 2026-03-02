@@ -14,15 +14,28 @@ interface CriarMetaDTO {
   dataFim?: Date;
 }
 
+// Helper para obter os componentes de data (hoje) no fuso de Brasília, independente de onde o servidor rode
+const getBrasiliaParts = () => {
+  const agora = new Date();
+  const brasiliaStr = agora.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" });
+  const d = new Date(brasiliaStr);
+  return {
+    year: d.getFullYear(),
+    month: d.getMonth() + 1,
+    day: d.getDate()
+  };
+};
+
 export async function criarMeta(data: CriarMetaDTO) {
   try {
     const inicio = data.dataInicio ? new Date(data.dataInicio) : new Date();
-    const dataInicioUTC = new Date(Date.UTC(inicio.getUTCFullYear(), inicio.getUTCMonth(), inicio.getUTCDate(), 0, 0, 0));
+    // Usamos 12:00 UTC para metas e registros para evitar que shifts de timezone (-3 ou +3) mudem o dia
+    const dataInicioUTC = new Date(Date.UTC(inicio.getFullYear(), inicio.getMonth(), inicio.getDate(), 12, 0, 0));
 
     let dataFimUTC = undefined;
     if (data.dataFim) {
       const fim = new Date(data.dataFim);
-      dataFimUTC = new Date(Date.UTC(fim.getUTCFullYear(), fim.getUTCMonth(), fim.getUTCDate(), 23, 59, 59, 999));
+      dataFimUTC = new Date(Date.UTC(fim.getFullYear(), fim.getMonth(), fim.getDate(), 12, 0, 0));
     }
 
     await prisma.meta.create({
@@ -68,12 +81,12 @@ export async function atualizarMeta(metaId: string, data: Partial<CriarMetaDTO>)
 
     if (data.dataInicio) {
       const inicio = new Date(data.dataInicio);
-      updateData.dataInicio = new Date(Date.UTC(inicio.getUTCFullYear(), inicio.getUTCMonth(), inicio.getUTCDate(), 0, 0, 0));
+      updateData.dataInicio = new Date(Date.UTC(inicio.getFullYear(), inicio.getMonth(), inicio.getDate(), 12, 0, 0));
     }
 
     if (data.dataFim) {
       const fim = new Date(data.dataFim);
-      updateData.dataFim = new Date(Date.UTC(fim.getUTCFullYear(), fim.getUTCMonth(), fim.getUTCDate(), 23, 59, 59, 999));
+      updateData.dataFim = new Date(Date.UTC(fim.getFullYear(), fim.getMonth(), fim.getDate(), 12, 0, 0));
     }
 
     await prisma.meta.update({
@@ -122,8 +135,16 @@ export async function buscarMetasPeloToken(token: string, dateISO?: string) {
 
     if (!paciente) return { success: false, error: "Paciente não encontrado" };
 
-    const [year, month, day] = dateISO ? dateISO.split('-').map(Number) : [new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate()];
-    const dataRef = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    let year, month, day;
+    if (dateISO) {
+        [year, month, day] = dateISO.split('-').map(Number);
+    } else {
+        const parts = getBrasiliaParts();
+        year = parts.year;
+        month = parts.month;
+        day = parts.day;
+    }
+    const dataRef = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
 
     // 1. Buscar TODAS as metas ativas
     const todasMetas = await prisma.meta.findMany({
@@ -191,8 +212,22 @@ export async function buscarMetasPeloToken(token: string, dateISO?: string) {
 
 export async function marcarMeta(metaId: string, feito: boolean, dataISO?: string) {
   try {
-    const [year, month, day] = dataISO ? dataISO.split('-').map(Number) : [new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate()];
-    const dataRef = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    let year, month, day;
+    if (dataISO) {
+        [year, month, day] = dataISO.split('-').map(Number);
+    } else {
+        const parts = getBrasiliaParts();
+        year = parts.year;
+        month = parts.month;
+        day = parts.day;
+    }
+    const dataRef = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
+
+    const meta = await prisma.meta.findUnique({
+        where: { id: metaId },
+        select: { pacienteId: true }
+    });
+    if (!meta) return { success: false, error: "Meta não encontrada" };
 
     // Upsert para garantir status (True ou False)
     // Se feito=false, agora SALVAMOS como false (não realizado) em vez de deletar
@@ -211,6 +246,7 @@ export async function marcarMeta(metaId: string, feito: boolean, dataISO?: strin
         }
     });
 
+    revalidatePath(`/painel/pacientes/${meta.pacienteId}`);
     return { success: true };
   } catch (error) {
     console.error("Erro ao marcar meta:", error);
@@ -218,10 +254,50 @@ export async function marcarMeta(metaId: string, feito: boolean, dataISO?: strin
   }
 }
 
+export async function limparMetasDia(token: string, dataISO: string) {
+  try {
+    const paciente = await prisma.paciente.findUnique({
+        where: { tokenAcesso: token },
+        select: { id: true }
+    });
+
+    if (!paciente) return { success: false, error: "Paciente não encontrado" };
+
+    const [year, month, day] = dataISO.split('-').map(Number);
+    const dataRef = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+
+    await prisma.metaRegistro.deleteMany({
+        where: {
+            data: dataRef,
+            meta: { pacienteId: paciente.id }
+        }
+    });
+
+    revalidatePath(`/painel/pacientes/${paciente.id}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao limpar metas:", error);
+    return { success: false, error: "Falha ao limpar metas" };
+  }
+}
+
 export async function alternarMetaHistorico(metaId: string, dataISO: string | Date) {
   try {
-    const d = typeof dataISO === 'string' ? dataISO.split('-').map(Number) : [dataISO.getFullYear(), dataISO.getMonth() + 1, dataISO.getDate()];
-    const data = new Date(Date.UTC(d[0], d[1] - 1, d[2], 0, 0, 0, 0));
+    const meta = await prisma.meta.findUnique({ where: { id: metaId }, select: { pacienteId: true } });
+    if (!meta) return { success: false, error: "Meta não encontrada" };
+
+    let year: number, month: number, day: number;
+    if (typeof dataISO === 'string') {
+        const parts = dataISO.split('T')[0].split('-');
+        year = parseInt(parts[0]);
+        month = parseInt(parts[1]);
+        day = parseInt(parts[2]);
+    } else {
+        year = dataISO.getFullYear();
+        month = dataISO.getMonth() + 1;
+        day = dataISO.getDate();
+    }
+    const data = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
 
     // Check if exists
     const existing = await prisma.metaRegistro.findFirst({
@@ -242,6 +318,7 @@ export async function alternarMetaHistorico(metaId: string, dataISO: string | Da
             }
         });
     }
+    revalidatePath(`/painel/pacientes/${meta.pacienteId}`);
     return { success: true };
   } catch (error) {
     console.error("Erro ao alternar histórico:", error);

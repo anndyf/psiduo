@@ -7,8 +7,9 @@ import Link from "next/link";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { cadastrarPsicologo } from "../catalogo/actions";
-
 import { ABORDAGENS } from "../../lib/constants";
+import { ShieldCheck, Zap, Lock, Star, Check, ArrowRight, Info, HelpCircle } from "lucide-react";
+
 export default function Cadastro() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -39,26 +40,24 @@ export default function Cadastro() {
       return;
     }
     if (formData.senha === confirmarSenha) {
-      setSenhaFeedback({ msg: "As senhas conferem", cor: "text-green-600" });
+      setSenhaFeedback({ msg: "As senhas conferem", cor: "text-emerald-600" });
     } else {
-      setSenhaFeedback({ msg: "As senhas não conferem", cor: "text-red-500" });
+      setSenhaFeedback({ msg: "As senhas não conferem", cor: "text-rose-500" });
     }
   }, [formData.senha, confirmarSenha]);
 
-  // --- VALIDAÇÃO DE EMAIL EM TEMPO REAL ---
   useEffect(() => {
     if (!confirmarEmail) {
       setEmailFeedback(null);
       return;
     }
     if (formData.email === confirmarEmail) {
-      setEmailFeedback({ msg: "Os e-mails conferem", cor: "text-green-600" });
+      setEmailFeedback({ msg: "Os e-mails conferem", cor: "text-emerald-600" });
     } else {
-      setEmailFeedback({ msg: "Os e-mails não conferem", cor: "text-red-500" });
+      setEmailFeedback({ msg: "Os e-mails não conferem", cor: "text-rose-500" });
     }
   }, [formData.email, confirmarEmail]);
 
-  // --- FUNÇÕES DE MÁSCARA ---
   const validarEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const formatarWhatsapp = (valor: string) => {
@@ -71,12 +70,9 @@ export default function Cadastro() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     let { name, value } = e.target;
-    
-    // Remove erro visual ao digitar
     if (fieldErrors.includes(name)) {
         setFieldErrors(prev => prev.filter(f => f !== name));
     }
-
     if (name === "whatsapp") value = formatarWhatsapp(value);
     setFormData({ ...formData, [name]: value });
   };
@@ -86,7 +82,6 @@ export default function Cadastro() {
     setIsLoading(true);
     setError("");
 
-    // Validação de Campos Vazios
     const emptyFields: string[] = [];
     if (!formData.nome) emptyFields.push("nome");
     if (!formData.email) emptyFields.push("email");
@@ -115,18 +110,16 @@ export default function Cadastro() {
         return;
     }
 
-    // Critérios de Senha Forte
     const senhaForte = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(formData.senha);
 
     if (!senhaForte || formData.senha !== confirmarSenha) {
-      setError("A senha deve ter no mínimo 8 caracteres, uma letra maiúscula, uma minúscula e um número.");
+      setError("A senha deve ser forte e as senhas devem conferir.");
       setIsLoading(false);
       return;
     }
 
     try {
       const whatsappLimpo = "55" + formData.whatsapp.replace(/\D/g, "");
-
       const res = await cadastrarPsicologo({
         ...formData,
         whatsapp: whatsappLimpo,
@@ -136,7 +129,6 @@ export default function Cadastro() {
       });
 
       if (res.success && res.id) {
-        // Fazer login automático com NextAuth
         const loginResult = await signIn("credentials", {
           email: formData.email,
           password: formData.senha,
@@ -147,12 +139,10 @@ export default function Cadastro() {
           router.push("/cadastro/planos");
           router.refresh();
         } else {
-          // Se login falhar, redireciona para página de login manual
           setError("Conta criada! Faça login para continuar.");
           setTimeout(() => router.push("/login"), 2000);
         }
       }
-      
     } catch (err: any) {
       setError(err.message || "Ocorreu um erro ao cadastrar.");
     } finally {
@@ -161,227 +151,242 @@ export default function Cadastro() {
   };
 
   return (
-    <main className="min-h-screen bg-mist font-sans flex flex-col">
+    <main className="min-h-screen bg-white font-sans flex flex-col overflow-x-hidden">
       <Navbar />
 
-      <div className="flex-1 flex items-center justify-center p-4 py-10 md:py-20">
-        {/* LARGURA AUMENTADA: max-w-4xl para Desktop */}
-        <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col md:flex-row">
+      <div className="flex-1 flex items-center justify-center p-6 py-12 lg:py-24 relative bg-slate-50/50">
+        {/* Subtle Decorative Backdrop */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-50 rounded-full blur-[100px] opacity-60"></div>
+          <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-slate-100 rounded-full blur-[120px] opacity-40"></div>
+          <div className="absolute inset-0 opacity-[0.2]" style={{ backgroundImage: 'radial-gradient(#CBD5E1 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+        </div>
+
+        <div className="w-full max-w-6xl relative z-10 flex flex-col lg:flex-row gap-8 items-stretch">
           
-          {/* COLUNA ESQUERDA (SAÚDE DOS PLANOS) */}
-          <div className="bg-deep p-8 md:w-1/3 flex flex-col text-center md:text-left">
-            <h1 className="text-2xl md:text-3xl font-black text-white mb-6 uppercase tracking-tight">Cresça com a PsiDuo</h1>
-            
-            <div className="space-y-8 mt-4">
-              <div className="bg-white/5 border border-white/10 p-5 rounded-2xl">
-                <span className="text-[10px] font-black uppercase text-blue-300 tracking-[0.2em] block mb-2">Plano Duo I</span>
-                <p className="text-sm text-blue-100 font-bold leading-relaxed">Sua porta de entrada para o digital. Visibilidade no catálogo e contato direto via WhatsApp. Totalmente grátis.</p>
+          {/* LEFT: Information & Trust signals (Balanced Light Version) */}
+          <div className="lg:w-[380px] flex flex-col gap-6">
+            <div className="bg-white border border-slate-200 rounded-[2rem] p-8 space-y-8 flex flex-col shadow-sm">
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full text-blue-600">
+                  <ShieldCheck className="w-3 h-3 text-blue-500" />
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em]">Clinical Workspace v2.0</span>
+                </div>
+                <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">
+                  Inicie sua <br /> <span className="text-blue-600 italic">Jornada.</span>
+                </h1>
+                <p className="text-slate-500 text-sm font-medium leading-relaxed">
+                  Crie sua presença digital no ecossistema PsiDuo e acesse as ferramentas de ponta para sua clínica autônoma.
+                </p>
               </div>
 
-              <div className="bg-primary/20 border-2 border-primary/30 p-5 rounded-2xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 bg-primary text-white text-[8px] font-black px-2 py-1 rounded-bl-lg uppercase">Destaque</div>
-                <span className="text-[10px] font-black uppercase text-white tracking-[0.2em] block mb-2 flex items-center gap-2">
-                  Plano Duo II 
-                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                </span>
-                <p className="text-sm text-white font-bold leading-relaxed">Assuma o controle total com agenda integrada, vídeo de apresentação e métricas de acesso. Apareça no topo das buscas.</p>
+              <div className="space-y-2">
+                {[
+                  { t: "Prontuário Digital", d: "Segurança total dos dados.", i: <Lock className="w-4 h-4" /> },
+                  { t: "Instrumentos IA", d: "Análises e insights clínicos.", i: <Zap className="w-4 h-4" /> },
+                  { t: "Agenda Digital", d: "Gestão inteligente de horários.", i: <Star className="w-4 h-4" /> }
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-colors group border border-transparent hover:border-slate-100">
+                    <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                      {item.i}
+                    </div>
+                    <div>
+                      <h3 className="text-[10px] font-black uppercase text-slate-900 tracking-widest leading-none">{item.t}</h3>
+                      <p className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-tight">{item.d}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 pt-6 border-t border-slate-100">
+                <div className="flex items-center gap-3 text-emerald-600">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]"></div>
+                  <span className="text-[9px] font-black uppercase tracking-widest">Protocolo de Segurança Ativo</span>
+                </div>
               </div>
             </div>
 
-            <div className="mt-auto">
-              <div className="hidden md:block text-blue-200/40 text-[10px] font-bold uppercase tracking-widest">
-                PsiDuo &copy; 2026
-              </div>
+            {/* Support Message */}
+            <div className="bg-slate-900 rounded-[2rem] p-8 text-white relative overflow-hidden group">
+               <div className="absolute inset-0 bg-blue-600 opacity-0 group-hover:opacity-10 transition-opacity"></div>
+               <div className="flex items-start gap-4 mb-4">
+                  <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-blue-400">
+                    <HelpCircle className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-black uppercase tracking-tight">Precisa de Ajuda?</h3>
+                    <p className="text-slate-400 text-xs font-medium leading-relaxed">Nosso time de compliance está disponível para suporte no cadastro.</p>
+                  </div>
+               </div>
+               <a href="mailto:suporte@psiduo.com.br" className="flex items-center justify-between w-full h-12 px-6 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-all group/btn">
+                 Falar com Suporte <ArrowRight className="w-3 h-3 group-hover/btn:translate-x-1 transition-transform" />
+               </a>
             </div>
           </div>
 
-          {/* COLUNA DIREITA (FORMULÁRIO ESPAÇOSO) */}
-          <div className="p-6 md:p-10 md:w-2/3">
-            <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-8 flex items-center gap-4 text-blue-700">
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-xl">
-                   <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          {/* RIGHT: Main Form Column (Clean & Spaced) */}
+          <div className="flex-1 bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-200/60 p-8 lg:p-14">
+            <div className="max-w-3xl mx-auto">
+              <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-50 pb-8">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 mb-2">Inscrição de Psicólogo</div>
+                  <h2 className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none">
+                    Dados do <span className="text-blue-600">Especialista.</span>
+                  </h2>
                 </div>
-                <p className="text-[11px] font-black uppercase tracking-tight leading-relaxed">
-                   Falta pouco! Crie sua conta abaixo e no próximo passo você poderá escolher entre os planos <span className="text-primary underline">Duo I (Grátis)</span> ou <span className="text-primary underline">Duo II (Premium)</span>.
-                </p>
-            </div>
-            <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
-                
+                <div className="bg-slate-50 px-4 py-2 rounded-full flex items-center gap-3">
+                   <Info className="w-4 h-4 text-blue-400" />
+                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Tempo estimado: 2 min</span>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-10">
                 {error && (
-                <div className="bg-red-50 text-red-600 text-sm font-medium p-4 rounded-xl border border-red-100 flex items-center gap-3 animate-pulse">
-                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                    {error}
-                </div>
+                  <div className="bg-rose-50 border border-rose-100 text-rose-600 px-6 py-4 rounded-2xl flex items-center gap-4 animate-in fade-in slide-in-from-top-4">
+                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
+                       <span className="text-lg">⚠️</span>
+                    </div>
+                    <span className="text-xs font-bold uppercase tracking-tight">{error}</span>
+                  </div>
                 )}
 
-                {/* Grid Superior: Nome e Email (Mais espaço) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Nome Completo</label>
-                        <input 
-                            name="nome" required type="text" 
-                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${fieldErrors.includes('nome') ? 'border-red-500 bg-red-50 focus:ring-red-200' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
-                            placeholder="Ex: Dra. Ana Silva"
-                            value={formData.nome}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    
-                    <div className="md:col-span-1">
-                        <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">E-mail Profissional</label>
-                        <input 
-                            name="email" required type="email" 
-                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${fieldErrors.includes('email') ? 'border-red-500 bg-red-50 focus:ring-red-200' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
-                            placeholder="seu@email.com"
-                            value={formData.email}
-                            onChange={handleChange}
-                        />
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Nome Completo (Profissional)</label>
+                    <input 
+                      name="nome" required type="text" 
+                      className={`w-full h-14 bg-slate-50/50 border rounded-2xl px-6 text-slate-900 font-bold outline-none transition-all placeholder:text-slate-300 ${fieldErrors.includes('nome') ? 'border-rose-400 ring-4 ring-rose-50' : 'border-slate-100 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50'}`}
+                      placeholder="Ex: Dra. Juliana Silva Menezes"
+                      value={formData.nome}
+                      onChange={handleChange}
+                    />
+                  </div>
 
-                    <div className="md:col-span-1">
-                        <label className="block text-sm font-bold text-slate-700 mb-2 ml-1 flex justify-between items-center h-5">
-                            Confirmar E-mail
-                            {emailFeedback && (
-                                <div className={`flex items-center gap-1 text-[10px] font-black uppercase ${emailFeedback.cor}`}>
-                                    {emailFeedback.msg === "Os e-mails conferem" ? (
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                                    ) : (
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
-                                    )}
-                                    {emailFeedback.msg}
-                                </div>
-                            )}
-                        </label>
-                        <input 
-                            required type="email" 
-                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${fieldErrors.includes('confirmarEmail') ? 'border-red-500 bg-red-50 focus:ring-red-200' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
-                            placeholder="Confirme seu e-mail"
-                            value={confirmarEmail}
-                            onChange={(e) => {
-                                setConfirmarEmail(e.target.value);
-                                if (fieldErrors.includes("confirmarEmail")) setFieldErrors(prev => prev.filter(f => f !== "confirmarEmail"));
-                            }}
-                        />
-                    </div>
-                </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">E-mail de Trabalho</label>
+                    <input 
+                      name="email" required type="email" 
+                      className={`w-full h-14 bg-slate-50/50 border rounded-2xl px-6 text-slate-900 font-bold outline-none transition-all placeholder:text-slate-300 ${fieldErrors.includes('email') ? 'border-rose-400 ring-4 ring-rose-50' : 'border-slate-100 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50'}`}
+                      placeholder="juliana@exemplo.com"
+                      value={formData.email}
+                      onChange={handleChange}
+                    />
+                  </div>
 
-                    {/* Grid Zap (Único nesta linha agora, ou expandir para full width) */}
-                    <div className="grid grid-cols-1">
-                        <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">WhatsApp</label>
-                        <input 
-                            name="whatsapp" required type="tel" 
-                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${fieldErrors.includes('whatsapp') ? 'border-red-500 bg-red-50 focus:ring-red-200' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
-                            placeholder="(00) 90000-0000"
-                            value={formData.whatsapp}
-                            onChange={handleChange}
-                            maxLength={15}
-                        />
-                    </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1 flex justify-between">
+                      Confirmar E-mail
+                      {emailFeedback && <span className={`font-black ${emailFeedback.cor} text-[9px]`}>{emailFeedback.msg}</span>}
+                    </label>
+                    <input 
+                      required type="email" 
+                      className={`w-full h-14 bg-slate-50/50 border rounded-2xl px-6 text-slate-900 font-bold outline-none transition-all placeholder:text-slate-300 ${fieldErrors.includes('confirmarEmail') ? 'border-rose-400 ring-4 ring-rose-50' : 'border-slate-100 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50'}`}
+                      placeholder="Repita o endereço"
+                      value={confirmarEmail}
+                      onChange={(e) => setConfirmarEmail(e.target.value)}
+                    />
+                  </div>
 
-                {/* Grid Senhas */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Senha</label>
-                        <input 
-                            name="senha" required type="password" 
-                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${fieldErrors.includes('senha') ? 'border-red-500 bg-red-50 focus:ring-red-200' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
-                            placeholder="Crie uma senha forte"
-                            value={formData.senha}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2 ml-1 flex justify-between items-center h-5">
-                            Confirmar Senha
-                            {senhaFeedback && (
-                                <div className={`flex items-center gap-1 text-[10px] font-black uppercase ${senhaFeedback.cor}`}>
-                                    {senhaFeedback.msg === "As senhas conferem" ? (
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                                    ) : (
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
-                                    )}
-                                    {senhaFeedback.msg}
-                                </div>
-                            )}
-                        </label>
-                        <input 
-                            name="confirmarSenha" required type="password" 
-                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${(senhaFeedback?.cor === 'text-red-500' || fieldErrors.includes('confirmarSenha')) ? 'border-red-500 bg-red-50 ring-red-100' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
-                            placeholder="Repita a senha"
-                            value={confirmarSenha}
-                            onChange={(e) => {
-                                setConfirmarSenha(e.target.value);
-                                if (fieldErrors.includes("confirmarSenha")) setFieldErrors(prev => prev.filter(f => f !== "confirmarSenha"));
-                            }}
-                        />
-                    </div>
-                </div>
+                  <div className="md:col-span-1">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Número WhatsApp</label>
+                    <input 
+                      name="whatsapp" required type="tel" 
+                      className={`w-full h-14 bg-slate-50/50 border rounded-2xl px-6 text-slate-900 font-bold outline-none transition-all placeholder:text-slate-300 ${fieldErrors.includes('whatsapp') ? 'border-rose-400 ring-4 ring-rose-50' : 'border-slate-100 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50'}`}
+                      placeholder="(00) 00000-0000"
+                      value={formData.whatsapp}
+                      onChange={handleChange}
+                      maxLength={15}
+                    />
+                  </div>
 
-                {/* Indicadores de Força da Senha - Horizontal e Equilibrado */}
-                <div className="flex flex-wrap gap-x-6 gap-y-2 pl-1">
-                    {[
-                        { label: "Mínimo 8 caracteres", valid: formData.senha.length >= 8 },
-                        { label: "Letra maiúscula", valid: /[A-Z]/.test(formData.senha) },
-                        { label: "Letra minúscula", valid: /[a-z]/.test(formData.senha) },
-                        { label: "Pelo menos um número", valid: /\d/.test(formData.senha) },
-                    ].map((rule, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                            <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${rule.valid ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-300'}`}>
-                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                            <span className={`text-xs font-medium transition-colors ${rule.valid ? 'text-green-600' : 'text-slate-400'}`}>
-                                {rule.label}
-                            </span>
-                        </div>
-                    ))}
-                </div>
+                  <div className="md:col-span-1">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Preço Sugerido (R$)</label>
+                    <input 
+                      name="preco" required type="number" 
+                      className={`w-full h-14 bg-slate-50/50 border rounded-2xl px-6 text-slate-900 font-bold outline-none transition-all placeholder:text-slate-300 ${fieldErrors.includes('preco') ? 'border-rose-400 ring-4 ring-rose-50' : 'border-slate-100 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50'}`}
+                      placeholder="150"
+                      value={formData.preco}
+                      onChange={handleChange}
+                    />
+                  </div>
 
-                {/* Grid Inferior: Abordagem e Preço */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Abordagem Principal</label>
-                        <div className="relative">
-                            <select 
-                                name="abordagem" 
-                                value={formData.abordagem}
-                                onChange={handleChange} 
-                                className="w-full border border-slate-200 rounded-xl p-4 text-slate-700 bg-slate-50 focus:bg-white outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
-                            >
-                                {ABORDAGENS.map((item) => (
-                                    <option key={item} value={item}>{item}</option>
-                                ))}
-                            </select>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">▼</div>
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Valor Sessão (R$)</label>
-                        <input 
-                            name="preco" required type="number" 
-                            className={`w-full border rounded-xl p-4 text-slate-700 outline-none transition ${fieldErrors.includes('preco') ? 'border-red-500 bg-red-50 focus:ring-red-200' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary'}`}
-                            placeholder="150"
-                            value={formData.preco}
-                            onChange={handleChange}
-                        />
-                    </div>
-                </div>
-
-                <div className="pt-4">
-                    <button 
-                        disabled={isLoading}
-                        type="submit" 
-                        className="w-full bg-deep text-white font-bold py-4 rounded-xl shadow-lg hover:bg-primary transition disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2 text-lg"
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Abordagem Terapêutica</label>
+                    <select 
+                      name="abordagem" 
+                      value={formData.abordagem}
+                      onChange={handleChange} 
+                      className="w-full h-14 bg-slate-50/50 border border-slate-100 rounded-2xl px-6 text-slate-900 font-bold outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 appearance-none cursor-pointer"
                     >
-                        {isLoading ? "Validando..." : "Criar Conta Profissional"}
-                    </button>
-                    
-                    <p className="text-center text-sm text-slate-500 mt-6">
-                        Já tem conta? <Link href="/login" className="text-primary font-bold hover:underline">Fazer Login</Link>
-                    </p>
+                      {ABORDAGENS.map((item) => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-slate-50">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Senha Segura</label>
+                      <input 
+                        name="senha" required type="password" 
+                        className={`w-full h-14 bg-slate-50/50 border rounded-2xl px-6 text-slate-900 font-bold outline-none transition-all ${fieldErrors.includes('senha') ? 'border-rose-400 ring-4 ring-rose-50' : 'border-slate-100 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50'}`}
+                        placeholder="********"
+                        value={formData.senha}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1 flex justify-between">
+                        Confirmar Senha
+                        {senhaFeedback && <span className={`font-black ${senhaFeedback.cor} text-[9px]`}>{senhaFeedback.msg}</span>}
+                      </label>
+                      <input 
+                        required type="password" 
+                        className={`w-full h-14 bg-slate-50/50 border rounded-2xl px-6 text-slate-900 font-bold outline-none transition-all ${senhaFeedback?.cor === 'text-rose-500' ? 'border-rose-400 ring-4 ring-rose-50' : 'border-slate-100 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50'}`}
+                        placeholder="********"
+                        value={confirmarSenha}
+                        onChange={(e) => setConfirmarSenha(e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
-            </form>
+
+                <div className="flex flex-wrap gap-4">
+                   {[
+                      { l: "Min. 8 char", v: formData.senha.length >= 8 },
+                      { l: "Maiúscula", v: /[A-Z]/.test(formData.senha) },
+                      { l: "Número", v: /\d/.test(formData.senha) }
+                   ].map((rule, i) => (
+                     <div key={i} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${rule.v ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                        <Check className={`w-3 h-3 ${rule.v ? 'opacity-100' : 'opacity-20'}`} strokeWidth={4} />
+                        <span className="text-[9px] font-black uppercase tracking-widest">{rule.l}</span>
+                     </div>
+                   ))}
+                </div>
+
+                <div className="pt-6">
+                  <button 
+                    disabled={isLoading}
+                    type="submit" 
+                    className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.3em] shadow-xl shadow-blue-500/20 transition-all flex items-center justify-center gap-4 group"
+                  >
+                    {isLoading ? (
+                       <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                    ) : (
+                      <>
+                        Inicializar Área Profissional <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                      </>
+                    )}
+                  </button>
+                  
+                  <div className="mt-10 pt-8 border-t border-slate-50 text-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Já possui credenciais? <Link href="/login" className="text-blue-600 hover:underline ml-2">Acessar Sistema</Link>
+                    </p>
+                  </div>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>

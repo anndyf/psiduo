@@ -77,13 +77,13 @@ export default function SpecialtiesSection({ formData, setFormData }: Specialtie
           <label className="block text-lg font-black text-deep uppercase tracking-wide">MODALIDADE DE ATENDIMENTO</label>
           <span className="text-[10px] font-black text-primary bg-primary/10 px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm">Obrigatório</span>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-            {["Individual", "Casais"].map(mod => (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {["Individual", "Casais", "Terapia em Grupo"].map(mod => (
                 <button 
                       key={mod} 
                       type="button" 
                       onClick={() => toggleItem(mod, 'publicoAlvo')} 
-                      className={`px-6 py-4 rounded-xl text-sm font-black border uppercase transition-all flex items-center justify-center gap-2 ${formData.publicoAlvo.includes(mod) ? 'bg-deep text-white border-deep shadow-lg scale-[1.02]' : 'bg-white text-slate-500 border-slate-200 hover:border-deep/30'}`}
+                      className={`px-4 py-4 rounded-xl text-sm font-black border uppercase transition-all flex items-center justify-center gap-2 ${formData.publicoAlvo.includes(mod) ? 'bg-deep text-white border-deep shadow-lg scale-[1.02]' : 'bg-white text-slate-500 border-slate-200 hover:border-deep/30'}`}
                 >
                     {formData.publicoAlvo.includes(mod) && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                     {mod}

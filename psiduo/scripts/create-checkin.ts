@@ -1,0 +1,1 @@
+import { prisma } from "@/lib/prisma"; async function main() { const grupoId = "cmkycddgu0003pxw9j1mwonmo"; const checkIn = await (prisma as any).checkInGrupo.create({ data: { grupoId, titulo: "Como está sua energia hoje?", descricao: "Check-in de teste (Novo).", dataExpira: new Date(Date.now() + 86400000), ativo: true } }); console.log("Created CheckIn:", checkIn.id); } main();

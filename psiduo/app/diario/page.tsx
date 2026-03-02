@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { autenticarPaciente } from "./actions";
-import Image from "next/image";
 import LogoPsiDuo from "@/components/LogoPsiDuo";
+import { ArrowRight, Lock, User } from "lucide-react";
 
 export default function LoginPaciente() {
   const router = useRouter();
@@ -50,70 +50,68 @@ export default function LoginPaciente() {
   };
 
   return (
-    <main className="min-h-screen bg-mist flex flex-col items-center justify-center p-4">
-      
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 md:p-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        
-        <LogoPsiDuo />
-
-        <div className="text-center space-y-2">
-            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-primary">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-            </div>
-            <h1 className="text-2xl font-black text-deep uppercase tracking-tighter">Área do Paciente</h1>
-            <p className="text-slate-500 font-medium">Acesse seu diário emocional com segurança.</p>
-        </div>
-
-        <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Seu CPF</label>
-                <input 
-                    type="text" 
-                    placeholder="000.000.000-00"
-                    className={`w-full bg-slate-50 border-2 p-4 rounded-xl text-lg font-black text-center tracking-widest outline-none transition-all ${error ? 'border-red-100 bg-red-50 text-red-500 placeholder-red-300' : 'border-slate-100 focus:border-primary focus:bg-white text-slate-800'}`}
-                    value={cpf}
-                    onChange={handleCpfChange}
-                    maxLength={14}
-                    disabled={loading}
-                />
-            </div>
-
-            {error && (
-                <div className="p-4 bg-red-50 text-red-600 text-sm font-bold rounded-xl text-center animate-pulse border border-red-100 flex items-center justify-center gap-2">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                    {error}
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="p-8 pb-4 flex flex-col items-center">
+                <div className="mb-0">
+                    <LogoPsiDuo variant="dark" width={190} />
                 </div>
-            )}
+                <h1 className="text-xl font-bold text-slate-800 mb-2 flex items-center justify-center gap-2">
+                     Área do Paciente
+                </h1>
+                <p className="text-slate-500 text-sm text-center">
+                    Acesse seu diário emocional com segurança.
+                </p>
+            </div>
 
-            <button 
-                type="submit" 
-                disabled={loading || cpf.length < 14}
-                className="w-full bg-deep text-white font-black py-4 rounded-xl shadow-xl hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest text-sm flex items-center justify-center gap-3"
-            >
-                {loading ? (
-                    <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        Acessando...
-                    </>
-                ) : (
-                    <>
-                        Entrar no Diário
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                    </>
-                )}
-            </button>
-        </form>
+            <div className="px-8 pb-8 space-y-6">
+                <form onSubmit={handleLogin} className="space-y-5">
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Seu CPF</label>
+                        <div className="relative group">
+                            <input
+                                type="text"
+                                value={cpf}
+                                onChange={handleCpfChange}
+                                placeholder="000.000.000-00"
+                                className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 pl-11 transition-all ${error ? 'border-red-200 focus:ring-red-200 focus:border-red-400 text-slate-900 bg-red-50' : 'border-slate-200 focus:ring-slate-200 focus:border-slate-400 text-slate-700 bg-white placeholder:text-slate-300'}`}
+                                required
+                            />
+                            <User className={`absolute left-3.5 top-3.5 transition-colors ${error ? 'text-red-400' : 'text-slate-400 group-focus-within:text-slate-600'}`} size={20} />
+                        </div>
+                    </div>
 
-        <div className="text-center">
-            <p className="text-xs text-slate-400 font-bold mb-4">
-                Seu acesso é pessoal e intransferível. <br/>
-                Em caso de dúvidas, contate seu psicólogo.
-            </p>
-            <div className="flex justify-center items-center gap-2 opacity-30 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-               <span className="font-black tracking-tighter text-deep">PsiDuo</span>
+                    {error && (
+                        <div className="p-3 bg-red-50 text-red-600 text-xs font-bold rounded-lg text-center animate-pulse border border-red-100 flex items-center justify-center gap-2">
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            {error}
+                        </div>
+                    )}
+
+                    <button
+                        type="submit"
+                        disabled={loading || cpf.length < 14}
+                        className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-lg transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        {loading ? (
+                            <span className="animate-pulse">Verificando...</span>
+                        ) : (
+                            <>
+                                Entrar no Diário <ArrowRight size={18} />
+                            </>
+                        )}
+                    </button>
+                </form>
+                
+                <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 flex gap-3 items-start">
+                    <Lock className="text-slate-400 shrink-0 mt-0.5" size={14} />
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                        <strong>Ambiente Seguro:</strong> Seu acesso é pessoal e as respostas são protegidas por criptografia, acessíveis apenas ao seu psicólogo.
+                    </p>
+                </div>
             </div>
         </div>
-      </div>
-    </main>
+    </div>
   );
 }
+

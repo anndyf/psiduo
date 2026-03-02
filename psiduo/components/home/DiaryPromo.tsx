@@ -7,57 +7,46 @@ export const DiaryPromo = () => {
           {/* Texto Explicativo */}
           <div className="flex-1 space-y-8">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="bg-blue-600/10 border border-blue-600/20 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">Exclusividade Duo II</span>
-              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">Pacientes Ilimitados</span>
+              <span className="bg-blue-600/10 border border-blue-600/20 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">Gestão Clínica</span>
             </div>
-            <h2 className="text-4xl lg:text-5xl font-black text-slate-900 uppercase tracking-tighter leading-none">
-              O <span className="text-blue-600">Elo Perdido</span> <br/> Entre as Sessões.
+            <h2 className="text-3xl lg:text-4xl font-black text-slate-900 leading-tight">
+              O sistema operacional <br/><span className="text-blue-600">da sua clínica digital.</span>
             </h2>
-            <p className="text-slate-500 text-lg font-medium leading-relaxed">
-              Muitas vezes, o que acontece entre uma sessão e outra é perdido. Com o módulo de <strong>Diário de Pacientes</strong>, você cadastra <span className="text-slate-900 font-bold underline decoration-blue-600/30 decoration-2 underline-offset-2">quantos pacientes quiser</span>, sem limites. Eles registram humor e sono diariamente, e você recebe tudo em um painel clínico organizado.
+            <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-lg">
+              Deixe de lado as planilhas e processos manuais. O PsiDuo centraliza toda a sua operação em uma interface nítida, intuitiva e segura.
             </p>
             
-            <div className="space-y-4 pt-4">
-              <div className="flex items-center gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4">
+              {[
+                { title: 'Gestão de Agenda', desc: 'Sincronização inteligente e controle de horários própria.', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /> },
+                { title: 'Prontuário Digital', desc: 'Histórico clínico seguro e evoluções estruturadas.', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /> },
+                { title: 'Instrumentos Pro', desc: 'Aplicação de escalas (ISI, WHO5) com score automático.', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /> },
+                { title: 'Controle Financeiro', desc: 'Fluxo de caixa completo e taxa 0% sobre consultas.', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> }
+              ].map((feature, i) => (
+                <div key={i} className="bg-white p-4 rounded-xl border border-slate-200/60 shadow-sm flex flex-col gap-2 hover:border-blue-200 transition-colors group">
+                   <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">{feature.icon}</svg>
+                   </div>
+                   <div>
+                      <h4 className="font-bold text-slate-900 text-xs">{feature.title}</h4>
+                      <p className="text-[10px] text-slate-500">{feature.desc}</p>
+                   </div>
                 </div>
-                <div>
-                  <h4 className="font-black text-slate-900 uppercase text-xs tracking-widest">Para o Paciente</h4>
-                  <p className="text-xs text-slate-500">Interface simples, amigável e gamificada.</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                <div className="w-12 h-12 bg-slate-900/10 rounded-xl flex items-center justify-center text-slate-900">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>
-                </div>
-                <div>
-                  <h4 className="font-black text-slate-900 uppercase text-xs tracking-widest">Para Você</h4>
-                  <p className="text-xs text-slate-500">Gráficos de tendência e alertas de oscilação.</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
           {/* Imagens (Mockups) */}
           <div className="flex-1 relative">
-            {/* Background Blob */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-blue-600/20 to-blue-200/20 rounded-full blur-3xl -z-10"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-100 rounded-full blur-3xl -z-10 opacity-50"></div>
             
-            <div className="relative z-10">
-              {/* Painel Desktop */}
-              <div className="rounded-xl overflow-hidden shadow-2xl border-4 border-white transform hover:scale-[1.02] transition-transform duration-500">
-                <img src="/painel_mockup.png" alt="Painel de Gerenciamento do Psicólogo" className="w-full h-auto" />
+            <div className="relative z-10 flex items-center justify-center">
+              <div className="rounded-xl overflow-hidden shadow-2xl border border-slate-200 bg-white p-2 transform rotate-2 hover:rotate-0 transition-all duration-500">
+                <img src="/images/pacientes.png" alt="Gestão de Pacientes" className="w-full h-auto rounded-lg shadow-inner" />
               </div>
               
-              {/* Gráficos (Floating Left) */}
-              <div className="absolute -bottom-8 -left-8 w-72 rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-4 border-white transform -rotate-3 hover:rotate-0 transition-all duration-500 hover:scale-105 hover:z-30">
-                <img src="/graficos_mockup.png" alt="Análise de Dados Clínicos" className="w-full h-auto bg-white" />
-              </div>
-              
-              {/* App Mobile (Overlapping Right) */}
-              <div className="absolute -bottom-12 -right-6 w-1/3 rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-4 border-white transform rotate-3 hover:rotate-0 transition-all duration-500 hover:scale-105 hover:z-20">
-                <img src="/diario_mockup.png" alt="Aplicativo do Paciente" className="w-full h-auto" />
+              <div className="absolute -bottom-6 -right-4 w-1/3 rounded-[1.5rem] overflow-hidden shadow-2xl border-4 border-white bg-white p-1 transform -rotate-3 hover:rotate-0 transition-all duration-500">
+                <img src="/images/diario.png" alt="Diário de Humor" className="w-full h-auto rounded-[1.2rem]" />
               </div>
             </div>
           </div>

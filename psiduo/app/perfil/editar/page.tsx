@@ -48,6 +48,7 @@ export default function EditarPerfilCompleto() {
   const [showPreview, setShowPreview] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState<'perfil' | 'atuacao' | 'gestao'>('perfil');
 
   // CRP States
   const [verificandoCrp, setVerificandoCrp] = useState(false);
@@ -225,15 +226,15 @@ export default function EditarPerfilCompleto() {
   return (
     <main className="min-h-screen bg-mist flex flex-col text-slate-800">
       <Navbar />
-      <div className="container mx-auto max-w-5xl py-10 px-4 flex-1">
+      <div className="container mx-auto max-w-5xl py-4 md:py-10 px-2 md:px-4 flex-1">
         <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100">
           
-          <div className="bg-deep p-8 text-white text-center">
+          <div className="bg-deep p-6 md:p-8 text-white text-center">
             <h1 className="text-3xl font-black mb-2 uppercase tracking-tight">Editar Perfil Profissional</h1>
             <p className="text-blue-200 text-base font-bold">Mantenha seus dados atualizados.</p>
           </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); setShowModal(true); }} className="px-4 py-8 md:p-12 space-y-12">
+          <form onSubmit={(e) => { e.preventDefault(); setShowModal(true); }} className="p-4 md:p-12 space-y-8 md:space-y-12">
             
             {msg.texto && (
               <div className={`p-4 rounded-xl text-center font-black text-lg animate-in fade-in slide-in-from-top-2 duration-300 ${
@@ -247,24 +248,15 @@ export default function EditarPerfilCompleto() {
             <ProfileHealth formData={formData} />
 
             {/* SEÇÃO 0: DESEMPENHO E PLANO */}
-            <section className="bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
-                <div className="flex-1 text-center md:text-left px-4">
-                  <span className="text-[10px] font-black uppercase text-slate-400 block mb-1">Seu Plano Atual</span>
-                  <div className="flex items-center justify-center md:justify-start gap-2">
-                    <span className={`text-lg font-black uppercase tracking-tight flex items-center gap-2 ${formData.plano === 'DUO_II' ? 'text-primary' : 'text-slate-500'}`}>
-                      {formData.plano === 'DUO_II' && (
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      )}
-                      {formData.plano === 'DUO_II' ? 'Duo II (Premium)' : 'Duo I (Básico)'}
-                    </span>
-                  </div>
-                </div>
-                <Link href="/cadastro/planos" className="bg-white text-deep border-2 border-slate-200 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition shadow-sm whitespace-nowrap">
-                   Mudar de Plano
-                </Link>
-            </section>
+            {/* MENU DE ABAS */}
+            <div className="bg-slate-100 p-1 rounded-2xl flex mb-6">
+               <button type="button" onClick={() => setActiveTab('perfil')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'perfil' ? 'bg-white text-deep shadow-sm' : 'text-slate-600 hover:text-slate-600'}`}>Perfil</button>
+               <button type="button" onClick={() => setActiveTab('atuacao')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'atuacao' ? 'bg-white text-deep shadow-sm' : 'text-slate-600 hover:text-slate-600'}`}>Atuação</button>
+               <button type="button" onClick={() => setActiveTab('gestao')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'gestao' ? 'bg-white text-deep shadow-sm' : 'text-slate-600 hover:text-slate-600'}`}>Gestão</button>
+            </div>
+
+            {activeTab === 'perfil' && (
+                <div className="space-y-12 animate-in fade-in slide-in-from-left-4 duration-300">
 
             {/* SEÇÃO 1: APRESENTAÇÃO E LOCALIZAÇÃO */}
             <section className="space-y-8">
@@ -275,7 +267,7 @@ export default function EditarPerfilCompleto() {
               
               <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-10 items-start">
                 <div className="flex flex-col items-center gap-4">
-                  <label className="block text-sm font-black text-slate-500 uppercase tracking-widest text-center">Sua Foto Profissional</label>
+                  <label className="block text-sm font-black text-slate-800 uppercase tracking-widest text-center">Sua Foto Profissional</label>
                   <div 
                     onClick={() => fileInputRef.current?.click()} 
                     className="w-44 h-44 rounded-full bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden cursor-pointer hover:border-primary transition shadow-inner group relative"
@@ -283,7 +275,7 @@ export default function EditarPerfilCompleto() {
                     {formData.foto ? (
                       <Image src={formData.foto} fill className="object-cover" alt="Preview" />
                     ) : (
-                      <div className="text-center p-4 text-slate-400 text-xs font-black uppercase">Upload</div>
+                      <div className="text-center p-4 text-slate-600 text-xs font-black uppercase">Upload</div>
                     )}
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                       <span className="text-white text-xs font-black uppercase tracking-wider">Alterar Foto</span>
@@ -343,13 +335,13 @@ export default function EditarPerfilCompleto() {
                   
                   {/* FORMATO DE ATENDIMENTO */}
                   <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 mt-0">
-                      <label className="block text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Formato de Atendimento</label>
+                      <label className="block text-sm font-black text-slate-600 uppercase tracking-widest mb-4">Formato de Atendimento</label>
                       <div className="grid grid-cols-2 gap-4">
                           <button
                             type="button"
                             onClick={() => setFormData({ ...formData, atendeOnline: !formData.atendeOnline })}
                             className={`p-4 rounded-xl flex items-center justify-center gap-3 border transition-all ${
-                              formData.atendeOnline ? "bg-white border-green-500 text-green-700 shadow-md" : "bg-slate-100 border-transparent text-slate-400"
+                              formData.atendeOnline ? "bg-white border-green-500 text-green-700 shadow-md" : "bg-slate-100 border-transparent text-slate-600"
                             }`}
                           >
                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${formData.atendeOnline ? "border-green-600 bg-green-600" : "border-slate-300 bg-white"}`}>
@@ -362,7 +354,7 @@ export default function EditarPerfilCompleto() {
                             type="button"
                             onClick={() => setFormData({ ...formData, atendePresencial: !formData.atendePresencial })}
                             className={`p-4 rounded-xl flex items-center justify-center gap-3 border transition-all ${
-                              formData.atendePresencial ? "bg-white border-green-500 text-green-700 shadow-md" : "bg-slate-100 border-transparent text-slate-400"
+                              formData.atendePresencial ? "bg-white border-green-500 text-green-700 shadow-md" : "bg-slate-100 border-transparent text-slate-600"
                             }`}
                           >
                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.atendePresencial ? "border-green-600 bg-green-600" : "border-slate-300 bg-white"}`}>
@@ -377,7 +369,7 @@ export default function EditarPerfilCompleto() {
                     <label className="block text-base font-black text-slate-700 mb-2 uppercase tracking-wide">Biografia Profissional (Máx. 300 caracteres)</label>
                     <textarea required rows={4} maxLength={300} className="w-full border border-slate-200 rounded-2xl p-5 bg-slate-50 text-lg outline-none focus:ring-2 focus:ring-primary transition font-medium leading-relaxed" placeholder="Conte para os pacientes sobre sua experiência..." value={formData.biografia} onChange={e => setFormData({...formData, biografia: e.target.value})} />
                     <div className="flex justify-between mt-2 px-1">
-                      <p className="text-xs text-slate-500 font-bold tracking-tight">Mínimo 50 caracteres.</p>
+                      <p className="text-xs text-slate-800 font-bold tracking-tight">Mínimo 50 caracteres.</p>
                       <span className={`text-xs font-black ${formData.biografia.length < 50 ? "text-red-500" : "text-green-600"}`}>
                         {formData.biografia.length} / 300
                       </span>
@@ -389,9 +381,33 @@ export default function EditarPerfilCompleto() {
 
             {/* SEÇÃO 2: IDENTIDADE PROFISSIONAL (Componentizado) */}
             <IdentitySection formData={formData} setFormData={setFormData} />
+            </div>
+            )}
 
-            {/* SEÇÃO 3: CONFIGURAÇÕES DE ATENDIMENTO (Componentizado) */}
+            {activeTab === 'atuacao' && (
+                <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-300">
             <SpecialtiesSection formData={formData} setFormData={setFormData} />
+            </div>
+            )}
+
+            {activeTab === 'gestao' && (
+                <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-300">
+            <section className="bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+                <div className="flex-1 text-center md:text-left px-4">
+                  <span className="text-[10px] font-black uppercase text-slate-600 block mb-1">Seu Plano Atual</span>
+                  <div className="flex items-center justify-center md:justify-start gap-2">
+                    <span className={`text-lg font-black uppercase tracking-tight flex items-center gap-2 ${formData.plano === 'DUO_II' ? 'text-primary' : 'text-slate-800'}`}>
+                      {formData.plano === 'DUO_II' && (
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                      )}
+                      {formData.plano === 'DUO_II' ? 'Duo II (Premium)' : 'Duo I (Básico)'}
+                    </span>
+                  </div>
+                </div>
+                <Link href="/cadastro/planos" className="bg-white text-deep border-2 border-slate-200 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition shadow-sm whitespace-nowrap">
+                   Mudar de Plano
+                </Link>
+            </section>
 
             {/* SEÇÃO 4: VALORES E DURAÇÃO */}
             <section className="space-y-6">
@@ -403,7 +419,7 @@ export default function EditarPerfilCompleto() {
                 <div className="space-y-3">
                   <label className="block text-base font-black text-slate-700 uppercase tracking-wide">Valor da Sessão Particular</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black">R$</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 font-black">R$</span>
                     <input required type="number" min="1" className="w-full border border-slate-200 rounded-xl p-4 pl-12 bg-slate-50 text-lg font-black text-deep" value={formData.preco} onChange={e => setFormData({...formData, preco: Number(e.target.value)})} />
                   </div>
                 </div>
@@ -411,7 +427,7 @@ export default function EditarPerfilCompleto() {
                   <label className="block text-base font-black text-slate-700 uppercase tracking-wide">Duração da Sessão</label>
                   <div className="relative">
                     <input required type="number" min="1" className="w-full border border-slate-200 rounded-xl p-4 pr-20 bg-slate-50 text-lg font-black text-deep" value={formData.duracaoSessao} onChange={e => setFormData({...formData, duracaoSessao: Number(e.target.value)})} />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-black uppercase">minutos</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 font-black uppercase">minutos</span>
                   </div>
                 </div>
               </div>
@@ -420,6 +436,8 @@ export default function EditarPerfilCompleto() {
             {/* SEÇÃO 5: EXCLUSIVO DUO II (VÍDEO, REDES E AGENDA) - COMPONENTIZADO */}
             {formData.plano === "DUO_II" && (
                 <DuoIISection formData={formData} setFormData={setFormData} />
+            )}
+            </div>
             )}
 
             <button disabled={loading} type="submit" className="w-full bg-primary text-white font-black py-6 rounded-2xl shadow-xl hover:opacity-90 transition-all text-xl uppercase tracking-widest active:scale-[0.98]">
@@ -436,7 +454,7 @@ export default function EditarPerfilCompleto() {
             </button>
 
             <div className="text-center pt-4">
-               <Link href="/painel" className="text-slate-400 font-bold hover:text-slate-600 transition underline decoration-2 underline-offset-4">
+               <Link href="/painel" className="text-slate-600 font-bold hover:text-slate-600 transition underline decoration-2 underline-offset-4">
                   Cancelar e Voltar ao Painel
                </Link>
             </div>
@@ -478,11 +496,11 @@ export default function EditarPerfilCompleto() {
                           <div className="flex-1 min-w-0">
                               <div className="flex justify-between items-start">
                                   <h3 className="font-bold text-slate-800 text-base sm:text-lg tracking-tight leading-tight">{formData.nome || "Seu Nome Completo"}</h3>
-                                  <button className="p-1.5 rounded-full text-slate-300">
+                                  <button className="p-1.5 rounded-full text-slate-500">
                                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
                                   </button>
                               </div>
-                              <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">CRP 00/00000</p>
+                              <p className="text-[9px] sm:text-[10px] font-black text-slate-600 uppercase tracking-widest mt-0.5">CRP 00/00000</p>
                           </div>
                       </div>
 
@@ -510,7 +528,7 @@ export default function EditarPerfilCompleto() {
                           {/* Especialidades */}
                           {formData.especialidades && formData.especialidades.length > 0 && (
                               <div>
-                                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">Especialidade</p>
+                                  <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Especialidade</p>
                                   <div className="flex flex-wrap gap-1.5">
                                       {formData.especialidades.map((esp: string) => (
                                           <span key={esp} className="text-[9px] text-blue-500 font-bold bg-blue-50/30 px-2.5 py-0.5 rounded-lg border border-blue-100/30">
@@ -524,15 +542,15 @@ export default function EditarPerfilCompleto() {
                           {/* Temas */}
                           {formData.temas && formData.temas.length > 0 && (
                             <div>
-                                <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">Temas</p>
+                                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Temas</p>
                                 <div className="flex flex-wrap gap-1.5">
                                     {formData.temas.slice(0, 2).map((tema: string) => (
-                                        <span key={tema} className="text-[9px] text-slate-500 font-bold bg-slate-50 px-2.5 py-0.5 rounded-lg border border-slate-100">
+                                        <span key={tema} className="text-[9px] text-slate-800 font-bold bg-slate-50 px-2.5 py-0.5 rounded-lg border border-slate-100">
                                             {tema}
                                         </span>
                                     ))}
                                     {formData.temas.length > 2 && (
-                                        <span className="text-[9px] text-slate-400 font-bold py-0.5 px-1">+{formData.temas.length - 2}</span>
+                                        <span className="text-[9px] text-slate-600 font-bold py-0.5 px-1">+{formData.temas.length - 2}</span>
                                     )}
                                 </div>
                             </div>
@@ -541,10 +559,10 @@ export default function EditarPerfilCompleto() {
                           {/* Público Alvo */}
                           {formData.publicoAlvo && formData.publicoAlvo.length > 0 && (
                               <div>
-                                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1 ">Acompanhamento</p>
+                                  <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1 ">Acompanhamento</p>
                                   <div className="flex flex-wrap gap-1.5">
                                       {formData.publicoAlvo.map((p: string) => (
-                                          <span key={p} className="text-[8px] text-slate-400 font-bold bg-white px-2 py-0.5 rounded-md border border-slate-100">
+                                          <span key={p} className="text-[8px] text-slate-600 font-bold bg-white px-2 py-0.5 rounded-md border border-slate-100">
                                               {p}
                                           </span>
                                       ))}
@@ -555,8 +573,8 @@ export default function EditarPerfilCompleto() {
                           {/* Bio Snippet */}
                           {formData.biografia && (
                               <div className="pt-2">
-                                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">Apresentação</p>
-                                  <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2 italic font-medium">
+                                  <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Apresentação</p>
+                                  <p className="text-[11px] text-slate-800 leading-relaxed line-clamp-2 italic font-medium">
                                       "{formData.biografia}"
                                   </p>
                               </div>
@@ -566,10 +584,10 @@ export default function EditarPerfilCompleto() {
                       {/* --- FOOTER: Valor + Botão --- */}
                       <div className="pt-4 border-t border-slate-50 flex items-center justify-between gap-3">
                           <div className="shrink-0">
-                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Sessão</p>
+                              <p className="text-[8px] font-black text-slate-600 uppercase tracking-[0.2em] mb-0.5">Sessão</p>
                               <div className="flex items-baseline gap-1 whitespace-nowrap">
                                   <span className="text-xl font-black text-green-500 tracking-tight leading-none">R$ {formData.preco}</span>
-                                  <span className="text-[10px] text-slate-400 font-bold uppercase opacity-60">/ {formData.duracaoSessao || 50}m</span>
+                                  <span className="text-[10px] text-slate-600 font-bold uppercase opacity-60">/ {formData.duracaoSessao || 50}m</span>
                               </div>
                           </div>
                           

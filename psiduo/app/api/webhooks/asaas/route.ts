@@ -16,19 +16,24 @@ export async function POST(req: Request) {
     if (event.event === "PAYMENT_RECEIVED" || event.event === "PAYMENT_CONFIRMED") {
       const payment = event.payment;
       const userId = payment.externalReference; // ID do nosso banco
-
       if (userId) {
         console.log(`💰 Webhook Asaas: Pagamento confirmado para User ${userId}`);
         
-        // Atualiza o plano
-        // OBS: externalReference está guardando o ID do PSICÓLOGO ou do USER?
-        // No lib/asaas.ts eu configurei para receber o userId.
-        // Precisamos garantir que estamos atualizando o registro certo.
-        // A função atualizarPlanoDuoII busca pelo ID do PSICOLOGO.
-        // Se userId for do Psicologo, ok. Se for do User, precisamos achar o Psicologo.
-        
-        // Vamos assumir que mandamos o ID DO PSICÓLOGO na hora de criar a cobrança.
-        await atualizarPlanoDuoII(userId);
+        // Buscar o Psicologo através do User ID
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { psicologo: true }
+        });
+
+        if (user && user.psicologo) {
+             // Calcular nova validade (30 dias a partir de agora)
+             const novaValidade = new Date();
+             novaValidade.setDate(novaValidade.getDate() + 30); // Adiciona 30 dias
+
+             await atualizarPlanoDuoII(user.psicologo.id, novaValidade);
+        } else {
+             console.error(`Webhook Erro: Usuário ${userId} não encontrado ou sem perfil de psicólogo.`);
+        }
       }
     }
 

@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { buscarDadosPsicologo, registrarAcessoPerfil, enviarAvaliacao } from "../actions";
+import { registrarAcessoPerfil, enviarAvaliacao } from "../actions";
 import { registrarCliqueWhatsapp } from "../../catalogo/actions";
-import Link from "next/link";
 import Image from "next/image";
 
 interface PsicologoDados {
@@ -36,6 +35,32 @@ interface PsicologoDados {
   atendeOnline?: boolean;
   atendePresencial?: boolean;
 }
+
+// Helper functions for Social Icons
+const getSocialColor = (name: string) => {
+    switch(name.toLowerCase()) {
+        case 'instagram': return "text-[#E1306C] hover:text-[#C13584]";
+        case 'linkedin': return "text-[#0077B5] hover:text-[#004182]";
+        case 'facebook': return "text-[#1877F2] hover:text-[#166FE5]";
+        case 'twitter': return "text-black hover:text-slate-700";
+        case 'youtube': return "text-[#FF0000] hover:text-[#D40000]";
+        case 'tiktok': return "text-black hover:text-slate-800";
+        default: return "text-slate-600 hover:text-slate-900";
+    }
+};
+
+const getSocialIcon = (name: string) => {
+    switch(name.toLowerCase()) {
+        case 'instagram': return <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>;
+        case 'linkedin': return <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>;
+        case 'facebook': return <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg>;
+        case 'twitter': return <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>;
+        case 'youtube': return <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>;
+        case 'tiktok': return <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.35-1.17 1.09-1.19 1.83 0 .42.06.84.18 1.25.26.83.97 1.5 1.75 1.8 1.52.6 3.24.1 4.14-1.19.64-.93.76-2.05.76-3.15V.02z"/></svg>;
+        case 'site': 
+        default: return <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm1 16.057v-3.057h2.994c-.059 1.143-.212 2.183-.442 3.057h-2.552zm-6.546-6.057h2.546v3h-2.994c-.059-1.143-.212-2.183-.442-3.057h.89zm0-1h.89c.23-.874.383-1.914.442-3.057h-2.546v3.057zm6.546 5h-2v2.943c.877-.494 1.579-1.296 2-2.289v-.654zm-4-9h2v-2.943c-.877.494-1.579 1.296-2 2.289v.654zm3.546 3h2.546v-3h-.89c-.23.874-.383 1.914-.442 3.057h-1.214zm-1.546 3v3.057c.928-.216 1.747-.796 2.253-1.636.327-.542.547-1.173.651-1.854h-2.904zm-4 4.057v-3.057h-2.904c.104.681.324 1.312.651 1.854.506.84 1.325 1.42 2.253 1.636zm0-13.114v3.057h-2.904c-.104-.681-.324-1.312-.651-1.854-.506-.84-1.325-1.42-2.253-1.636zm4 0c-.928.216-1.747.796-2.253 1.636-.327.542-.547 1.173-.651 1.854h2.904v-3.49zm9.546 6.057h-2.994c.059-1.143.212-2.183.442-3.057h2.552v3.057zm-14.717 3.057h2.623c.23.874.383 1.914.442 3.057h-3.065v-3.057zm5.171 0h2v2.943c.877-.494 1.579-1.296 2-2.289v-.654zm-4-9h2v-2.943c-.877.494-1.579 1.296-2 2.289v.654zm3.546 3h2.546v-3h-.89c-.23.874-.383 1.914-.442 3.057h-1.214zm-1.546 3v3h1.546v-3h-1.546z"/></svg>;
+    }
+};
 
 export default function ClientProfile({ initialData, id }: { initialData: any, id: string }) {
   const router = useRouter();
@@ -77,21 +102,10 @@ export default function ClientProfile({ initialData, id }: { initialData: any, i
   const handleCopiarLink = async () => {
     try {
       const link = window.location.href;
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(link);
-      } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = link;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-      }
+      await navigator.clipboard.writeText(link);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
-    } catch (err) {
-      console.error("Erro ao copiar:", err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   useEffect(() => {
@@ -105,369 +119,312 @@ export default function ClientProfile({ initialData, id }: { initialData: any, i
   const renderVideoYoutube = (url: string): string => {
     if (!url) return "";
     try {
-      // Regex robusto para capturar ID do YouTube (suporta shorts, embed, watch, youtu.be)
       const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
       const match = url.match(regExp);
       const videoId = (match && match[2].length === 11) ? match[2] : null;
-      
       return videoId ? `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1` : "";
     } catch (e) { return ""; }
   };
 
   const formatarCRP = (valor: string) => {
     const nums = valor.replace(/\D/g, "");
-    if (nums.length > 2) {
-      return `${nums.slice(0, 2)}/${nums.slice(2)}`;
-    }
+    if (nums.length > 2) return `${nums.slice(0, 2)}/${nums.slice(2)}`;
     return nums;
   };
 
-  if (!dados) return <div className="min-h-screen flex items-center justify-center font-black uppercase tracking-widest text-slate-400">Perfil não encontrado</div>;
+  if (!dados) return <div className="min-h-screen flex items-center justify-center font-black uppercase tracking-widest text-slate-600">Perfil não encontrado</div>;
 
   const isDuoII = dados.plano === "DUO_II";
   const videoSrc = renderVideoYoutube(dados.videoApresentacao || "");
   const hasVideo = isDuoII && videoSrc !== "";
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col font-sans overflow-x-hidden">
+    <main className="min-h-screen bg-white text-slate-900 font-sans">
       <Navbar />
 
-      <section className="container mx-auto max-w-6xl py-12 md:py-20 px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          
-          {/* COLUNA ESQUERDA */}
-          <div className="lg:col-span-4 space-y-8 lg:sticky lg:top-24">
-            
-            <div className="w-full max-w-[320px] lg:max-w-none mx-auto aspect-[4/5] rounded-[40px] md:rounded-[60px] overflow-hidden border-[8px] md:border-[10px] border-white shadow-2xl bg-slate-100 relative">
-              <Image 
-                src={dados.foto || "/placeholder-psico.jpg"} 
-                fill
-                className="object-cover transition-all duration-700" 
-                alt={dados.nome}
-                priority
-              />
-              
-              {isDuoII && (
-                <div className="absolute top-5 left-5 lg:top-8 lg:left-8 flex items-center justify-center">
-                  <span className="w-4 h-4 bg-blue-400 rounded-full animate-pulse shadow-[0_0_20px_rgba(96,165,250,1)] border-2 border-white"></span>
+      {/* LAYOUT TIPO REDE SOCIAL / BIO LINK */}
+      <div className="max-w-3xl mx-auto px-4 py-8 md:py-12 pb-32">
+         
+         {/* HEADER PERFIL */}
+         <header className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8 text-center md:text-left">
+            <div className="relative shrink-0">
+                <div className="w-32 h-32 md:w-36 md:h-36 rounded-full p-1 bg-deep">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-white border-4 border-white relative">
+                        <Image 
+                            src={dados.foto || "/placeholder-psico.jpg"} 
+                            fill
+                            className="object-cover" 
+                            alt={dados.nome}
+                            priority
+                        />
+                    </div>
                 </div>
-              )}
+                {isDuoII && (
+                    <div className="absolute bottom-1 right-1 bg-deep text-white p-1.5 rounded-full border-2 border-white shadow-sm" title="Verificado">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                )}
             </div>
 
-            {/* NOME E CRP PARA MOBILE */}
-            <div className="lg:hidden text-center space-y-2">
-              <h1 className="text-4xl font-black uppercase tracking-tighter leading-tight text-slate-900">{dados.nome}</h1>
-              <div className="flex items-center justify-center gap-2 text-primary">
-                <span className="text-[10px] font-black uppercase tracking-[0.3em]">
-                  {dados.crp ? formatarCRP(dados.crp) : "Inscrição Pendente"}
-                </span>
-                <button onClick={handleCopiarLink} className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all active:scale-95" title="Copiar Link">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
-                </button>
-              </div>
-            </div>
-
-            {isDuoII && dados.redesSociais && Object.values(dados.redesSociais).some(v => v) && (
-              <div className="bg-white p-6 rounded-[35px] shadow-sm border border-slate-100 flex items-center justify-center gap-4 lg:gap-6">
-                {Object.entries(dados.redesSociais).map(([rede, link]: [string, any]) => {
-                  if (!link) return null;
-                  
-                  const getIcon = (name: string) => {
-                    switch (name.toLowerCase()) {
-                      case 'instagram':
-                        return (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                            <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"></path>
-                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                          </svg>
-                        );
-                      case 'linkedin':
-                        return (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                            <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"></path>
-                            <rect x="2" y="9" width="4" height="12"></rect>
-                            <circle cx="4" cy="4" r="2"></circle>
-                          </svg>
-                        );
-                      case 'site':
-                      default:
-                        return (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="2" y1="12" x2="22" y2="12"></line>
-                            <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"></path>
-                          </svg>
-                        );
-                    }
-                  };
-
-                  const getLabel = (name: string) => {
-                    if (name.toLowerCase() === 'site') return 'Website';
-                    return name.charAt(0).toUpperCase() + name.slice(1);
-                  };
-
-                  return (
-                    <a 
-                      key={rede} 
-                      href={link.startsWith('http') ? link : `https://${link}`} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="group flex flex-col items-center gap-2 transition-all"
+            <div className="flex-1 min-w-0 w-full">
+                <div className="flex flex-row items-center justify-center md:justify-between gap-3 w-full">
+                    <h1 className="text-2xl md:text-3xl font-black text-slate-900 leading-tight text-center md:text-left">{dados.nome}</h1>
+                    <button 
+                        onClick={() => toggleFavorite(dados.id)}
+                        className={`p-2 rounded-full transition-all shrink-0 ${favorites.includes(dados.id) ? 'text-red-500' : 'text-slate-400 hover:text-red-400'}`}
                     >
-                      <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white group-hover:shadow-lg group-hover:shadow-primary/30 transition-all duration-300">
-                        {getIcon(rede)}
-                      </div>
-                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 group-hover:text-primary transition-colors">{getLabel(rede)}</span>
-                    </a>
-                  );
-                })}
-              </div>
-            )}
-
-            <div className="bg-white p-8 rounded-[45px] shadow-sm border border-slate-100 text-center">
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-3 block">Abordagem Clínica</span>
-              <p className="text-xl font-black uppercase leading-tight mb-8 break-words">{dados.abordagem}</p>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-900 text-white p-5 rounded-[28px] shadow-lg">
-                  <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block mb-1">Sessão</span>
-                  <span className="text-base font-black tracking-tight">R${dados.preco}</span>
+                        <svg className="w-6 h-6" fill={favorites.includes(dados.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                    </button>
                 </div>
-                <div className="bg-slate-900 text-white p-5 rounded-[28px] shadow-lg">
-                  <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block mb-1">Duração</span>
-                  <span className="text-base font-black tracking-tight">{dados.duracaoSessao}min</span>
+                <p className="text-sm font-bold text-slate-800 mt-1 uppercase tracking-wide">
+                    Psi • CRP {dados.crp ? formatarCRP(dados.crp) : "Processing"}
+                </p>
+                
+                <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-4 text-xs font-bold text-white">
+                    <span className="flex items-center gap-1.5 bg-deep px-4 py-2 rounded-xl shadow-lg shadow-slate-200/50">
+                        <svg className="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        {dados.duracaoSessao} min
+                    </span>
+                    <span className="flex items-center gap-1.5 bg-deep px-4 py-2 rounded-xl shadow-lg shadow-slate-200/50">
+                        <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                       R$ {dados.preco}
+                    </span>
+                    <span className="flex items-center gap-1.5 bg-deep px-4 py-2 rounded-xl shadow-lg shadow-slate-200/50">
+                        <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                        {getModalidade()}
+                    </span>
                 </div>
-              </div>
-              
-              <div className="mt-4 bg-blue-50 text-blue-900 p-5 rounded-[28px] shadow-sm border border-blue-100">
-                  <span className="text-[8px] font-black uppercase tracking-widest text-blue-400 block mb-1">Atendimento</span>
-                  <span className="text-sm font-black tracking-tight uppercase text-blue-700">{getModalidade()}</span>
-              </div>
             </div>
+         </header>
 
-            <div className="bg-white p-8 rounded-[45px] shadow-sm border border-slate-100">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-6 text-center">Detalhes</h3>
-              <div className="space-y-4">
-                {[
-                  { label: "Gênero", value: dados.genero },
-                  { label: "Idade", value: `${dados.idade} anos` },
-                  { label: "Etnia", value: dados.etnia },
-                  { label: "Local", value: dados.cidade ? `${dados.cidade} - ${dados.estado}` : "Atendimento Online" }
-                ].map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-center border-b border-slate-50 pb-2">
-                    <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">{item.label}</span>
-                    <span className="text-sm font-black uppercase text-slate-900">{item.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+         {/* BIO */}
+         <div className="mb-8 px-2 md:px-0">
+            <p className="text-slate-800 text-sm md:text-base leading-relaxed whitespace-pre-line">
+                {dados.biografia}
+            </p>
+         </div>
 
-          {/* COLUNA DIREITA */}
-          <div className="lg:col-span-8 space-y-8">
-            <div className="hidden lg:block">
-              <div className="flex items-center gap-4 mb-2">
-                <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none break-words text-slate-900">{dados.nome}</h1>
+         {/* ACTIONS */}
+         <div className="grid grid-cols-2 gap-3 mb-10">
+            <a 
+               href={`https://wa.me/${dados.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent("Olá! Vim pelo PsiDuo.")}`} 
+               target="_blank"
+               onClick={() => registrarCliqueWhatsapp(dados.id)}
+               className="col-span-1 bg-green-600 text-white font-bold py-3.5 rounded-xl text-center shadow-lg shadow-green-200 hover:bg-green-700 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+            >
+                <span>WhatsApp</span>
+            </a>
+            {isDuoII ? (
                 <button 
-                  onClick={() => toggleFavorite(dados.id)}
-                  className={`mt-2 p-3 rounded-full transition-all ${favorites.includes(dados.id) ? 'text-red-500 bg-red-50' : 'text-slate-300 hover:text-red-400 hover:bg-slate-50'}`}
+                  onClick={() => setIsModalOpen(true)}
+                  className="col-span-1 bg-deep text-white font-bold py-3.5 rounded-xl text-center shadow-lg hover:bg-slate-800 hover:scale-[1.02] transition-all"
                 >
-                  <svg className="w-8 h-8 md:w-10 md:h-10" fill={favorites.includes(dados.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                    Agendar
                 </button>
-              </div>
-              <div className="flex items-center gap-4 text-primary ml-1">
-                <span className="text-xs font-black uppercase tracking-[0.4em]">
-                  CRP: {dados.crp ? formatarCRP(dados.crp) : "Pendente"}
-                </span>
-                <button onClick={handleCopiarLink} className="flex items-center gap-2 bg-slate-50 hover:bg-primary/10 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 text-slate-400 hover:text-primary">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
-                  Compartilhar Perfil
+            ) : (
+                <button 
+                  onClick={handleCopiarLink}
+                  className="col-span-1 bg-slate-100 text-slate-700 font-bold py-3.5 rounded-xl text-center hover:bg-slate-200 transition-all border border-slate-200"
+                >
+                    Compartilhar Perfil
                 </button>
-              </div>
-            </div>
+            )}
+         </div>
 
-            <div className="bg-white p-10 md:p-14 rounded-[50px] shadow-sm border border-slate-100">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 mb-6">Apresentação</h3>
-              <p className="text-xl md:text-2xl font-bold leading-snug text-slate-600 italic break-words">"{dados.biografia}"</p>
-            </div>
+         {/* DIVIDER */}
+         <div className="h-px bg-slate-100 mb-10"></div>
 
-            <div className="bg-white p-10 md:p-14 rounded-[50px] shadow-sm border border-slate-100 space-y-12">
-              <div>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-900 mb-8">Especialidades</h3>
-                <div className="flex flex-wrap gap-3">
-                  {dados.especialidades.map(e => <span key={e} className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-8 py-4 rounded-full shadow-lg">{e}</span>)}
+         {/* VIDEO FEED */}
+         {/* REDES SOCIAIS */}
+         {isDuoII && dados.redesSociais && Object.values(dados.redesSociais).some(v => v) && (
+            <div className="mb-10">
+                <h3 className="text-sm font-black uppercase text-deep mb-3 tracking-widest pl-1">Redes Sociais</h3>
+                <div className="flex gap-2">
+                    {Object.entries(dados.redesSociais).map(([rede, link]: [string, any]) => {
+                        if (!link) return null;
+                        const label = rede === 'site' ? 'Website' : rede.charAt(0).toUpperCase() + rede.slice(1);
+                        return (
+                            <a key={rede} href={link.startsWith('http') ? link : `https://${link}`} target="_blank" title={label} className="group transition-transform hover:-translate-y-1">
+                                <div className={`w-9 h-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center transition-colors ${getSocialColor(rede)}`}>
+                                    {getSocialIcon(rede)}
+                                </div>
+                            </a>
+                        )
+                    })}
                 </div>
-              </div>
+            </div>
+         )}
 
-              {hasVideo && (
-                <div className="pt-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 mb-6 text-center md:text-left">Apresentação em Vídeo</h3>
-                  <div className="w-full aspect-video rounded-[40px] overflow-hidden border-[8px] border-slate-50 shadow-inner bg-black">
+         {/* VIDEO FEED */}
+         {hasVideo && (
+            <div className="mb-10">
+                <h3 className="text-sm font-black uppercase text-deep mb-3 tracking-widest pl-1">Vídeo de Apresentação</h3>
+                <div className="rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-black aspect-video">
                     <iframe src={videoSrc} className="w-full h-full border-none" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen></iframe>
-                  </div>
                 </div>
-              )}
-              
-              <div>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-900 mb-8">Temas e Demandas</h3>
-                <div className="flex flex-wrap gap-2">
-                  {dados.temas.map(t => <span key={t} className="bg-slate-50 text-slate-500 text-[9px] font-black uppercase tracking-widest px-6 py-3 rounded-full border border-slate-100">{t}</span>)}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-900 mb-6">Público Alvo</h3>
-                <div className="flex flex-wrap gap-4">
-                  {dados.publicoAlvo.map(p => <span key={p} className="text-sm font-black uppercase text-slate-400">• {p}</span>)}
-                </div>
-              </div>
             </div>
+         )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-              <a 
-                href={`https://wa.me/${dados.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent("Olá! Encontrei seu perfil no PsiDuo e gostaria de saber mais sobre a terapia.")}`} 
-                target="_blank" 
-                onClick={() => registrarCliqueWhatsapp(dados.id)}
-                className="bg-[#16A34A] text-white text-[11px] font-black uppercase tracking-[0.4em] py-10 rounded-full shadow-2xl text-center hover:bg-green-700 transition-colors"
-              >
-                WhatsApp
-              </a>
-              {isDuoII && <button onClick={() => setIsModalOpen(true)} className="bg-slate-900 text-white text-[11px] font-black uppercase tracking-[0.4em] py-10 rounded-full shadow-2xl hover:bg-black transition-colors">Agenda Digital</button>}
-            </div>
+         {/* INFO CARDS */}
+         <div className="space-y-8">
+             {/* ESPECIALIDADES */}
+             <div className="mb-8">
+                 <h3 className="text-sm font-black uppercase text-deep mb-3 tracking-widest pl-1">Especialidades</h3>
+                 <div className="flex flex-wrap gap-2">
+                     {dados.especialidades.map(e => (
+                         <span key={e} className="bg-deep text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-slate-200">
+                             {e}
+                         </span>
+                     ))}
+                 </div>
+             </div>
 
-            {/* SEÇÃO DE AVALIAÇÃO PRIVADA */}
-            <div className="bg-white p-10 md:p-14 rounded-[50px] shadow-sm border border-slate-100">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
-                <div>
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-900 mb-2">Feedback do Paciente</h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Sua avaliação é enviada de forma privada para o profissional.</p>
+             {/* ABORDAGEM & TEMAS GRID */}
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                 {/* COLUNA 1: ABORDAGEM */}
+                 <div className="flex flex-col">
+                    <h3 className="text-sm font-black uppercase text-deep mb-3 tracking-widest pl-1">Abordagem</h3>
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 min-h-[140px] flex items-center justify-center text-center h-full">
+                        <p className="font-black text-slate-800 uppercase text-base">{dados.abordagem}</p>
+                    </div>
+                 </div>
+
+                 {/* COLUNA 2: PÚBLICO ALVO */}
+                 <div className="flex flex-col">
+                    <h3 className="text-sm font-black uppercase text-deep mb-3 tracking-widest pl-1">Público Alvo</h3>
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 min-h-[140px] flex items-center h-full">
+                        <div className="flex flex-wrap gap-2 content-center">
+                            {dados.publicoAlvo.map(p => (
+                                <span key={p} className="text-xs font-bold uppercase bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg shadow-sm">
+                                    {p}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                 </div>
+             </div>
+
+             {/* TEMAS */}
+             <div>
+                 <h3 className="text-sm font-black uppercase text-deep mb-3 tracking-widest pl-1">Temas de Trabalho</h3>
+                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div className="flex flex-wrap gap-2">
+                        {dados.temas.map(t => (
+                            <span key={t} className="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-sm font-semibold">
+                                {t}
+                            </span>
+                        ))}
+                    </div>
+                 </div>
+             </div>
+             
+             {/* DETALHES */}
+             <div>
+                <h3 className="text-sm font-black uppercase text-deep mb-3 tracking-widest pl-1">Detalhes do Profissional</h3>
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                    <div className="grid grid-cols-2 gap-y-4 gap-x-8">
+                        <div>
+                            <span className="block text-[10px] uppercase text-slate-600 font-bold mb-0.5">Local</span>
+                            <span className="text-sm font-bold text-slate-800">{dados.cidade ? `${dados.cidade}/${dados.estado}` : "Online"}</span>
+                        </div>
+                        <div>
+                            <span className="block text-[10px] uppercase text-slate-600 font-bold mb-0.5">Idade/Gênero</span>
+                            <span className="text-sm font-bold text-slate-800">{dados.idade} anos • {dados.genero}</span>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex gap-1">
+             </div>
+         </div>
+
+         {/* FEEDBACK SECTION */}
+         <div className="mt-12 pt-10 border-t border-slate-100">
+            <h3 className="text-center text-xs font-black uppercase text-deep mb-6 tracking-widest">Avaliação Anônima</h3>
+            <div className="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm text-center">
+                 <div className="flex justify-center gap-2 mb-4">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button 
                       key={star} 
-                      type="button"
                       onClick={() => setRating(star)}
-                      className={`text-2xl transition-colors ${star <= rating ? 'text-amber-400' : 'text-slate-200 hover:text-amber-300'}`}
-                    >
-                      ★
-                    </button>
+                      className={`text-3xl transition-colors ${star <= rating ? 'text-amber-400' : 'text-slate-200'}`}
+                    >★</button>
                   ))}
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <textarea 
-                  value={feedbackText}
-                  onChange={(e) => setFeedbackText(e.target.value)}
-                  placeholder="Deixe aqui seu depoimento ou sugestão..."
-                  rows={4}
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-[30px] p-8 text-sm font-medium outline-none focus:border-primary transition-all resize-none"
-                ></textarea>
-                
-                <div className="flex justify-end">
-                  <button 
-                    onClick={async (e) => {
-                      if (rating === 0) { alert("Por favor, selecione uma nota de 1 a 5 estrelas."); return; }
-                      
-                      const btn = e.currentTarget;
-                      btn.disabled = true;
-                      btn.innerText = "Enviando...";
-                      
-                      try {
-                        const res = await enviarAvaliacao(dados.id, rating, feedbackText, "Acesso Perfil");
-                        if (res.success) {
-                          alert("Obrigado pelo seu feedback!");
-                          setFeedbackText("");
-                          setRating(0);
+                 </div>
+                 <textarea 
+                   className="w-full bg-slate-50 border-0 rounded-xl p-3 text-sm mb-4 focus:ring-2 focus:ring-deep/5 outline-none resize-none"
+                   rows={3}
+                   placeholder="Escreva seu depoimento..."
+                   value={feedbackText}
+                   onChange={e => setFeedbackText(e.target.value)}
+                 />
+                 <button 
+                    onClick={() => {
+                        if (rating > 0) {
+                            enviarAvaliacao(dados.id, rating, feedbackText);
+                            alert("Obrigado!"); setRating(0); setFeedbackText("");
                         }
-                      } catch (err) { console.error(err); }
-                      finally { btn.disabled = false; btn.innerText = "Enviar Depoimento Privado"; }
                     }}
-                    className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.3em] px-10 py-5 rounded-full hover:bg-black transition-all shadow-xl active:scale-95"
-                  >
-                    Enviar Depoimento Privado
-                  </button>
-                </div>
+                    className="w-full bg-deep text-white text-xs font-bold uppercase py-3 rounded-xl hover:bg-slate-800 transition-colors"
+                 >Enviar</button>
+            </div>
+         </div>
+      </div>
+
+       {/* MODAL AGENDA */}
+       {isModalOpen && (
+         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
+           {/* Modal on all devices */}
+           <div className="bg-white w-full max-w-lg rounded-3xl p-6 md:p-8 max-h-[85vh] overflow-y-auto animate-in zoom-in-95 duration-200 shadow-2xl">
+             <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-black text-slate-900">Agenda Disponível</h2>
+                <button onClick={() => setIsModalOpen(false)} className="p-2 bg-slate-100 rounded-full text-slate-800">✕</button>
+             </div>
+
+             <div className="mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                      👋 Selecione um horário de preferência abaixo para enviar uma mensagem personalizada ao profissional e confirmar a disponibilidade.
+                  </p>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* MODAL AGENDA */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md">
-          <div className="bg-white w-full max-w-2xl rounded-[40px] md:rounded-[55px] p-6 md:p-12 relative shadow-2xl animate-in zoom-in-95 duration-300">
-            <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 md:top-8 md:right-8 text-slate-400 hover:text-slate-900 font-black uppercase text-[10px] tracking-[0.2em] bg-slate-50 px-4 py-2 rounded-full transition-all active:scale-95">Fechar [x]</button>
-            <div className="text-center mb-10">
-              <span className="text-[10px] font-black text-primary uppercase tracking-[0.4em] block mb-2">Disponibilidade</span>
-              <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900">Agenda Digital</h2>
-            </div>
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-              {["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"].map((dia) => {
-                const horarios = dados.agendaConfig?.[dia] || [];
-                if (horarios.length === 0) return null;
-                
-                const WEEK_MAP: Record<string, string> = {
-                  "Seg": "Segunda-feira", "Ter": "Terça-feira", "Qua": "Quarta-feira",
-                  "Qui": "Quinta-feira", "Sex": "Sexta-feira", "Sab": "Sábado", "Dom": "Domingo"
-                };
+             <div className="space-y-6">
+                 {/* Agenda Logic Simplified for 'Rede Social' look */}
+                {["Seg", "Ter", "Qua", "Qui", "Sex"].map(d => {
+                    const horarios = dados.agendaConfig?.[d] || [];
+                    if(!horarios.length) return null;
 
-                return (
-                  <div key={dia} className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-6 pt-2 gap-4">
-                    <span className="bg-slate-900 text-white px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest min-w-[120px] text-center shadow-lg self-start md:self-auto">
-                      {dia}
-                    </span>
-                    <div className="flex flex-wrap gap-2 md:justify-end">
-                      {horarios.map((hora: string) => (
-                        <a 
-                          key={hora}
-                          href={`https://wa.me/${dados.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`Olá ${dados.nome.split(" ")[0]}! Vi sua disponibilidade na plataforma PsiDuo. O horário de *${WEEK_MAP[dia]}* às *${hora}* ainda está livre para agendamento?`)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => registrarCliqueWhatsapp(dados.id)}
-                          className="bg-slate-50 border-2 border-slate-100 text-slate-600 px-4 py-2 rounded-xl text-[11px] font-black shadow-sm hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors cursor-pointer flex items-center gap-2 group"
-                          title="Solicitar este horário"
-                        >
-                          {hora}
-                          <svg className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mt-10 pt-8 border-t border-slate-50 flex flex-col md:flex-row items-center justify-between gap-4">
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide text-center md:text-left">* Os horários acima estão sujeitos a confirmação via WhatsApp.</p>
-              <a 
-                 href={`https://wa.me/${dados.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent("Olá! Vi sua agenda no PsiDuo e gostaria de agendar um horário.")}`} 
-                 target="_blank" 
-                 onClick={() => registrarCliqueWhatsapp(dados.id)}
-                 className="bg-green-600 text-white px-8 py-4 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-xl active:scale-95"
-              >
-                Agendar via WhatsApp
-              </a>
-            </div>
-          </div>
-        </div>
-      )}    
-      {/* Toast Notification */}
-      {showToast && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-4 duration-300">
-          <div className="bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-white/10">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Pronto!</span>
-              <span className="text-xs font-bold uppercase tracking-wider">Link copiado para compartilhar</span>
-            </div>
-          </div>
-        </div>
-      )}
+                    const diasMap: Record<string, string> = {
+                        'Seg': 'Segunda-feira', 'Ter': 'Terça-feira', 'Qua': 'Quarta-feira',
+                        'Qui': 'Quinta-feira', 'Sex': 'Sexta-feira', 'Sab': 'Sábado', 'Dom': 'Domingo'
+                    };
+                    const diaExtenso = diasMap[d] || d;
+
+                    return (
+                        <div key={d}>
+                            <h4 className="font-black text-xs uppercase text-slate-600 mb-2">{d}</h4>
+                            <div className="flex flex-wrap gap-2">
+                                {horarios.map((h:any) => (
+                                    <a 
+                                        key={h} 
+                                        href={`https://wa.me/${dados.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`Olá! Vi seu perfil no PsiDuo. Gostaria de verificar a disponibilidade para uma sessão na ${diaExtenso} às ${h}. É possível?`)}`} 
+                                        target="_blank" 
+                                        className="bg-slate-50 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg border border-slate-100 hover:border-green-500 hover:text-green-600 transition-colors"
+                                    >
+                                        {h}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    )
+                })}
+             </div>
+           </div>
+         </div>
+       )}
+
+       {showToast && (
+         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg animate-fade-in z-50">
+            Link copiado!
+         </div>
+       )}
 
       <Footer />
     </main>

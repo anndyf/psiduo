@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -54,51 +55,58 @@ model VerificationToken {
 }
 
 model Psicologo {
-  id                String      @id @default(uuid())
-  criadoEm          DateTime    @default(now())
-  atualizadoEm      DateTime    @updatedAt
-  nome              String
-  cpf               String?
-  asaasCustomerId   String?
-  subscriptionId    String?
-  ciclo             String?     // MONTHLY, YEARLY
-  limiteExtraPacientes Int      @default(0)
-  dataInicioPlano   DateTime?
-  planoValidade     DateTime?
-  crp               String?     @unique
-  foto              String?
-  whatsapp          String
-  abordagem         String
-  especialidades    String[]
-  temas             String[]
-  preco             Decimal     @db.Decimal(10, 2)
-  duracaoSessao     Int
-  idade             Int?
-  genero            String?
-  etnia             String?
-  sexualidade       String?
-  publicoAlvo       String[]
-  biografia         String?
-  videoApresentacao String?
-  redesSociais      Json?
-  acessos           Int         @default(0)
-  agendaConfig      Json?
-  plano             Plano       @default(DUO_I)
-  verificado        Boolean     @default(false)
-  status            String      @default("PENDENTE")
-  cidade            String?
-  estado            String?
-  atendeOnline      Boolean     @default(true)
-  atendePresencial  Boolean     @default(false)
-  slug              String?     @unique
-  diretividade      String?
-  estilo            String?
-  religiao          String?
-  cliquesWhatsapp   Int         @default(0)
-  userId            String      @unique
-  avaliacoes        Avaliacao[]
-  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pacientes         Paciente[]
+  id                   String               @id @default(uuid())
+  criadoEm             DateTime             @default(now())
+  atualizadoEm         DateTime             @updatedAt
+  nome                 String
+  crp                  String?              @unique
+  foto                 String?
+  whatsapp             String
+  abordagem            String
+  especialidades       String[]
+  temas                String[]
+  preco                Decimal              @db.Decimal(10, 2)
+  idade                Int?
+  genero               String?
+  etnia                String?
+  sexualidade          String?
+  publicoAlvo          String[]
+  biografia            String?
+  videoApresentacao    String?
+  redesSociais         Json?
+  acessos              Int                  @default(0)
+  agendaConfig         Json?
+  plano                Plano                @default(DUO_I)
+  verificado           Boolean              @default(false)
+  cidade               String?
+  cliquesWhatsapp      Int                  @default(0)
+  diretividade         String?
+  duracaoSessao        Int
+  estado               String?
+  estilo               String?
+  religiao             String?
+  slug                 String?              @unique
+  status               String               @default("PENDENTE")
+  userId               String               @unique
+  atendeOnline         Boolean              @default(true)
+  atendePresencial     Boolean              @default(false)
+  cpf                  String?
+  asaasCustomerId      String?
+  planoValidade        DateTime?
+  subscriptionId       String?
+  ciclo                String?
+  dataInicioPlano      DateTime?
+  limiteExtraPacientes Int                  @default(0)
+  avaliacoes           Avaliacao[]
+  comentariosPostagem  ComentarioPostagem[]
+  curtidasPostagem     CurtidaPostagem[]
+  evolucoes            Evolucao[]
+  grupos               GrupoTerapeutico[]
+  pacientes            Paciente[]
+  postagens            PostagemGrupo[]
+  user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agendamentos         Agendamento[]
+  mensagensInternas    InternalMessage[]
 
   @@index([abordagem])
   @@index([preco])
@@ -107,13 +115,71 @@ model Psicologo {
   @@index([verificado])
 }
 
+model Agendamento {
+  id              String    @id @default(cuid())
+  psicologoId     String
+  pacienteId      String?
+  titulo          String
+  data            DateTime
+  duracao         Int       @default(50)
+  status          String    @default("AGENDADO")
+  tipo            String    @default("INDIVIDUAL")
+  observacoes     String?
+  valorSessao     Decimal?  @db.Decimal(10, 2)
+  recorrencia     String    @default("NENHUMA")
+  recorrenciaId   String?
+  grupoId         String?
+  criadoEm       DateTime  @default(now())
+  atualizadoEm   DateTime  @updatedAt
+  psicologo       Psicologo       @relation(fields: [psicologoId], references: [id], onDelete: Cascade)
+  paciente        Paciente?       @relation(fields: [pacienteId], references: [id], onDelete: SetNull)
+  grupo           GrupoTerapeutico? @relation(fields: [grupoId], references: [id], onDelete: SetNull)
+
+  @@index([psicologoId])
+  @@index([data])
+  @@index([status])
+  @@index([recorrenciaId])
+  @@index([grupoId])
+}
+
+model GrupoTerapeutico {
+  id              String          @id @default(cuid())
+  psicologoId     String
+  titulo          String
+  descricao       String
+  temas           String[]
+  publicoAlvo     String[]
+  precoMensal     Decimal         @db.Decimal(10, 2)
+  periodicidade   String
+  diaSemana       String?
+  horario         String?
+  duracaoSessao   Int
+  ativo           Boolean         @default(true)
+  vagasTotais     Int?
+  vagasOcupadas   Int             @default(0)
+  cliquesWhatsapp Int             @default(0)
+  criadoEm        DateTime        @default(now())
+  atualizadoEm    DateTime        @updatedAt
+  cidade          String?
+  estado          String?
+  modalidade      String          @default("ONLINE")
+  checkIns        CheckInGrupo[]
+  psicologo       Psicologo       @relation(fields: [psicologoId], references: [id], onDelete: Cascade)
+  missoes         MissaoGrupo[]
+  participantes   Paciente[]
+  postagens       PostagemGrupo[]
+  agendamentos    Agendamento[]
+
+  @@index([psicologoId])
+  @@index([ativo])
+}
+
 model Avaliacao {
   id          String    @id @default(uuid())
   nota        Int
   comentario  String?
   data        DateTime  @default(now())
   psicologoId String
-  localizacao String?
   psicologo   Psicologo @relation(fields: [psicologoId], references: [id])
 
   @@index([psicologoId])
@@ -131,92 +197,295 @@ model AuditLog {
 }
 
 model Paciente {
-  id              String           @id @default(cuid())
-  nome            String
-  cpf             String?          @unique
-  tokenAcesso     String           @unique
-  psicologoId     String
-  ativo           Boolean          @default(true)
-  criadoEm        DateTime         @default(now())
-  dataInicio      DateTime         @default(now())
-  psicologo       Psicologo        @relation(fields: [psicologoId], references: [id], onDelete: Cascade)
-  registros       RegistroDiario[]
-  metas           Meta[]
-  notasClinicas   NotaClinica[]
+  id                      String                   @id @default(cuid())
+  nome                    String
+  tokenAcesso             String                   @unique
+  psicologoId             String
+  ativo                   Boolean                  @default(false)
+  criadoEm                DateTime                 @default(now())
+  dataInicio              DateTime                 @default(now())
+  cpf                     String?                  @unique
+  grupoId                 String?
+  tipo                    TipoPaciente             @default(INDIVIDUAL)
+  whatsapp                String?
+  cidade                  String?
+  dataNascimento          DateTime?
+  estado                  String?
+  estadoCivil             String?
+  grauInstrucao           String?
+  nacionalidade           String?
+  outrosContatos          String?
+  profissao               String?
+  sexo                    String?
+  cep                     String?
+  endereco                String?
+  telefone                String?
+  anamnese                Anamnese?
+  instrumentos            AplicacaoInstrumento[]
+  comentariosPostagem     ComentarioPostagem[]
+  conclusoesMissao        ConclusaoMissao[]
+  curtidasPostagem        CurtidaPostagem[]
+  metas                   Meta[]
+  notasClinicas           NotaClinica[]
+  grupo                   GrupoTerapeutico?        @relation(fields: [grupoId], references: [id])
+  psicologo               Psicologo                @relation(fields: [psicologoId], references: [id], onDelete: Cascade)
+  postagens               PostagemGrupo[]
+  prontuario              Prontuario?
+  registros               RegistroDiario[]
+  respostasCheckIn        RespostaCheckIn[]
+  solicitacoesInstrumento SolicitacaoInstrumento[]
+  agendamentos            Agendamento[]
+}
+
+model SolicitacaoInstrumento {
+  id         String   @id @default(cuid())
+  pacienteId String
+  tipo       String
+  data       DateTime @default(now())
+  concluida  Boolean  @default(false)
+  paciente   Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+
+  @@index([pacienteId])
 }
 
 model NotaClinica {
-  id          String   @id @default(cuid())
-  pacienteId  String
-  conteudo    String   @db.Text
-  criadoEm    DateTime @default(now())
-  
-  paciente    Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  pacienteId String
+  conteudo   String
+  criadoEm   DateTime @default(now())
+  paciente   Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
 
   @@index([pacienteId])
 }
 
 model RegistroDiario {
-  id          String   @id @default(cuid())
-  pacienteId  String
-  data        DateTime
-  humor       Int      
-  sono        Int      
-  notas       String?
-  tags        String[]
-  criadoEm    DateTime @default(now())
-  
-  paciente    Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  pacienteId String
+  data       DateTime
+  humor      Int
+  sono       Int
+  notas      String?
+  tags       String[]
+  criadoEm   DateTime @default(now())
+  paciente   Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
 
   @@index([pacienteId, data])
 }
 
-
-
-
 model Meta {
-  id          String         @id @default(cuid())
-  pacienteId  String
-  titulo      String
-  descricao   String?
-  frequencia  FrequenciaMeta @default(DIARIO)
-  
-  // Controle de Recorrência
-  diasSemana  Int[]          // 0=Dom, 1=Seg... (Para SEMANAL)
-  diaMes      Int?           // 1-31 (Para MENSAL)
-  
-  // Periodo de Vigência
-  dataInicio  DateTime       @default(now())
-  dataFim     DateTime?
-
-  ativa       Boolean        @default(true)
-  criadoEm    DateTime       @default(now())
-  atualizadoEm DateTime      @updatedAt
-  
-  paciente    Paciente       @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
-  registros   MetaRegistro[]
+  id           String         @id @default(cuid())
+  pacienteId   String
+  titulo       String
+  descricao    String?
+  frequencia   FrequenciaMeta @default(DIARIO)
+  ativa        Boolean        @default(true)
+  criadoEm     DateTime       @default(now())
+  atualizadoEm DateTime       @updatedAt
+  dataFim      DateTime?
+  dataInicio   DateTime       @default(now())
+  diaMes       Int?
+  diasSemana   Int[]
+  paciente     Paciente       @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  registros    MetaRegistro[]
 }
 
 model MetaRegistro {
-  id        String   @id @default(cuid())
-  metaId    String
-  data      DateTime 
-  feito     Boolean  @default(true)
-  criadoEm  DateTime @default(now())
-  
-  meta      Meta     @relation(fields: [metaId], references: [id], onDelete: Cascade)
+  id       String   @id @default(cuid())
+  metaId   String
+  data     DateTime
+  feito    Boolean  @default(true)
+  criadoEm DateTime @default(now())
+  meta     Meta     @relation(fields: [metaId], references: [id], onDelete: Cascade)
 
-  @@unique([metaId, data]) 
+  @@unique([metaId, data])
+}
+
+model CheckInGrupo {
+  id         String            @id @default(cuid())
+  grupoId    String
+  titulo     String
+  descricao  String?
+  dataEnvio  DateTime          @default(now())
+  dataExpira DateTime
+  ativo      Boolean           @default(true)
+  grupo      GrupoTerapeutico  @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  respostas  RespostaCheckIn[]
+
+  @@index([grupoId])
+  @@index([ativo])
+}
+
+model RespostaCheckIn {
+  id         String       @id @default(cuid())
+  checkInId  String
+  pacienteId String
+  emocao     String
+  criadoEm   DateTime     @default(now())
+  comentario String?
+  checkIn    CheckInGrupo @relation(fields: [checkInId], references: [id], onDelete: Cascade)
+  paciente   Paciente     @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+
+  @@unique([checkInId, pacienteId])
+  @@index([checkInId])
+}
+
+model PostagemGrupo {
+  id          String               @id @default(cuid())
+  grupoId     String
+  conteudo    String
+  criadoEm    DateTime             @default(now())
+  pacienteId  String?
+  psicologoId String?
+  comentarios ComentarioPostagem[]
+  curtidas    CurtidaPostagem[]
+  grupo       GrupoTerapeutico     @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  paciente    Paciente?            @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  psicologo   Psicologo?           @relation(fields: [psicologoId], references: [id], onDelete: Cascade)
+
+  @@index([grupoId])
+}
+
+model ComentarioPostagem {
+  id          String        @id @default(cuid())
+  postagemId  String
+  conteudo    String
+  criadoEm    DateTime      @default(now())
+  pacienteId  String?
+  psicologoId String?
+  paciente    Paciente?     @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  postagem    PostagemGrupo @relation(fields: [postagemId], references: [id], onDelete: Cascade)
+  psicologo   Psicologo?    @relation(fields: [psicologoId], references: [id], onDelete: Cascade)
+
+  @@index([postagemId])
+}
+
+model CurtidaPostagem {
+  id          String        @id @default(cuid())
+  postagemId  String
+  criadoEm    DateTime      @default(now())
+  pacienteId  String?
+  psicologoId String?
+  paciente    Paciente?     @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  postagem    PostagemGrupo @relation(fields: [postagemId], references: [id], onDelete: Cascade)
+  psicologo   Psicologo?    @relation(fields: [psicologoId], references: [id], onDelete: Cascade)
+
+  @@unique([postagemId, pacienteId])
+  @@unique([postagemId, psicologoId])
+}
+
+model MissaoGrupo {
+  id         String            @id @default(cuid())
+  grupoId    String
+  titulo     String
+  descricao  String
+  dataInicio DateTime          @default(now())
+  dataFim    DateTime
+  ativo      Boolean           @default(true)
+  conclusoes ConclusaoMissao[]
+  grupo      GrupoTerapeutico  @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+
+  @@index([grupoId])
+  @@index([ativo])
+}
+
+model ConclusaoMissao {
+  id            String      @id @default(cuid())
+  missaoId      String
+  pacienteId    String
+  dataConclusao DateTime?
+  criadoEm      DateTime    @default(now())
+  status        String      @default("NAO_FEITO")
+  missao        MissaoGrupo @relation(fields: [missaoId], references: [id], onDelete: Cascade)
+  paciente      Paciente    @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+
+  @@unique([missaoId, pacienteId])
+  @@index([missaoId])
+}
+
+model Anamnese {
+  id                String   @id @default(cuid())
+  pacienteId        String   @unique
+  sintomas          String?
+  inicioSintomas    String?
+  historicoFamiliar String?
+  expectativas      String?
+  tratamentoPrevio  String?
+  rotinaHobbies     String?
+  criadoEm          DateTime @default(now())
+  atualizadoEm      DateTime @updatedAt
+  paciente          Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+}
+
+model Prontuario {
+  id            String           @id @default(cuid())
+  pacienteId    String           @unique
+  demanda       String?
+  planoTrabalho String?
+  evolucaoFinal String?
+  status        StatusProntuario @default(ABERTO)
+  criadoEm      DateTime         @default(now())
+  atualizadoEm  DateTime         @updatedAt
+  evolucoes     Evolucao[]
+  paciente      Paciente         @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+}
+
+model AplicacaoInstrumento {
+  id         String   @id @default(cuid())
+  pacienteId String
+  tipo       String
+  data       DateTime @default(now())
+  respostas  Json
+  resultado  Json
+  paciente   Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+
+  @@index([pacienteId])
+}
+
+model Evolucao {
+  id            String     @id @default(cuid())
+  prontuarioId  String
+  data          DateTime
+  conteudo      String
+  procedimentos String?
+  criadoEm      DateTime   @default(now())
+  atualizadoEm  DateTime   @updatedAt
+  psicologoId   String?
+  demanda       String?
+  planoTrabalho String?
+  prontuario    Prontuario @relation(fields: [prontuarioId], references: [id], onDelete: Cascade)
+  psicologo     Psicologo? @relation(fields: [psicologoId], references: [id])
+}
+
+enum TipoPaciente {
+  INDIVIDUAL
+  GRUPO_EXCLUSIVO
 }
 
 enum FrequenciaMeta {
   DIARIO
+  UNICO
   SEMANAL
   MENSAL
-  UNICO
 }
 
 enum Plano {
   DUO_I
   DUO_II
+}
+
+enum StatusProntuario {
+  ABERTO
+  ENCERRADO
+}
+
+model InternalMessage {
+  id          String    @id @default(cuid())
+  psicologoId String
+  conteudo    String
+  remetente   String    @default("ADMIN") // "ADMIN" ou "PSICOLOGO"
+  lida        Boolean   @default(false)
+  criadoEm    DateTime  @default(now())
+  psicologo   Psicologo @relation(fields: [psicologoId], references: [id], onDelete: Cascade)
+
+  @@index([psicologoId])
 }

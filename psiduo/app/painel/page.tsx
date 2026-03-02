@@ -3,72 +3,159 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { buscarDadosPainel } from "./actions";
+import { toast } from "sonner";
 import { buscarAvaliacoes } from "../perfil/actions";
-import AccountSettingsModal from "./AccountSettingsModal";
+import { 
+    Calendar, Users, Clock, TrendingUp, Settings, 
+    Link as LinkIcon, Lock, ChevronRight, Activity,
+    Search, Bell, Plus, FileText, Share2, 
+    MoreHorizontal, ShieldAlert, BadgeCheck, Zap,
+    CircleDollarSign, User
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
+// --- Componentes Visuais ---
+
+const Sparkline = ({ color = "amber" }: { color?: string }) => (
+    <div className="h-10 w-full overflow-hidden opacity-50">
+        <svg viewBox="0 0 100 20" preserveAspectRatio="none" className={`w-full h-full text-${color}-500 fill-current`}>
+            <path d="M0,10 Q10,5 20,12 T40,8 T60,15 T80,5 T100,12 V20 H0 Z" fillOpacity="0.1" />
+            <path d="M0,10 Q10,5 20,12 T40,8 T60,15 T80,5 T100,12" fill="none" stroke="currentColor" strokeWidth="2" />
+        </svg>
+    </div>
+);
+
+const StatCard = ({ label, value, icon: Icon, trend, subtext, chart = false }: any) => (
+    <div className="bg-white/80 backdrop-blur-sm p-5 rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:shadow-slate-200/40 hover:border-slate-300 transition-all flex flex-col justify-between h-full relative overflow-hidden group">
+        <div className="flex justify-between items-start mb-2 relative z-10">
+            <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+                <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none">{value}</h3>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-50 text-slate-900 group-hover:bg-deep group-hover:text-white transition-all shadow-sm">
+                <Icon size={18} strokeWidth={2.5} />
+            </div>
+        </div>
+        
+        {chart && <div className="mt-4 -mx-2 opacity-30 group-hover:opacity-60 transition-opacity grayscale group-hover:grayscale-0"><Sparkline color="amber" /></div>}
+        
+        {subtext && !chart && (
+            <div className="mt-auto pt-4 flex items-center gap-2">
+                {trend && (
+                    <span className="text-[9px] font-black text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded uppercase tracking-wide border border-amber-100">
+                        {trend}
+                    </span>
+                )}
+                <p className="text-[10px] text-slate-400 font-bold truncate">{subtext}</p>
+            </div>
+        )}
+    </div>
+);
+
+const ActionCard = ({ title, desc, icon: Icon, onClick, disabled = false, locked = false }: any) => (
+    <button 
+        onClick={!disabled ? onClick : undefined}
+        disabled={disabled}
+        className={`w-full text-left group relative overflow-hidden bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-slate-200/60 shadow-sm hover:border-deep hover:shadow-2xl hover:shadow-deep/5 transition-all duration-500 ${disabled ? 'opacity-60 grayscale-[0.5] cursor-not-allowed' : 'cursor-pointer'}`}
+    >
+        {locked && (
+            <div className="absolute top-4 right-4 text-slate-300 group-hover:text-deep transition-colors">
+                <Lock size={14} />
+            </div>
+        )}
+        <div className="flex items-start gap-4">
+            <div className="p-4 rounded-2xl bg-slate-50 text-slate-900 group-hover:bg-deep group-hover:text-white transition-all shrink-0 shadow-sm group-hover:shadow-lg group-hover:shadow-deep/10">
+                <Icon size={24} strokeWidth={2} />
+            </div>
+            <div>
+                <h4 className="text-sm font-black text-slate-900 mb-1 px-1 py-0.5 rounded transition-colors uppercase tracking-tight inline-block group-hover:text-deep">{title}</h4>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-[200px]">{desc}</p>
+            </div>
+            {!disabled && (
+                <div className="ml-auto self-center opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 text-deep">
+                    <ChevronRight size={20} strokeWidth={3} />
+                </div>
+            )}
+        </div>
+    </button>
+);
+
+import AdminNotice from "./AdminNotice";
+import SupportModal from "./SupportModal";
+import { LifeBuoy } from "lucide-react";
 
 export default function PainelPsicologo() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
+  const [showSupport, setShowSupport] = useState(false);
   const [dados, setDados] = useState({ 
     nome: "", 
+    foto: null as string | null,
     slug: "",
     status: "PENDENTE", 
     email: "",
     media: "0.0",
     plano: "DUO_I",
     acessos: 0,
-    cliquesWhatsapp: 0
+    cliquesWhatsapp: 0,
+    especialidades: [] as string[],
+    publicoAlvo: [] as string[],
+    agendamentosHoje: [] as any[],
+    kpis: {
+        totalPacientes: 0,
+        totalGrupos: 0,
+        sessoesMes: 0
+    }
   });
   
-  const [isModalSistemaOpen, setIsModalSistemaOpen] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const [statusEnvio, setStatusEnvio] = useState({ tipo: "", texto: "" }); 
+  const [dataHoje, setDataHoje] = useState("");
+
+  useEffect(() => {
+    const dateStr = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const capitalized = dateStr.replace(/(^\w{1})|(\s+\w{1})/g, letter => letter.toUpperCase());
+    setDataHoje(capitalized);
+  }, []);
 
   useEffect(() => {
     if (status === "loading") return;
-    
-    if (status === "unauthenticated") {
-      router.push("/login");
-      return;
-    }
+    if (status === "unauthenticated") { router.push("/login"); return; }
 
     async function init() {
       try {
+        console.log("CLIENTE: Chamando buscarDadosPainel...");
         const resPainel = await buscarDadosPainel();
+        console.log("CLIENTE: Resposta painel:", resPainel);
+        
         let resAv: any = { success: true, media: "0.0" };
-
         if (resPainel.success && resPainel.dados?.id) {
             resAv = await buscarAvaliacoes(resPainel.dados.id);
-        }
-
-        if (resPainel.error) {
-          console.error("Erro ao buscar painel:", resPainel.error);
-          setLoading(false);
-          return;
+            console.log("CLIENTE: Resposta avaliações:", resAv);
         }
 
         if (resPainel.success && resPainel.dados) {
           setDados({ 
             nome: resPainel.dados.nome || "Profissional", 
+            foto: resPainel.dados.foto || null,
             slug: resPainel.dados.slug || "",
             status: resPainel.dados.status || "PENDENTE", 
             email: resPainel.dados.email || "",
             media: resAv.success ? resAv.media : "0.0",
             plano: resPainel.dados.plano || "DUO_I",
             acessos: resPainel.dados.acessos || 0,
-            cliquesWhatsapp: resPainel.dados.cliquesWhatsapp || 0
+            cliquesWhatsapp: resPainel.dados.cliquesWhatsapp || 0,
+            especialidades: resPainel.dados.especialidades || [],
+            publicoAlvo: resPainel.dados.publicoAlvo || [],
+            agendamentosHoje: resPainel.dados.agendamentosHoje || [],
+            kpis: resPainel.dados.kpis || { totalPacientes: 0, totalGrupos: 0, sessoesMes: 0 }
           });
-        } else {
-          setStatusEnvio({ tipo: "erro", texto: (resPainel as any).error || "Não foi possível carregar seu perfil." });
+        } else if (resPainel.error) {
+          console.error("Erro retornado do servidor:", resPainel.error);
+          toast.error(resPainel.error);
         }
-      } catch (err) {
-        console.error("Falha crítica no carregamento do painel:", err);
-        setStatusEnvio({ tipo: "erro", texto: "Erro interno ao carregar o painel." });
+      } catch (err) { 
+        console.error("Erro na inicialização do painel:", err); 
+        toast.error("Erro ao carregar dados do painel.");
       } finally {
         setLoading(false);
       }
@@ -76,243 +163,304 @@ export default function PainelPsicologo() {
     init();
   }, [router, status]);
 
-  const handleCopiarLink = async () => {
-    const link = `${window.location.origin}/perfil/${dados.slug}`;
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(link);
-      } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = link;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-      }
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
-    } catch (err) {
-      console.error("Erro ao copiar link:", err);
-    }
+  const handleShareProfile = () => {
+      const link = `${window.location.origin}/perfil/${dados.slug}`;
+      navigator.clipboard.writeText(link);
+      alert("Link copiado para a área de transferência.");
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-white font-black text-slate-300 uppercase tracking-[0.4em] animate-pulse">
-      Autenticando
-    </div>
+      <div className="min-h-screen bg-slate-50/50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3 animate-pulse">
+              <div className="w-10 h-10 border-4 border-slate-200 border-t-deep rounded-full animate-spin"></div>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Carregando Painel...</p>
+          </div>
+      </div>
   );
 
-  const isAtivo = dados.status === "ATIVO";
   const isDuoII = dados.plano === "DUO_II";
+  const firstName = (dados.nome?.trim() || "Profissional").split(' ')[0];
 
   return (
-    <main className="min-h-screen bg-slate-50 flex flex-col text-slate-900">
-      <Navbar />
+    <div className="max-w-[1280px] mx-auto py-6 px-4 md:px-8 animate-in fade-in duration-700">
       
-      <div className="container mx-auto max-w-[1400px] py-8 md:py-12 px-6 md:px-8 flex-1">
-        {/* Header Profissional */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 gap-6 text-left">
-          <div className="w-full">
-            <span className="text-deep font-black text-[11px] uppercase tracking-[0.4em] mb-3 block opacity-60">Área Exclusiva</span>
-            <h1 className="text-4xl md:text-6xl font-black text-slate-900 uppercase tracking-tighter leading-tight break-words">
-              Olá, {dados.nome}
-            </h1>
-            <div className="w-16 h-1.5 bg-deep mt-4 md:mt-6"></div>
-          </div>
-
-        </header>
-
-        {/* Status Tracker */}
-        {statusEnvio.texto && statusEnvio.tipo === "erro" && (
-          <div className="mb-8 p-6 bg-red-50 border-2 border-red-200 rounded-3xl text-danger font-black uppercase text-xs tracking-widest text-center flex items-center justify-center gap-3 animate-bounce">
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-            {statusEnvio.texto}
-            <button onClick={() => window.location.reload()} className="ml-4 underline">Tentar novamente</button>
-          </div>
-        )}
-
-        <div className={`mb-8 p-6 md:p-8 bg-white border-l-4 shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 transition-all ${
-          isAtivo ? "border-emerald-500" : "border-amber-500"
-        }`}>
-          <div className="w-full md:w-auto text-left flex flex-col">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Visibilidade Atual</h2>
-            <div className="flex items-center gap-3">
-                <div className={`w-2.5 h-2.5 rounded-full ${isAtivo ? "bg-emerald-500" : "bg-amber-500"}`}></div>
-                <p className={`text-2xl font-black uppercase tracking-tight ${isAtivo ? "text-emerald-700" : "text-amber-600"}`}>
-                  {dados.status}
-                </p>
-            </div>
-            {!isAtivo && (
-                <p className="text-xs font-bold text-slate-400 mt-1 max-w-md">
-                    Complete seu cadastro para aparecer nas buscas.
-                </p>
-            )}
-          </div>
-          <div className="w-full md:w-auto">
-            <Button 
-              onClick={() => router.push("/perfil/editar")}
-              variant={isAtivo ? "outline" : "primary"}
-              className={`${!isAtivo ? "bg-amber-500 hover:bg-amber-600 border-none text-white shadow-amber-200" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}
-              size="sm"
-            >
-              {isAtivo ? "Gerenciar Perfil" : "Ativar Perfil"}
-            </Button>
-          </div>
+      {/* Top Header Compacto */}
+      <header className="flex items-center justify-between mb-8 pb-6 border-b border-slate-200/60">
+        <div>
+           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              Olá, {firstName} <span className="text-xl">👋</span>
+           </h1>
+           <div className="flex items-center gap-2 mt-1.5 text-xs font-bold text-slate-500 uppercase tracking-wide">
+               <Calendar size={14} strokeWidth={2.5} className="text-amber-500" />
+               {dataHoje}
+           </div>
         </div>
-
-        {/* Banner Upgrade (Apenas para NÃO Duo II) */}
-        {!isDuoII && (
-          <div className="mb-12 bg-slate-900 p-10 md:p-16 flex flex-col lg:flex-row items-center justify-between gap-10 relative overflow-hidden group shadow-2xl">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-deep/20 rounded-full -mr-48 -mt-48 blur-[100px] group-hover:bg-deep/30 transition-all duration-1000"></div>
-            <div className="relative z-10 max-w-2xl text-left">
-              <span className="text-deep font-black text-[10px] uppercase tracking-[0.4em] mb-4 block">Potencialize seu Perfil</span>
-              <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-6 leading-none">VÍDEO E AGENDA <br className="hidden md:block"/> NO PLANO DUO II</h2>
-              <p className="text-slate-400 font-bold text-sm uppercase tracking-widest leading-relaxed opacity-80">Assinantes Premium desbloqueiam ferramentas de alta conversão e métricas avançadas.</p>
-            </div>
-            <Button 
-                onClick={() => router.push("/cadastro/planos")} 
-                className="relative z-10 shadow-2xl bg-deep hover:bg-white hover:text-deep"
-                size="xl"
-            >
-              Fazer Upgrade
-            </Button>
-          </div>
-        )}
-
-        {/* Banner Duo II (Gestão de Assinatura) */}
-        {isDuoII && (
-             <div className="mb-12 bg-gradient-to-r from-slate-900 to-slate-800 p-8 md:p-10 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl border border-slate-700">
-                <div className="flex items-center gap-6">
-                    <div className="bg-primary/20 p-4 rounded-full">
-                        <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
-                    </div>
-                    <div>
-                        <h3 className="text-white font-black uppercase tracking-widest text-lg">Membro Premium Duo II</h3>
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Sua assinatura está ativa e rodando.</p>
-                    </div>
-                </div>
-                <Button 
-                    onClick={() => router.push("/painel/configuracoes")}
-                    className="bg-slate-700 hover:bg-slate-600 border-none"
-                    size="md"
-                >
-                    Gerenciar Plano
-                </Button>
-             </div>
-        )}
-
-        {/* Grid de Cards com Tipografia Ampliada */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { label: "Informações", desc: isDuoII ? "Biografia, Especialidades, Vídeo e Redes." : "Gestão de biografia, foto e especialidades.", icon: <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>, route: "/perfil/editar", color: "border-deep" },
-            { 
-                label: "Visibilidade", 
-                desc: "Visualização pública do seu perfil clínico.", 
-                icon: <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>, 
-                action: () => window.open(`/perfil/${dados.slug}`, "_blank"),
-                color: "border-blue-500", 
-                disabled: !isAtivo 
-            },
-            ...(isDuoII ? [
-              { 
-                label: "Visitas", 
-                desc: "Total de acessos ao seu perfil.", 
-                icon: <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>, 
-                highlight: dados.acessos,
-                color: "border-indigo-500",
-                action: () => {} 
-              }
-            ] : []),
-            { label: "Reputação", desc: "Depoimentos e notas dos seus pacientes.", icon: <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>, route: "/perfil/avaliacoes", color: "border-amber-500", highlight: dados.media },
-            { 
-               label: "Minha Agenda", 
-               desc: " Configure seus horários de atendimento.", 
-               icon: <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>, 
-               route: "/perfil/editar#agenda", 
-               color: "border-green-500",
-               disabled: !isDuoII 
-            },
-            {
-               label: "Meus Pacientes",
-               desc: "Diário de humor e sono dos seus pacientes.",
-               icon: <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
-               route: "/painel/pacientes",
-               color: "border-pink-500",
-               disabled: !isDuoII
-            },
-            { label: "Sistema", desc: "Configurações de acesso e credenciais.", icon: <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>, action: () => setIsModalSistemaOpen(true), color: "border-slate-400" }
-          ].map((item: any, idx) => (
-            <div 
-              key={idx}
-              onClick={item.disabled ? undefined : (item.action || (() => router.push(item.route!)))}
-              className={`group bg-white p-10 md:p-12 flex flex-col items-start text-left transition-all duration-300 shadow-md ${item.disabled ? "opacity-40 grayscale cursor-not-allowed" : "hover:shadow-2xl hover:-translate-y-1 cursor-pointer"} border-t-4 ${item.color}`}
-            >
-              <div className="w-full flex justify-between items-start mb-8">
-                <div className="text-slate-200 group-hover:text-slate-900 transition-colors duration-300">
-                  {item.icon}
-                </div>
-                {item.label === "Visibilidade" && !item.disabled && (
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); handleCopiarLink(); }} 
-                    className="p-2 hover:bg-slate-50 rounded-lg text-slate-300 hover:text-primary transition-all active:scale-90"
-                    title="Copiar Link do Perfil"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
-                  </button>
-                )}
-              </div>
-              <h3 className="text-sm md:text-base font-black text-slate-900 uppercase tracking-[0.2em] mb-4">{item.label}</h3>
-              
-              {item.highlight !== undefined && (
-                <div className="w-full mb-4">
-                  <p className="text-slate-900 font-black text-3xl md:text-4xl tracking-tighter mb-2">
-                    {item.highlight} 
-                    {item.label === "Reputação" ? <span className="text-sm text-slate-300 ml-1">/ 5.0</span> : ""}
-                  </p>
-                  {isDuoII && (item.label === "Visitas" || item.label === "Contatos") && (
-                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full opacity-60 transition-all duration-1000 ${
-                          item.label === "Visitas" ? "bg-indigo-500" : 
-                          item.label === "Contatos" ? "bg-green-500" : "bg-primary"
-                        }`}
-                        style={{ width: '65%' }}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              <p className="text-slate-500 font-bold text-xs md:text-sm uppercase tracking-wider leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Toast Notification */}
-        {showToast && (
-          <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4 duration-300">
-            <div className="bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-white/10">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-widest text-primary">Sucesso</span>
-                <span className="text-xs font-bold uppercase tracking-wider">Link do Perfil Copiado!</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modal Sistema */}
-        <AccountSettingsModal 
-          isOpen={isModalSistemaOpen} 
-          onClose={() => setIsModalSistemaOpen(false)} 
-          currentEmail={dados.email}
-          onUpdateEmail={(email) => setDados(prev => ({ ...prev, email }))}
-        />
         
-        <Footer />
-      </main>
-    );
+        <div className="flex items-center gap-4">
+             <Button 
+                variant="outline"
+                className="h-10 px-4 text-xs font-bold bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300 uppercase tracking-wide hidden sm:flex"
+                onClick={() => window.open(`/perfil/${dados.slug}`, '_blank')}
+             >
+                 <Search size={14} className="mr-2" strokeWidth={2.5} /> Meu Perfil
+             </Button>
+
+             <Button 
+                variant="outline"
+                className="h-10 px-4 text-xs font-bold bg-white border-slate-200 text-amber-600 hover:text-amber-700 hover:border-amber-200 hover:bg-amber-50 uppercase tracking-wide hidden sm:flex"
+                onClick={() => setShowSupport(true)}
+             >
+                 <LifeBuoy size={14} className="mr-2" strokeWidth={2.5} /> Suporte
+             </Button>
+
+             <div className="h-8 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+
+             <div className="flex items-center gap-3 cursor-pointer group" onClick={() => router.push('/painel/perfil')} role="button">
+                 <div className="text-right hidden md:block">
+                     <p className="text-sm font-black text-slate-900 group-hover:text-amber-600 transition-colors">{dados.nome}</p>
+                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                        {isDuoII ? 'Plano Premium' : 'Plano Básico'}
+                     </p>
+                 </div>
+                 {dados.foto ? (
+                     // eslint-disable-next-line @next/next/no-img-element
+                     <img src={dados.foto} alt="Profile" className="w-10 h-10 rounded-xl object-cover border-2 border-slate-100 shadow-sm group-hover:border-amber-500 transition-all" />
+                 ) : (
+                     <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-bold border-2 border-transparent group-hover:border-amber-500 transition-all shadow-lg shadow-slate-900/20">
+                         {dados.nome.charAt(0)}
+                     </div>
+                 )}
+             </div>
+        </div>
+      </header>
+      
+      <AdminNotice />
+      
+      {showSupport && <SupportModal onClose={() => setShowSupport(false)} />}
+      
+      {/* Alert Banner (Se Free) */}
+      {!isDuoII && (
+          <div className="mb-8 bg-deep rounded-[2rem] p-8 flex flex-col md:flex-row items-center justify-between shadow-2xl shadow-deep/20 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-[100px] -mr-32 -mt-32 pointer-events-none group-hover:bg-white/10 transition-all duration-700"></div>
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-500/5 rounded-full blur-[80px] -ml-24 -mb-24 pointer-events-none"></div>
+              
+              <div className="flex items-center gap-6 relative z-10 mb-6 md:mb-0">
+                  <div className="p-4 bg-white/10 rounded-2xl text-amber-400 backdrop-blur-md shadow-inner border border-white/10 group-hover:scale-110 transition-transform duration-500">
+                      <Zap size={28} fill="currentColor" />
+                  </div>
+                  <div>
+                      <h3 className="text-lg font-black text-white mb-1 uppercase tracking-tight">Evolua para o Duo II</h3>
+                      <p className="text-sm text-slate-300 font-medium max-w-md">Tenha acesso a prontuários ilimitados, gestão de grupos, agenda inteligente e muito mais.</p>
+                  </div>
+              </div>
+              <Button 
+                size="lg" 
+                onClick={() => router.push('/cadastro/planos')} 
+                className="relative z-10 bg-amber-400 text-deep hover:bg-white hover:text-deep font-black text-xs uppercase tracking-[0.15em] h-12 px-8 rounded-xl border-none transition-all shadow-xl hover:shadow-amber-400/20 active:scale-95"
+              >
+                  Ver Planos
+              </Button>
+          </div>
+      )}
+
+      {/* Grid de KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <StatCard 
+             label="Sessões no Mês" 
+             value={dados.kpis.sessoesMes} 
+             icon={Activity}
+             chart={true}
+             trend="Mensal"
+          />
+          <StatCard 
+             label="Pacientes Ativos" 
+             value={dados.kpis.totalPacientes} 
+             icon={Users} 
+             subtext="Acompanhamento clínico"
+          />
+          <StatCard 
+             label="Grupos Terapêuticos" 
+             value={dados.kpis.totalGrupos} 
+             icon={Share2} 
+             subtext="Grupos em andamento"
+          />
+      </div>
+      
+      {/* Layout Grid Principal */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          
+          {/* Coluna Esquerda - Ações Clínicas */}
+          <div className="lg:col-span-2 space-y-8">
+              
+              <div className="space-y-4">
+                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Gestão Clínica</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      
+                      <ActionCard 
+                         title="Visão Geral" 
+                         desc="Gerenciar prontuários e evoluções." 
+                         icon={Users} 
+                         onClick={() => router.push('/painel/pacientes')}
+                         locked={!isDuoII}
+                         disabled={!isDuoII}
+                      />
+                      
+                      <ActionCard 
+                         title="Minha Agenda" 
+                         desc="Controle total de sessões e horários." 
+                         icon={Calendar} 
+                         onClick={() => router.push('/painel/agenda')}
+                         locked={!isDuoII}
+                         disabled={!isDuoII}
+                      />
+                      
+                      <ActionCard 
+                         title="Grupos Terapêuticos" 
+                         desc="Rodas de conversa e participantes." 
+                         icon={Users} 
+                         onClick={() => router.push('/painel/grupos')}
+                         locked={!isDuoII}
+                         disabled={!isDuoII}
+                      />
+
+                      <ActionCard 
+                         title="Financeiro" 
+                         desc="Controle de receitas e recebíveis." 
+                         icon={CircleDollarSign} 
+                         onClick={() => router.push('/painel/financeiro')}
+                         locked={!isDuoII}
+                         disabled={!isDuoII}
+                      />
+                  </div>
+              </div>
+
+               {/* SEÇÃO AGENDA DE HOJE */}
+               <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden group">
+                   <div className="px-6 py-5 border-b border-slate-100/60 flex items-center justify-between bg-slate-50/20">
+                       <h3 className="text-xs font-black text-slate-900 uppercase tracking-[0.1em] flex items-center gap-2">
+                           <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)] animate-pulse" />
+                           Agenda de Hoje
+                       </h3>
+                       <Button variant="ghost" size="sm" onClick={() => router.push('/painel/agenda')} className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-deep hover:bg-slate-100/50 h-8 px-3">
+                           Ver Completa
+                       </Button>
+                   </div>
+                   
+                   {isDuoII ? (
+                       <div className="p-0">
+                           {dados.agendamentosHoje.length === 0 ? (
+                               <div className="p-10 text-center">
+                                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-50 mb-4 text-slate-300">
+                                       <Calendar size={20} />
+                                   </div>
+                                   <p className="text-sm font-bold text-slate-500 mb-1">Dia livre!</p>
+                                   <p className="text-xs text-slate-400 mb-4 max-w-xs mx-auto">Você não tem sessões agendadas para hoje.</p>
+                                   <Button variant="outline" size="sm" onClick={() => router.push('/painel/agenda')} className="text-[10px] h-9 px-5 bg-white border-slate-200 uppercase font-bold tracking-widest hover:border-slate-900 hover:text-slate-900">
+                                       Ir para Agenda
+                                   </Button>
+                               </div>
+                           ) : (
+                               <div className="divide-y divide-slate-100">
+                                   {dados.agendamentosHoje.map((a: any) => (
+                                       <div key={a.id} className="p-4 hover:bg-slate-50 transition-colors flex items-center gap-4">
+                                           {/* Horário e Status */}
+                                           <div className="flex flex-col items-center justify-center min-w-[60px] border-r border-slate-100 pr-4">
+                                               <span className="text-base font-black text-slate-900">
+                                                   {new Date(a.hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                               </span>
+                                                <span className={`mt-1 text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded ${
+                                                    a.status === 'REALIZADO' ? 'text-emerald-700 bg-emerald-100' :
+                                                    a.status === 'AGENDADO' ? 'text-deep bg-slate-100' :
+                                                    'text-amber-700 bg-amber-100'
+                                                }`}>
+                                                    {a.status}
+                                                </span>
+                                           </div>
+                                           {/* Detalhes */}
+                                           <div className="flex-1 min-w-0">
+                                               <h4 className="text-sm font-bold text-slate-900 truncate group-hover:text-amber-600 transition-colors">{a.titulo}</h4>
+                                               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1.5 text-xs text-slate-500 font-medium">
+                                                   <span className="flex items-center gap-1.5 min-w-0 truncate">
+                                                       {a.tipo === 'INDIVIDUAL' ? <User size={12}/> : <Users size={12}/>}
+                                                       <span className="truncate">{a.tipo}</span>
+                                                   </span>
+                                                   <span className="hidden sm:inline text-slate-300">•</span>
+                                                   <span className="flex items-center gap-1.5 whitespace-nowrap">
+                                                       <Clock size={12}/> {a.duracao || 50} min
+                                                   </span>
+                                               </div>
+                                           </div>
+                                       </div>
+                                   ))}
+                               </div>
+                           )}
+                       </div>
+                   ) : (
+                       <div className="p-10 flex flex-col items-center justify-center text-center opacity-60 pointer-events-none grayscale">
+                            <Lock size={24} className="text-slate-400 mb-3" />
+                            <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Agenda Bloqueada</p>
+                       </div>
+                   )}
+               </div>
+
+          </div>
+
+          {/* Coluna Direita - Sistema & Perfil */}
+          <div className="space-y-6">
+              
+              {/* Meu Perfil Widget */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden group">
+                  <div className="p-6 border-b border-slate-50/60">
+                      <div className="flex items-center justify-between mb-5">
+                          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Meu Perfil Público</h3>
+                          <div className={`flex items-center gap-2 px-2 py-1 rounded-lg border ${dados.status === 'ATIVO' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                                <div className={`w-1.5 h-1.5 rounded-full ${dados.status === 'ATIVO' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-amber-500'}`}></div>
+                                <span className="text-[8px] font-black uppercase tracking-tighter">{dados.status}</span>
+                          </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                           {dados.foto ? (
+                               // eslint-disable-next-line @next/next/no-img-element
+                               <img src={dados.foto} alt="Profile" className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-xl shadow-slate-200/50 group-hover:scale-105 transition-transform duration-500" />
+                           ) : (
+                               <div className="w-16 h-16 rounded-2xl bg-deep text-white flex items-center justify-center font-black text-2xl shadow-xl shadow-deep/20 group-hover:scale-105 transition-transform duration-500">
+                                   {(dados.nome || "P").charAt(0)}
+                               </div>
+                           )}
+                           <div className="min-w-0">
+                               <h4 className="font-black text-slate-900 text-lg leading-none tracking-tight mb-1 truncate">{firstName}</h4>
+                               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Psicólogo(a) Clínico</p>
+                           </div>
+                      </div>
+                  </div>
+                  <div className="p-2 bg-slate-50/50">
+                      <button onClick={handleShareProfile} className="w-full text-left px-4 py-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm transition-all flex items-center justify-between group/btn mb-1">
+                          Copiar Link <Share2 size={14} className="text-slate-400 group-hover/btn:text-amber-500 transition-colors" />
+                      </button>
+                      <button onClick={() => router.push('/painel/perfil')} className="w-full text-left px-4 py-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm transition-all flex items-center justify-between group/btn">
+                          Editar Informações <Settings size={14} className="text-slate-400 group-hover/btn:text-amber-500 transition-colors" />
+                      </button>
+                  </div>
+              </div>
+
+                {/* Atalhos do Sistema */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm p-6 group">
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Suporte & Conta</h3>
+                    <div className="space-y-2">
+                        <button onClick={() => router.push('/painel/configuracoes')} className="w-full flex items-center gap-3 p-3.5 rounded-2xl hover:bg-slate-50 text-slate-600 hover:text-deep transition-all text-xs font-black uppercase tracking-wider group/item border border-transparent hover:border-slate-100">
+                            <div className="p-2 rounded-xl bg-slate-100 text-slate-500 group-hover/item:bg-deep group-hover/item:text-white transition-all"><Settings size={14} strokeWidth={2.5}/></div>
+                            Configurações
+                        </button>
+                        <button onClick={() => window.location.href="mailto:suporte@psiduo.com.br"} className="w-full flex items-center gap-3 p-3.5 rounded-2xl hover:bg-slate-50 text-slate-600 hover:text-deep transition-all text-xs font-black uppercase tracking-wider group/item border border-transparent hover:border-slate-100">
+                            <div className="p-2 rounded-xl bg-slate-100 text-slate-500 group-hover/item:bg-deep group-hover/item:text-white transition-all"><ShieldAlert size={14} strokeWidth={2.5}/></div>
+                            Suporte Técnico
+                        </button>
+                    </div>
+                </div>
+
+          </div>
+      </div>
+    </div>
+  );
 }

@@ -1,101 +1,89 @@
+"use client";
+
 import Navbar from "@/components/Navbar";
-import Link from "next/link";
+import Footer from "@/components/Footer";
+import { ScrollText, Shield, FileText, CheckCircle } from "lucide-react";
 
-export const metadata = {
-  title: "Termos de Uso | PsiDuo",
-};
+export default function Termos() {
+  const sections = [
+    {
+      title: "1. Aceitação dos Termos",
+      content: "Ao acessar e utilizar a plataforma PsiDuo, você concorda em cumprir e estar vinculado a estes Termos e Condições de Uso. Se você não concordar com qualquer parte destes termos, não deverá utilizar nossos serviços.",
+      icon: <CheckCircle className="w-5 h-5 text-blue-500" />
+    },
+    {
+      title: "2. Descrição do Serviço",
+      content: "O PsiDuo é uma plataforma de tecnologia que oferece ferramentas de gestão para psicólogos, incluindo prontuário digital, diário de pacientes, agenda e organização financeira. Não somos uma clínica de psicologia e não oferecemos atendimento direto.",
+      icon: <FileText className="w-5 h-5 text-blue-500" />
+    },
+    {
+      title: "3. Responsabilidades do Profissional",
+      content: "O profissional é o único responsável pela veracidade de sua formação e registro profissional (CRP). O uso das ferramentas de prontuário e diário deve seguir as normas éticas vigentes do Conselho Federal de Psicologia.",
+      icon: <Shield className="w-5 h-5 text-blue-500" />
+    },
+    {
+      title: "4. Privacidade e Dados (LGPD)",
+      content: "Tratamos os dados com o mais alto rigor de segurança. Os registros clínicos são criptografados. O psicólogo é o controlador dos dados de seus pacientes, e o PsiDuo atua como operador tecnológico.",
+      icon: <Shield className="w-5 h-5 text-blue-500" />
+    }
+  ];
 
-export default function TermosUso() {
   return (
-    <div className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50 font-sans flex flex-col overflow-x-hidden">
       <Navbar />
-      
-      <main className="container mx-auto max-w-4xl py-12 px-6 lg:px-8">
-        <h1 className="text-3xl md:text-5xl font-black text-slate-900 mb-2 uppercase tracking-tight">Termos de Uso</h1>
-        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-12 border-b pb-8">Última atualização: 25 de Janeiro de 2026</p>
-        
-        <div className="prose prose-slate max-w-none text-slate-600 font-medium space-y-8 leading-relaxed">
-          
-          <section className="space-y-4">
-            <h2 className="text-2xl font-black text-slate-900 uppercase">1. Aceitação dos Termos</h2>
-            <p className="text-justify indent-0">
-              Ao acessar e utilizar a plataforma <strong>PsiDuo</strong>, você concorda expressamente com estes Termos de Uso e com nossa Política de Privacidade. Se você não concordar com qualquer disposição destes termos, não deve utilizar nossos serviços.
-            </p>
-          </section>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-black text-slate-900 uppercase">2. Descrição do Serviço</h2>
-            <p>
-              O PsiDuo é uma plataforma tecnológica que facilita a gestão de consultórios de psicologia e o acompanhamento terapêutico de pacientes.
-            </p>
-            <ul className="list-disc pl-6 space-y-2 marker:text-blue-500">
-              <li><strong>Para Psicólogos:</strong> Oferecemos ferramentas de gestão de pacientes, diário clínico, criação de perfil profissional e visibilidade online.</li>
-              <li><strong>Para Pacientes:</strong> Oferecemos uma ferramenta de diário emocional (Wellness Tracker) conectada ao seu profissional de confiança.</li>
-            </ul>
-             <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100">
-              <p className="text-sm text-blue-800 font-bold">⚠️ IMPORTANTE: O PsiDuo NÃO presta serviços de saúde, emergência ou plantão psicológico. A plataforma é uma ferramenta meio para profissionais autônomos.</p>
-            </div>
-          </section>
-
-          <section className="space-y-4">
-            <h2 className="text-2xl font-black text-slate-900 uppercase">3. Responsabilidades</h2>
-            
-            <h3 className="text-lg font-black text-slate-800 uppercase mt-4">3.1. Do Profissional (Psicólogo)</h3>
-            <p className="text-justify">
-              O psicólogo é inteiramente responsável pela veracidade de suas informações profissionais (incluindo regularidade no CRP), pelo conteúdo dos atendimentos e pelo sigilo das informações de seus pacientes, devendo agir em conformidade com o Código de Ética Profissional do Psicólogo.
-            </p>
-
-            <h3 className="text-lg font-black text-slate-800 uppercase mt-4">3.2. Do Paciente</h3>
-            <p className="text-justify">
-              O paciente compromete-se a fornecer informações verdadeiras e a utilizar a plataforma de boa fé. O paciente entende que o registo no diário não substitui uma sessão de terapia e que em casos de urgência deve procurar serviços de emergência (como o CVV no 188 ou hospitais).
-            </p>
-          </section>
-
-          <section className="space-y-4">
-            <h2 className="text-2xl font-black text-slate-900 uppercase">4. Planos e Pagamentos</h2>
-            <p>
-              O uso da plataforma para psicólogos pode estar sujeito ao pagamento de planos de assinatura. Os valores e funcionalidades de cada plano estão descritos na página de planos. O não pagamento pode implicar na suspensão ou limitação do acesso às ferramentas premium.
-            </p>
-          </section>
-
-          <section className="space-y-4">
-            <h2 className="text-2xl font-black text-slate-900 uppercase">5. Propriedade Intelectual</h2>
-            <p>
-              Todo o conteúdo, design, código, logotipos e marcas presentes no PsiDuo são de propriedade exclusiva da plataforma ou de seus licenciadores. É proibida a cópia, reprodução ou distribuição não autorizada deste material.
-            </p>
-          </section>
-
-          <section className="space-y-4">
-            <h2 className="text-2xl font-black text-slate-900 uppercase">6. Modificações</h2>
-            <p>
-              O PsiDuo reserva-se o direito de alterar estes Termos de Uso a qualquer momento. Alterações significativas serão notificadas aos usuários. O uso continuado da plataforma após as alterações implica na aceitação dos novos termos.
-            </p>
-          </section>
-          
-          <section className="space-y-4">
-            <h2 className="text-2xl font-black text-slate-900 uppercase">7. Foro</h2>
-            <p>
-              Fica eleito o Foro da Comarca de [Sua Cidade/Estado], para dirimir quaisquer dúvidas oriundas destes Termos, com renúncia expressa a qualquer outro.
-            </p>
-          </section>
-
-          <section className="space-y-4 pt-8 border-t">
-            <h2 className="text-2xl font-black text-slate-900 uppercase">Contato</h2>
-            <p>
-              Dúvidas? Entre em contato pelo e-mail: <a href="mailto:suporte@psiduo.com.br" className="text-blue-600 hover:underline font-bold">suporte@psiduo.com.br</a>.
-            </p>
-          </section>
-
+      {/* --- HERO SECTION --- */}
+      <section className="bg-slate-900 relative py-20 lg:py-32 px-6 overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-20">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(11,30,59,1),rgba(2,6,23,1))]" />
         </div>
-      </main>
-      
-      <footer className="bg-slate-50 py-10 text-center border-t border-slate-200 mt-12">
-            <div className="flex justify-center gap-6 mb-4">
-                <Link href="/" className="text-xs font-black uppercase text-slate-400 hover:text-slate-600 tracking-widest transition-colors">Início</Link>
-                <Link href="/privacidade" className="text-xs font-black uppercase text-slate-400 hover:text-slate-600 tracking-widest transition-colors">Privacidade</Link>
+
+        <div className="container mx-auto max-w-4xl relative z-10 text-center">
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full text-blue-400">
+              <ScrollText className="w-3 h-3" />
+              <span className="text-[10px] font-black uppercase tracking-[0.3em]">Legal & Compliance</span>
             </div>
-           <p className="text-xs text-slate-300">© 2026 PsiDuo. Todos os direitos reservados.</p>
-      </footer>
-    </div>
+            <h1 className="text-4xl lg:text-6xl font-black text-white leading-tight uppercase tracking-tighter">
+              Termos de <span className="text-blue-500 italic">Uso.</span>
+            </h1>
+            <p className="text-slate-400 text-sm font-medium uppercase tracking-widest">
+              Última atualização: Fevereiro de 2026
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* --- CONTENT SECTION --- */}
+      <section className="py-24 px-6 bg-white">
+        <div className="container mx-auto max-w-3xl">
+          <div className="space-y-12">
+            {sections.map((section, i) => (
+              <div key={i} className="space-y-4">
+                <div className="flex items-center gap-3">
+                  {section.icon}
+                  <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{section.title}</h2>
+                </div>
+                <p className="text-slate-600 leading-relaxed font-medium">
+                  {section.content}
+                </p>
+              </div>
+            ))}
+
+            <div className="p-8 bg-slate-50 rounded-2xl border border-slate-100">
+              <h3 className="font-bold text-slate-900 mb-4 uppercase tracking-tight">Dúvidas Jurídicas?</h3>
+              <p className="text-sm text-slate-500 mb-6 font-medium leading-relaxed">
+                Nossa equipe jurídica está à disposição para esclarecer qualquer ponto sobre nossos termos de serviço e políticas de privacidade.
+              </p>
+              <a href="mailto:juridico@psiduo.com.br" className="text-blue-600 font-black uppercase text-[10px] tracking-widest hover:underline">
+                Contatar Departamento Jurídico →
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </main>
   );
 }

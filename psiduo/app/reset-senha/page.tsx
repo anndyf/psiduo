@@ -63,7 +63,7 @@ function ResetSenhaContent() {
         <div className="bg-white w-full max-w-md p-8 rounded-3xl shadow-xl border border-slate-100">
           
           <div className="flex flex-col items-center mb-6">
-            <span className="text-3xl font-black text-slate-800 tracking-tight">Psi<span className="text-blue-600">Duo</span></span>
+            <span className="text-3xl font-black text-slate-900 tracking-tighter">PsiDuo<span className="text-amber-500">.</span></span>
           </div>
 
           {/* SUCESSO NO ENVIO */}

@@ -36,8 +36,8 @@ export const Plans = () => {
                   <ul className="space-y-4 mb-8 flex-1">
                       {[
                         "Perfil Básico no Catálogo",
-                        "Recebimento de Avaliações",
                         "Botão WhatsApp Direto",
+                        "Divulgação de 1 Grupo Terapêutico",
                         "Exibição do Valor da Consulta"
                       ].map(item => (
                         <li key={item} className="flex items-center text-slate-700">
@@ -53,7 +53,7 @@ export const Plans = () => {
               </Card>
             </Link>
 
-            {/* PLANO DUO II (PREMIUM R$ 20) */}
+            {/* PLANO DUO II (PREMIUM R$ 40) */}
             <Link href="/cadastro" className="h-full">
               <Card 
                 variant="white" 
@@ -65,27 +65,29 @@ export const Plans = () => {
                   <div className="mb-6">
                       <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">Premium</span>
                       <h3 className="text-3xl font-bold text-deep mt-4">Duo II</h3>
-                      <p className="text-slate-500 mt-2">Ferramentas completas de gestão.</p>
+                      <p className="text-slate-500 mt-2">Gestão completa para seu consultório.</p>
                   </div>
                   <div className="text-5xl font-bold text-primary mb-2">
-                      R$ 20,00
+                      R$ 40,00
                   </div>
                   <div className="text-sm text-slate-400 font-normal mb-8">assinatura mensal</div>
                   
                   <ul className="space-y-5 mb-10 flex-1">
-                      <li className="flex items-center text-slate-700 font-medium">
+                      <li className="flex items-center text-slate-700 font-medium pb-2 border-b border-slate-50">
                           <span className="w-6 h-6 bg-blue-50 text-primary rounded-full flex items-center justify-center mr-3 text-sm">✓</span>
                           Tudo do plano Duo I
                       </li>
                       {[
-                        { text: "Diário de Pacientes (Novo!)", highlight: true, special: true },
-                        { text: "Horários Disponíveis (Agenda)", highlight: true },
+                        { text: "Prontuário & Diário de Pacientes", highlight: true, special: true },
+                        { text: "Agenda Online e Agendamento", highlight: true },
+                        { text: "Fluxo de Caixa e Financeiro", highlight: true },
+                        { text: "Aplicação de Instrumentos", highlight: true },
+                        { text: "Destaque prioritário na busca", highlight: true },
                         { text: "Vídeo de Apresentação" },
                         { text: "Métricas de Acessos" },
-                        { text: "Destaque na Busca" },
                         { text: "Links Redes Sociais" }
                       ].map(item => (
-                        <li key={item.text} className={`flex items-center ${item.highlight ? 'text-deep font-semibold' : 'text-slate-700'}`}>
+                        <li key={item.text} className={`flex items-center ${item.highlight ? 'text-deep font-bold' : 'text-slate-700'}`}>
                             <span className={`w-6 h-6 ${item.special ? 'bg-amber-400 text-deep shadow-lg shadow-amber-400/50' : (item.highlight ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-primary')} rounded-full flex items-center justify-center mr-3 ${item.highlight ? 'shadow-sm' : ''}`}>✓</span>
                             {item.text}
                         </li>
